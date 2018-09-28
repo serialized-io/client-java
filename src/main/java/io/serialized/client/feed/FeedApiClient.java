@@ -9,6 +9,7 @@ import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public class FeedApiClient {
 
@@ -22,13 +23,14 @@ public class FeedApiClient {
     this.apiRoot = builder.apiRoot;
   }
 
-  public FeedsResponse feeds() throws IOException {
+  public List<Feed> listFeeds() throws IOException {
     Request request = new Request.Builder()
         .url(apiRoot.newBuilder().addPathSegment("feeds").build())
         .get()
         .build();
 
-    return readResponse(request, FeedsResponse.class);
+    FeedsResponse feedsResponse = readResponse(request, FeedsResponse.class);
+    return feedsResponse.feeds();
   }
 
   public FeedResponse feed(String feedName) throws IOException {

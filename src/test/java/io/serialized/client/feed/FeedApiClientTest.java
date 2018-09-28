@@ -38,8 +38,11 @@ public class FeedApiClientTest {
   @Test
   public void listFeeds() throws IOException {
     mockServerClient.when(HttpRequest.request("/feeds")).respond(HttpResponse.response().withBody(getResource("feeds.json")));
-
-    assertThat(feedClient.feeds().feeds().size(), is(1));
+    assertThat(feedClient.listFeeds().size(), is(1));
+    assertThat(feedClient.listFeeds().get(0).aggregateType(), is("games"));
+    assertThat(feedClient.listFeeds().get(0).aggregateCount(), is(10L));
+    assertThat(feedClient.listFeeds().get(0).batchCount(), is(48L));
+    assertThat(feedClient.listFeeds().get(0).eventCount(), is(96L));
   }
 
   @Test
