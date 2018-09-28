@@ -7,7 +7,7 @@ public class LoadAggregateResponse {
   private String aggregateId;
   private String aggregateType;
   private long aggregateVersion;
-  private List<EventBatch.Event> events;
+  private List<Event> events;
 
   public String aggregateId() {
     return aggregateId;
@@ -21,7 +21,7 @@ public class LoadAggregateResponse {
     return aggregateVersion;
   }
 
-  public List<EventBatch.Event> events() {
+  public List<Event> events() {
     return events;
   }
 

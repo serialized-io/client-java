@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.serialized.client.SerializedClientConfig.JSON_MEDIA_TYPE;
+import static io.serialized.client.aggregates.EventBatch.newBatch;
 
 public class AggregatesApiClient {
 
@@ -21,6 +22,11 @@ public class AggregatesApiClient {
     this.httpClient = builder.httpClient;
     this.objectMapper = builder.objectMapper;
     this.apiRoot = builder.apiRoot;
+  }
+
+  public void storeEvent(String aggregateType, String aggregateId, Event event) throws IOException {
+    EventBatch eventBatch = newBatch().aggregateId(aggregateId).addEvent(event).build();
+    storeEvents(aggregateType, eventBatch);
   }
 
   public void storeEvents(String aggregateType, EventBatch eventBatch) throws IOException {

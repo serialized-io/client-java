@@ -14,7 +14,7 @@ import java.util.UUID;
 
 import static io.serialized.client.aggregates.EventBatch.newEvent;
 
-class EventDeserializer extends StdDeserializer<EventBatch.Event> {
+class EventDeserializer extends StdDeserializer<Event> {
 
   private Map<String, Class> eventTypes;
 
@@ -25,18 +25,18 @@ class EventDeserializer extends StdDeserializer<EventBatch.Event> {
 
   static Module module(Map<String, Class> eventTypes) {
     SimpleModule module = new SimpleModule();
-    module.addDeserializer(EventBatch.Event.class, new EventDeserializer(eventTypes));
+    module.addDeserializer(Event.class, new EventDeserializer(eventTypes));
     return module;
   }
 
   @Override
-  public EventBatch.Event deserialize(JsonParser jp, DeserializationContext context) throws IOException {
+  public Event deserialize(JsonParser jp, DeserializationContext context) throws IOException {
 
     JsonNode node = jp.getCodec().readTree(jp);
 
     String eventId = node.get("eventId").asText();
     String eventType = node.get("eventType").asText();
-    EventBatch.EventBuilder eventBuilder = newEvent(eventType).eventId(UUID.fromString(eventId));
+    Event.Builder eventBuilder = newEvent(eventType).eventId(UUID.fromString(eventId));
 
     Optional<Class> matchingClass = eventTypes
         .entrySet()

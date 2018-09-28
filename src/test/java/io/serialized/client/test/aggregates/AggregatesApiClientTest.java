@@ -1,21 +1,27 @@
 package io.serialized.client.test.aggregates;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.aggregates.AggregatesApiClient;
+import io.serialized.client.aggregates.Event;
 import io.serialized.client.aggregates.EventBatch;
 import io.serialized.client.aggregates.LoadAggregateResponse;
 import org.apache.commons.io.IOUtils;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.UUID;
 
 import static io.serialized.client.aggregates.EventBatch.newEvent;
+import static io.serialized.client.test.aggregates.AggregatesApiClientTest.OrderPlacedEvent.orderPlaced;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.hamcrest.core.Is.is;
@@ -24,7 +30,15 @@ import static org.junit.Assert.assertThat;
 public class AggregatesApiClientTest {
 
   public static class OrderPlacedEvent {
+    private String customerId;
+    private long orderAmount;
 
+    public static OrderPlacedEvent orderPlaced(String customerId, long orderAmount) {
+      OrderPlacedEvent orderPlacedEvent = new OrderPlacedEvent();
+      orderPlacedEvent.customerId = customerId;
+      orderPlacedEvent.orderAmount = orderAmount;
+      return orderPlacedEvent;
+    }
   }
 
   @ClassRule
@@ -37,7 +51,7 @@ public class AggregatesApiClientTest {
 
     @POST
     @Path("{aggregateType}/events")
-    public Response saveEvents(@PathParam("aggregateType") String aggregateType) {
+    public Response saveEvents(@PathParam("aggregateType") String aggregateType, @NotNull @Valid EventBatch eventBatch) {
       return Response.ok().build();
     }
 
@@ -65,6 +79,11 @@ public class AggregatesApiClientTest {
           .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
           .accessKey("aaaaa")
           .secretAccessKey("bbbbb").build());
+
+  @Before
+  public void setUp() {
+    DROPWIZARD.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+  }
 
   @Test
   public void loadAggregate() throws IOException {
@@ -97,22 +116,32 @@ public class AggregatesApiClientTest {
   }
 
   @Test
-  public void saveEvents() throws IOException {
+  public void storeEventsInBatch() throws IOException {
 
-    AggregatesApiClient aggregatesApiClient = aggregatesClientBuilder
-        .registerEventType(OrderPlacedEvent.class)
+    AggregatesApiClient aggregatesApiClient = aggregatesClientBuilder.build();
+
+    Event orderPlacedEvent = newEvent("OrderPlaced")
+        .eventId("127b80b5-4a05-4774-b870-1c9a2e2a27a3")
+        .data(ImmutableMap.of(
+            "customerId", "some-test-id-1",
+            "orderAmount", 12345))
         .build();
 
     EventBatch eventBatch = EventBatch.newBatch()
         .aggregateId("723ecfce-14e9-4889-98d5-a3d0ad54912f")
-        .addEvent(newEvent("OrderPlaced")
-            .eventId(UUID.fromString("127b80b5-4a05-4774-b870-1c9a2e2a27a3"))
-            .data(ImmutableMap.of(
-                "customerId", "some-test-id-1",
-                "orderAmount", 12345))
-            .build()).build();
+        .addEvent(orderPlacedEvent).build();
 
     aggregatesApiClient.storeEvents("order", eventBatch);
+  }
+
+  @Test
+  public void storeSingleEvent() throws IOException {
+
+    AggregatesApiClient aggregatesClient = aggregatesClientBuilder.build();
+
+    Event orderPlacedEvent = newEvent(orderPlaced("ACME Inc.", 12345)).build();
+
+    aggregatesClient.storeEvent("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f", orderPlacedEvent);
   }
 
 }
