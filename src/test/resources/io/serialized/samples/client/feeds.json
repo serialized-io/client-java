@@ -1,0 +1,10 @@
+{
+  "feeds": [
+    {
+      "aggregateType": "games",
+      "aggregateCount": 10,
+      "batchCount": 48,
+      "eventCount": 96
+    }
+  ]
+}

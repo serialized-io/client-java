@@ -1,0 +1,22 @@
+{
+  "aggregateId": "7532dd2a-c29d-47b8-8d51-c0c9fabb5c16",
+  "aggregateType": "order",
+  "aggregateVersion": 2,
+  "events": [
+    {
+      "eventId": "6dabf294-fa23-42aa-814a-48c3ae4e0d01",
+      "eventType": "OrderPlacedEvent",
+      "data": {
+        "customerId": "myCustomerId",
+        "orderAmount": 124354
+      }
+    },
+    {
+      "eventId": "3fea7937-f994-410b-8211-68e0b8fb342e",
+      "eventType": "OrderCancelledEvent",
+      "data": {
+        "reason": "DOA"
+      }
+    }
+  ]
+}
