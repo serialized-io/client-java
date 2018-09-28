@@ -37,7 +37,7 @@ public class ProjectionsApiClientTest {
   @Rule
   public MockServerRule mockServerRule = new MockServerRule(this);
 
-  private ProjectionApiClient projectionsClient = ProjectionApiClient.projectionsApiClient(SerializedClientConfig.builder()
+  private ProjectionApiClient projectionsClient = ProjectionApiClient.projectionsClient(SerializedClientConfig.builder()
       .rootApiUrl("http://localhost:" + mockServerRule.getPort())
       .accessKey("aaaaa")
       .secretAccessKey("bbbbb")

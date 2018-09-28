@@ -47,7 +47,7 @@ public class ProjectionApiClient {
   }
 
 
-  public static ProjectionApiClient.Builder projectionsApiClient(SerializedClientConfig config) {
+  public static ProjectionApiClient.Builder projectionsClient(SerializedClientConfig config) {
     return new ProjectionApiClient.Builder(config);
   }
 

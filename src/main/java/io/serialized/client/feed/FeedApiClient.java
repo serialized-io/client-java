@@ -50,7 +50,7 @@ public class FeedApiClient {
     }
   }
 
-  public static Builder feedApiClient(SerializedClientConfig config) {
+  public static Builder feedClient(SerializedClientConfig config) {
     return new Builder(config);
   }
 

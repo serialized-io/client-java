@@ -69,7 +69,7 @@ public class AggregatesApiClient {
     }
   }
 
-  public static Builder aggregatesApiClient(SerializedClientConfig config) {
+  public static Builder aggregatesClient(SerializedClientConfig config) {
     return new Builder(config);
   }
 

@@ -27,7 +27,7 @@ public class AggregatesApiClientTest {
   @Rule
   public MockServerRule mockServerRule = new MockServerRule(this);
 
-  private AggregatesApiClient.Builder aggregatesClientBuilder = AggregatesApiClient.aggregatesApiClient(
+  private AggregatesApiClient.Builder aggregatesClientBuilder = AggregatesApiClient.aggregatesClient(
       SerializedClientConfig.builder()
           .rootApiUrl("http://localhost:" + mockServerRule.getPort())
           .accessKey("aaaaa")

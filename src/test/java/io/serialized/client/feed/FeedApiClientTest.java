@@ -20,7 +20,7 @@ public class FeedApiClientTest {
   @Rule
   public MockServerRule mockServerRule = new MockServerRule(this);
 
-  private FeedApiClient feedClient = FeedApiClient.feedApiClient(
+  private FeedApiClient feedClient = FeedApiClient.feedClient(
       SerializedClientConfig.builder()
           .rootApiUrl("http://localhost:" + mockServerRule.getPort())
           .accessKey("aaaaa")
