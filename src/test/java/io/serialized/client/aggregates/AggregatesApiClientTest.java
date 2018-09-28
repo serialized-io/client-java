@@ -1,14 +1,10 @@
-package io.serialized.client.test.aggregates;
+package io.serialized.client.aggregates;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.aggregates.AggregatesApiClient;
-import io.serialized.client.aggregates.Event;
-import io.serialized.client.aggregates.EventBatch;
-import io.serialized.client.aggregates.LoadAggregateResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -20,8 +16,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
+import static io.serialized.client.aggregates.AggregatesApiClientTest.OrderPlacedEvent.orderPlaced;
 import static io.serialized.client.aggregates.EventBatch.newEvent;
-import static io.serialized.client.test.aggregates.AggregatesApiClientTest.OrderPlacedEvent.orderPlaced;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.hamcrest.core.Is.is;
@@ -139,7 +135,7 @@ public class AggregatesApiClientTest {
 
     AggregatesApiClient aggregatesClient = aggregatesClientBuilder.build();
 
-    Event orderPlacedEvent = newEvent(orderPlaced("ACME Inc.", 12345)).build();
+    Event orderPlacedEvent = EventBatch.newEvent(orderPlaced("ACME Inc.", 12345)).build();
 
     aggregatesClient.storeEvent("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f", orderPlacedEvent);
   }

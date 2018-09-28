@@ -1,9 +1,7 @@
-package io.serialized.client.test.feed;
+package io.serialized.client.feed;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.feed.FeedApiClient;
-import io.serialized.client.feed.FeedResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
