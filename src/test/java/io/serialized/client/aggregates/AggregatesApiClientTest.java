@@ -5,21 +5,14 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 import static io.serialized.client.aggregates.AggregatesApiClientTest.OrderPlacedEvent.orderPlaced;
 import static io.serialized.client.aggregates.EventBatch.newEvent;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -38,37 +31,7 @@ public class AggregatesApiClientTest {
   }
 
   @ClassRule
-  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new SerializedAggregatesApiStub());
-
-  @Path("/api-stub/aggregates")
-  @Produces(APPLICATION_JSON)
-  @Consumes(APPLICATION_JSON)
-  public static class SerializedAggregatesApiStub {
-
-    @POST
-    @Path("{aggregateType}/events")
-    public Response saveEvents(@PathParam("aggregateType") String aggregateType, @NotNull @Valid EventBatch eventBatch) {
-      return Response.ok().build();
-    }
-
-    @GET
-    @Path("order/{aggregateId}")
-    public Response loadAggregate(@PathParam("aggregateId") String aggregateId) throws IOException {
-      String responseBody = getResource("load_aggregate.json");
-      return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
-    }
-
-    @GET
-    @Path("order-specific/{aggregateId}")
-    public Response loadAggregateWithSpecifiedEventNamed(@PathParam("aggregateId") String aggregateId) throws IOException {
-      String responseBody = getResource("load_aggregate_not_classname.json");
-      return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
-    }
-
-    private String getResource(String s) throws IOException {
-      return IOUtils.toString(getClass().getResourceAsStream(s), "UTF-8");
-    }
-  }
+  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new AggregatesApi());
 
   private AggregatesApiClient.Builder aggregatesClientBuilder = AggregatesApiClient.aggregatesClient(
       SerializedClientConfig.builder()

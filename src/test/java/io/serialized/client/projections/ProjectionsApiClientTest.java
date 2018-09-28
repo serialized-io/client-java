@@ -4,18 +4,13 @@ import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.projection.ProjectionApiClient;
 import io.serialized.client.projection.ProjectionResponse;
-import org.apache.commons.io.IOUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 import static io.serialized.client.projection.ProjectionQuery.aggregatedProjection;
 import static io.serialized.client.projection.ProjectionQuery.singleProjection;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -31,31 +26,7 @@ public class ProjectionsApiClientTest {
   }
 
   @ClassRule
-  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new SerializedAggregatesApiStub());
-
-  @Path("/api-stub/projections/")
-  @Produces(APPLICATION_JSON)
-  @Consumes(APPLICATION_JSON)
-  public static class SerializedAggregatesApiStub {
-
-    @GET
-    @Path("single/{projectionName}/{id}")
-    public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id) throws IOException {
-      String responseBody = getResource("single_projection.json");
-      return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
-    }
-
-    @GET
-    @Path("aggregated/{projectionName}")
-    public Response getAggregatedProjection(@PathParam("projectionName") String projectionName) throws IOException {
-      String responseBody = getResource("aggregated_projection.json");
-      return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
-    }
-
-    private String getResource(String s) throws IOException {
-      return IOUtils.toString(getClass().getResourceAsStream(s), "UTF-8");
-    }
-  }
+  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ProjectionApi());
 
   private ProjectionApiClient projectionsClient = ProjectionApiClient.projectionsClient(SerializedClientConfig.builder()
       .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
