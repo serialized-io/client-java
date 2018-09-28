@@ -17,6 +17,7 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 public class SerializedClientConfig {
 
   public static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
+  public static final String HTTPS_API_SERIALIZED_IO = "https://api.serialized.io/)";
 
   private final OkHttpClient httpClient;
   private final Supplier<ObjectMapper> objectMapper;
@@ -46,7 +47,7 @@ public class SerializedClientConfig {
 
   public static class Builder {
 
-    private URI rootUrl = URI.create("https://api.serialized.io/)");
+    private URI rootUrl = URI.create(HTTPS_API_SERIALIZED_IO);
     private String accessKey;
     private String secretAccessKey;
 

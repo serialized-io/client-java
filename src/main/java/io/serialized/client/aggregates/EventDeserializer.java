@@ -14,16 +14,16 @@ import java.util.UUID;
 
 import static io.serialized.client.aggregates.EventBatch.newEvent;
 
-public class EventDeserializer extends StdDeserializer<EventBatch.Event> {
+class EventDeserializer extends StdDeserializer<EventBatch.Event> {
 
   private Map<String, Class> eventTypes;
 
-  public EventDeserializer(Map<String, Class> eventTypes) {
+  private EventDeserializer(Map<String, Class> eventTypes) {
     super((Class) null);
     this.eventTypes = eventTypes;
   }
 
-  public static Module module(Map<String, Class> eventTypes) {
+  static Module module(Map<String, Class> eventTypes) {
     SimpleModule module = new SimpleModule();
     module.addDeserializer(EventBatch.Event.class, new EventDeserializer(eventTypes));
     return module;
