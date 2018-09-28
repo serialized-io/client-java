@@ -73,6 +73,10 @@ public class EventBatch {
       return this;
     }
 
+    public BatchBuilder aggregateId(String aggregateId) {
+      return aggregateId(UUID.fromString(aggregateId));
+    }
+
     public BatchBuilder addEvent(Event event) {
       this.events.add(event);
       return this;

@@ -76,11 +76,11 @@ public class AggregatesApiClient {
   public static class Builder {
 
     private final OkHttpClient httpClient;
-    private final ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
     private final HttpUrl apiRoot;
     private final Map<String, Class> eventTypes = new HashMap<>();
 
-    public Builder(SerializedClientConfig config) {
+    Builder(SerializedClientConfig config) {
       this.httpClient = config.httpClient();
       this.objectMapper = config.objectMapper();
       this.apiRoot = config.apiRoot();

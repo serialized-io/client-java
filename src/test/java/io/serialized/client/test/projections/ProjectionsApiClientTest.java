@@ -1,60 +1,70 @@
-package io.serialized.client.projections;
+package io.serialized.client.test.projections;
 
+import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.projection.ProjectionApiClient;
 import io.serialized.client.projection.ProjectionResponse;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.mockserver.client.server.MockServerClient;
-import org.mockserver.junit.MockServerRule;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 import static io.serialized.client.projection.ProjectionQuery.aggregatedProjection;
 import static io.serialized.client.projection.ProjectionQuery.singleProjection;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 public class ProjectionsApiClientTest {
 
   public static class OrderBalanceProjection {
-
     public long orderAmount;
-
   }
 
   public static class OrderTotalsProjection {
-
     public long orderAmount;
     public long orderCount;
-
   }
 
-  @Rule
-  public MockServerRule mockServerRule = new MockServerRule(this);
+  @ClassRule
+  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new SerializedAggregatesApiStub());
+
+  @Path("/api-stub/projections/")
+  @Produces(APPLICATION_JSON)
+  @Consumes(APPLICATION_JSON)
+  public static class SerializedAggregatesApiStub {
+
+    @GET
+    @Path("single/{projectionName}/{id}")
+    public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id) throws IOException {
+      String responseBody = getResource("single_projection.json");
+      return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
+    }
+
+    @GET
+    @Path("aggregated/{projectionName}")
+    public Response getAggregatedProjection(@PathParam("projectionName") String projectionName) throws IOException {
+      String responseBody = getResource("aggregated_projection.json");
+      return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
+    }
+
+    private String getResource(String s) throws IOException {
+      return IOUtils.toString(getClass().getResourceAsStream(s), "UTF-8");
+    }
+  }
 
   private ProjectionApiClient projectionsClient = ProjectionApiClient.projectionsClient(SerializedClientConfig.builder()
-      .rootApiUrl("http://localhost:" + mockServerRule.getPort())
+      .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
       .accessKey("aaaaa")
       .secretAccessKey("bbbbb")
       .build()).build();
 
-  MockServerClient mockServerClient = new MockServerClient("localhost", mockServerRule.getPort());
-
-  @Before
-  public void setUp() {
-    mockServerClient.reset();
-  }
-
-
   @Test
   public void testSingleProjection() throws IOException {
-    mockServerClient.when(HttpRequest.request("/projections/single/orders/723ecfce-14e9-4889-98d5-a3d0ad54912f")).respond(HttpResponse.response().withBody(getResource("single_projection.json")));
-
     ProjectionResponse<OrderBalanceProjection> projection = projectionsClient.query(
         singleProjection("orders")
             .id("723ecfce-14e9-4889-98d5-a3d0ad54912f")
@@ -69,8 +79,6 @@ public class ProjectionsApiClientTest {
 
   @Test
   public void testAggregatedProjection() throws IOException {
-    mockServerClient.when(HttpRequest.request("/projections/aggregated/order-totals")).respond(HttpResponse.response().withBody(getResource("aggregated_projection.json")));
-
     ProjectionResponse<OrderTotalsProjection> projection = projectionsClient.query(
         aggregatedProjection("order-totals")
             .as(OrderTotalsProjection.class)
@@ -83,7 +91,4 @@ public class ProjectionsApiClientTest {
     assertThat(projection.data().orderCount, is(2L));
   }
 
-  private String getResource(String s) throws IOException {
-    return IOUtils.toString(getClass().getResourceAsStream(s));
-  }
 }

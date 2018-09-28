@@ -1,6 +1,6 @@
 {
   "aggregateId": "723ecfce-14e9-4889-98d5-a3d0ad54912f",
-  "aggregateType": "order",
+  "aggregateType": "order-specific",
   "aggregateVersion": 1,
   "events": [
     {

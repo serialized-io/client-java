@@ -60,7 +60,7 @@ public class FeedApiClient {
     private final ObjectMapper objectMapper;
     private final HttpUrl apiRoot;
 
-    public Builder(SerializedClientConfig config) {
+    Builder(SerializedClientConfig config) {
       this.httpClient = config.httpClient();
       this.objectMapper = config.objectMapper();
       this.apiRoot = config.apiRoot();
