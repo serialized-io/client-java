@@ -18,7 +18,7 @@ public class ProjectionApiClient {
   private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
 
-  public ProjectionApiClient(Builder builder) {
+  private ProjectionApiClient(Builder builder) {
     this.httpClient = builder.httpClient;
     this.objectMapper = builder.objectMapper;
     this.apiRoot = builder.apiRoot;

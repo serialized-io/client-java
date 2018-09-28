@@ -17,7 +17,7 @@ public class AggregatesApiClient {
   private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
 
-  public AggregatesApiClient(Builder builder) {
+  private AggregatesApiClient(Builder builder) {
     this.httpClient = builder.httpClient;
     this.objectMapper = builder.objectMapper;
     this.apiRoot = builder.apiRoot;
