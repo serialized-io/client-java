@@ -6,13 +6,11 @@ import static java.util.Collections.unmodifiableList;
 
 public class EventBatch {
 
-  public final String aggregateId;
-  public final String aggregateType;
-  public final List<Event> events;
+  private final String aggregateId;
+  private final List<Event> events;
 
   private EventBatch(BatchBuilder builder) {
     this.aggregateId = builder.aggregateId.toString();
-    this.aggregateType = builder.aggregateType;
     this.events = unmodifiableList(builder.events);
   }
 
@@ -20,14 +18,18 @@ public class EventBatch {
     return new BatchBuilder();
   }
 
-  public static EventBuilder newEvent() {
-    return new EventBuilder();
+  public static EventBuilder newEvent(String eventType) {
+    return new EventBuilder(eventType);
   }
 
   public static class EventBuilder {
     private UUID eventId;
     private String eventType;
     private Object data = new LinkedHashMap<>();
+
+    public EventBuilder(String eventType) {
+      this.eventType = eventType;
+    }
 
     public Event build() {
       return new Event(eventId, eventType, data);
@@ -40,16 +42,6 @@ public class EventBatch {
 
     public EventBuilder eventId(UUID eventId) {
       this.eventId = eventId;
-      return this;
-    }
-
-    public EventBuilder eventType(String eventType) {
-      this.eventType = eventType;
-      return this;
-    }
-
-    public EventBuilder eventType(Class eventType) {
-      this.eventType = eventType.getSimpleName();
       return this;
     }
 
@@ -67,9 +59,9 @@ public class EventBatch {
   }
 
   public static class BatchBuilder {
-    private UUID aggregateId;
-    private String aggregateType;
+
     private final List<Event> events = new ArrayList<>();
+    private UUID aggregateId;
 
     public BatchBuilder randomAggregateId() {
       this.aggregateId = UUID.randomUUID();
@@ -78,16 +70,6 @@ public class EventBatch {
 
     public BatchBuilder aggregateId(UUID aggregateId) {
       this.aggregateId = aggregateId;
-      return this;
-    }
-
-    public BatchBuilder aggregateType(String aggregateType) {
-      this.aggregateType = aggregateType;
-      return this;
-    }
-
-    public BatchBuilder aggregateType(Class aggregateType) {
-      this.aggregateType = aggregateType.getSimpleName().toLowerCase();
       return this;
     }
 

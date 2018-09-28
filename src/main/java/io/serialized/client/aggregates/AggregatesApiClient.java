@@ -23,12 +23,20 @@ public class AggregatesApiClient {
     this.apiRoot = builder.apiRoot;
   }
 
-  public void storeEvents(EventBatch eventBatch) throws IOException {
-    HttpUrl.Builder urlBuilder = apiRoot.newBuilder().addPathSegment("aggregates").addPathSegment(eventBatch.aggregateType).addPathSegment("events");
+  public void storeEvents(String aggregateType, EventBatch eventBatch) throws IOException {
 
+    HttpUrl url = apiRoot.newBuilder()
+        .addPathSegment("aggregates")
+        .addPathSegment(aggregateType)
+        .addPathSegment("events")
+        .build();
+
+    String content = toJson(eventBatch);
+
+    System.out.println("content = " + content);
     Request request = new Request.Builder()
-        .url(urlBuilder.build())
-        .post(RequestBody.create(JSON_MEDIA_TYPE, toJson(eventBatch)))
+        .url(url)
+        .post(RequestBody.create(JSON_MEDIA_TYPE, content))
         .build();
 
     try (Response response = httpClient.newCall(request).execute()) {

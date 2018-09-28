@@ -36,7 +36,7 @@ class EventDeserializer extends StdDeserializer<EventBatch.Event> {
 
     String eventId = node.get("eventId").asText();
     String eventType = node.get("eventType").asText();
-    EventBatch.EventBuilder eventBuilder = newEvent().eventType(eventType).eventId(UUID.fromString(eventId));
+    EventBatch.EventBuilder eventBuilder = newEvent(eventType).eventId(UUID.fromString(eventId));
 
     Optional<Class> matchingClass = eventTypes
         .entrySet()
