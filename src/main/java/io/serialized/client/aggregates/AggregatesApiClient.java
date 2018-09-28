@@ -33,7 +33,6 @@ public class AggregatesApiClient {
 
     String content = toJson(eventBatch);
 
-    System.out.println("content = " + content);
     Request request = new Request.Builder()
         .url(url)
         .post(RequestBody.create(JSON_MEDIA_TYPE, content))
