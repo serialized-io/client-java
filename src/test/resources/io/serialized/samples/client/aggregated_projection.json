@@ -1,0 +1,8 @@
+{
+  "projectionId": "order-totals",
+  "updatedAt": 1505850788368,
+  "data": {
+    "orderAmount": "1000",
+    "orderCount": "2"
+  }
+}

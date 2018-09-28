@@ -4,6 +4,7 @@ import okhttp3.HttpUrl;
 
 import java.util.Optional;
 
+import static io.serialized.samples.client.projection.ProjectionType.AGGREGATED;
 import static io.serialized.samples.client.projection.ProjectionType.SINGLE;
 
 public class ProjectionQuery {
@@ -20,21 +21,35 @@ public class ProjectionQuery {
     this.responseClass = builder.responseClass;
   }
 
-  public HttpUrl constructUrl(HttpUrl rootUrl) {
-    return rootUrl.newBuilder()
-        .addPathSegment("projections")
-        .addPathSegment(projectionType.name().toLowerCase())
-        .addPathSegment(projectionName)
-        .addPathSegment(projectionId)
-        .build();
+  HttpUrl constructUrl(HttpUrl rootUrl) {
+    if (SINGLE.equals(projectionType)) {
+      return rootUrl.newBuilder()
+          .addPathSegment("projections")
+          .addPathSegment(projectionType.name().toLowerCase())
+          .addPathSegment(projectionName)
+          .addPathSegment(projectionId)
+          .build();
+    } else if (AGGREGATED.equals(projectionType)) {
+      return rootUrl.newBuilder()
+          .addPathSegment("projections")
+          .addPathSegment(projectionType.name().toLowerCase())
+          .addPathSegment(projectionName)
+          .build();
+    } else {
+      throw new IllegalStateException("Invalid projectionType: " + projectionType);
+    }
   }
 
-  public Optional<Class> responseClass() {
+  Optional<Class> responseClass() {
     return Optional.ofNullable(responseClass);
   }
 
   public static Builder singleProjection(String projectionName) {
     return new Builder(SINGLE, projectionName);
+  }
+
+  public static Builder aggregatedProjection(String projectionName) {
+    return new Builder(AGGREGATED, projectionName);
   }
 
   public static class Builder {

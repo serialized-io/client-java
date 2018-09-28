@@ -30,11 +30,11 @@ public class ProjectionApiClient {
         .get()
         .build();
 
-    JavaType javaType1 = query.responseClass()
+    JavaType javaType = query.responseClass()
         .map(dataClass -> objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, dataClass))
         .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
 
-    return readResponse(request, javaType1);
+    return readResponse(request, javaType);
   }
 
   private <T> T readResponse(Request request, JavaType type) throws IOException {
