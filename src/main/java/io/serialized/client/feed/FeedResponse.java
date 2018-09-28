@@ -1,6 +1,6 @@
-package io.serialized.samples.client.feed;
+package io.serialized.client.feed;
 
-import io.serialized.samples.client.aggregates.EventBatch;
+import io.serialized.client.aggregates.EventBatch;
 
 import java.util.List;
 import java.util.stream.Collectors;

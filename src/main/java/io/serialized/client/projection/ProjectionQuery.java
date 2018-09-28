@@ -1,11 +1,11 @@
-package io.serialized.samples.client.projection;
+package io.serialized.client.projection;
 
 import okhttp3.HttpUrl;
 
 import java.util.Optional;
 
-import static io.serialized.samples.client.projection.ProjectionType.AGGREGATED;
-import static io.serialized.samples.client.projection.ProjectionType.SINGLE;
+import static io.serialized.client.projection.ProjectionType.AGGREGATED;
+import static io.serialized.client.projection.ProjectionType.SINGLE;
 
 public class ProjectionQuery {
 

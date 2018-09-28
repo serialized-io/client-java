@@ -1,4 +1,4 @@
-package io.serialized.samples.client.feed;
+package io.serialized.client.feed;
 
 import java.util.List;
 

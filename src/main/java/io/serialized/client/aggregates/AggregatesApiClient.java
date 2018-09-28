@@ -1,12 +1,15 @@
-package io.serialized.samples.client.aggregates;
+package io.serialized.client.aggregates;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.serialized.client.SerializedClientConfig;
 import okhttp3.*;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import static io.serialized.samples.client.SerializedApiClient.JSON_MEDIA_TYPE;
+import static io.serialized.client.SerializedClientConfig.JSON_MEDIA_TYPE;
 
 public class AggregatesApiClient {
 
@@ -14,10 +17,10 @@ public class AggregatesApiClient {
   private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
 
-  public AggregatesApiClient(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot) {
-    this.httpClient = httpClient;
-    this.objectMapper = objectMapper;
-    this.apiRoot = apiRoot;
+  public AggregatesApiClient(Builder builder) {
+    this.httpClient = builder.httpClient;
+    this.objectMapper = builder.objectMapper;
+    this.apiRoot = builder.apiRoot;
   }
 
   public void storeEvents(EventBatch eventBatch) throws IOException {
@@ -56,6 +59,38 @@ public class AggregatesApiClient {
       return objectMapper.writeValueAsString(payload);
     } catch (JsonProcessingException e) {
       throw new RuntimeException("Failed to parse json request", e);
+    }
+  }
+
+  public static Builder aggregatesApiClient(SerializedClientConfig config) {
+    return new Builder(config);
+  }
+
+  public static class Builder {
+
+    private final OkHttpClient httpClient;
+    private final ObjectMapper objectMapper;
+    private final HttpUrl apiRoot;
+    private final Map<String, Class> eventTypes = new HashMap<>();
+
+    public Builder(SerializedClientConfig config) {
+      this.httpClient = config.httpClient();
+      this.objectMapper = config.objectMapper();
+      this.apiRoot = config.apiRoot();
+    }
+
+    public Builder registerEventType(Class eventClass) {
+      return registerEventType(eventClass.getSimpleName(), eventClass);
+    }
+
+    public Builder registerEventType(String eventType, Class eventClass) {
+      this.eventTypes.put(eventType, eventClass);
+      return this;
+    }
+
+    public AggregatesApiClient build() {
+      objectMapper.registerModule(EventDeserializer.module(eventTypes));
+      return new AggregatesApiClient(this);
     }
   }
 }

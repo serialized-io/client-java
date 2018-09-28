@@ -1,4 +1,4 @@
-package io.serialized.samples.client.projection;
+package io.serialized.client.projection;
 
 public enum ProjectionType {
   SINGLE, AGGREGATED;

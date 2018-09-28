@@ -1,6 +1,7 @@
-package io.serialized.samples.client.feed;
+package io.serialized.client.feed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.serialized.client.SerializedClientConfig;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -15,10 +16,10 @@ public class FeedApiClient {
   private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
 
-  public FeedApiClient(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot) {
-    this.httpClient = httpClient;
-    this.objectMapper = objectMapper;
-    this.apiRoot = apiRoot;
+  private FeedApiClient(Builder builder) {
+    this.httpClient = builder.httpClient;
+    this.objectMapper = builder.objectMapper;
+    this.apiRoot = builder.apiRoot;
   }
 
   public FeedsResponse feeds() throws IOException {
@@ -46,4 +47,26 @@ public class FeedApiClient {
       return objectMapper.readValue(src, responseType);
     }
   }
+
+  public static Builder feedApiClient(SerializedClientConfig config) {
+    return new Builder(config);
+  }
+
+  public static class Builder {
+
+    private final OkHttpClient httpClient;
+    private final ObjectMapper objectMapper;
+    private final HttpUrl apiRoot;
+
+    public Builder(SerializedClientConfig config) {
+      this.httpClient = config.httpClient();
+      this.objectMapper = config.objectMapper();
+      this.apiRoot = config.apiRoot();
+    }
+
+    public FeedApiClient build() {
+      return new FeedApiClient(this);
+    }
+  }
+
 }

@@ -1,4 +1,4 @@
-package io.serialized.samples.client.aggregates;
+package io.serialized.client.aggregates;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static io.serialized.samples.client.aggregates.EventBatch.newEvent;
+import static io.serialized.client.aggregates.EventBatch.newEvent;
 
 public class EventDeserializer extends StdDeserializer<EventBatch.Event> {
 

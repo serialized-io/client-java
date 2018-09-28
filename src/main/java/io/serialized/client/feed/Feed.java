@@ -1,4 +1,4 @@
-package io.serialized.samples.client.feed;
+package io.serialized.client.feed;
 
 public class Feed {
 
