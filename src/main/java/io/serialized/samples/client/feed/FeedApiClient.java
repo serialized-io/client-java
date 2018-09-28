@@ -8,20 +8,17 @@ import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Set;
 
 public class FeedApiClient {
 
   private final OkHttpClient httpClient;
   private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
-  private final Set<Class> eventTypes;
 
-  public FeedApiClient(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot, Set<Class> eventTypes) {
+  public FeedApiClient(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.apiRoot = apiRoot;
-    this.eventTypes = eventTypes;
   }
 
   public FeedsResponse feeds() throws IOException {

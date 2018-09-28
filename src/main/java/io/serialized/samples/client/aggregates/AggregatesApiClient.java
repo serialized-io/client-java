@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 
 import java.io.IOException;
-import java.util.Set;
 
 import static io.serialized.samples.client.SerializedApiClient.JSON_MEDIA_TYPE;
 
@@ -14,13 +13,11 @@ public class AggregatesApiClient {
   private final OkHttpClient httpClient;
   private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
-  private final Set<Class> eventTypes;
 
-  public AggregatesApiClient(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot, Set<Class> eventTypes) {
+  public AggregatesApiClient(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.apiRoot = apiRoot;
-    this.eventTypes = eventTypes;
   }
 
   public void storeEvents(EventBatch eventBatch) throws IOException {

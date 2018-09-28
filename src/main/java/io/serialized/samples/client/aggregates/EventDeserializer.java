@@ -1,8 +1,6 @@
 package io.serialized.samples.client.aggregates;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.Module;
@@ -10,27 +8,29 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import static io.serialized.samples.client.aggregates.EventBatch.newEvent;
 
 public class EventDeserializer extends StdDeserializer<EventBatch.Event> {
 
-  private Set<Class> eventTypes;
+  private Map<String, Class> eventTypes;
 
-  public EventDeserializer(Set<Class> eventTypes) {
+  public EventDeserializer(Map<String, Class> eventTypes) {
     super((Class) null);
     this.eventTypes = eventTypes;
   }
 
-  public static Module module(Set<Class> eventTypes) {
+  public static Module module(Map<String, Class> eventTypes) {
     SimpleModule module = new SimpleModule();
     module.addDeserializer(EventBatch.Event.class, new EventDeserializer(eventTypes));
     return module;
   }
 
   @Override
-  public EventBatch.Event deserialize(JsonParser jp, DeserializationContext context) throws IOException, JsonProcessingException {
+  public EventBatch.Event deserialize(JsonParser jp, DeserializationContext context) throws IOException {
 
     JsonNode node = jp.getCodec().readTree(jp);
 
@@ -38,8 +38,11 @@ public class EventDeserializer extends StdDeserializer<EventBatch.Event> {
     String eventType = node.get("eventType").asText();
     EventBatch.EventBuilder eventBuilder = newEvent().eventType(eventType).eventId(UUID.fromString(eventId));
 
-
-    Optional<Class> matchingClass = eventTypes.stream().filter(et -> et.getSimpleName().equals(eventType))
+    Optional<Class> matchingClass = eventTypes
+        .entrySet()
+        .stream()
+        .filter(et -> et.getKey().equals(eventType))
+        .map(Map.Entry::getValue)
         .findFirst();
 
     JsonNode data = node.get("data");

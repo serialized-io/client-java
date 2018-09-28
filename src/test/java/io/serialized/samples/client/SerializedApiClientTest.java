@@ -25,28 +25,31 @@ public class SerializedApiClientTest {
   @Rule
   public MockServerRule mockServerRule = new MockServerRule(this);
 
-  private SerializedApiClient client = SerializedApiClient.builder()
+  private SerializedApiClient.Builder clientBuilder = SerializedApiClient.builder()
       .rootApiUrl("http://localhost:" + mockServerRule.getPort())
       .accessKey("aaaaa")
-      .secretAccessKey("bbbbb")
-      .registerEventType(OrderPlacedEvent.class)
-      .build();
+      .secretAccessKey("bbbbb");
+
+  MockServerClient mockServerClient = new MockServerClient("localhost", mockServerRule.getPort());
 
   @Before
   public void setUp() throws Exception {
-    MockServerClient localhost = new MockServerClient("localhost", mockServerRule.getPort());
-    localhost.when(HttpRequest.request("/feeds")).respond(HttpResponse.response().withBody(getResource("feeds.json")));
-    localhost.when(HttpRequest.request("/feeds/games")).respond(HttpResponse.response().withBody(getResource("feedentries.json")));
-    localhost.when(HttpRequest.request("/aggregates/order/723ecfce-14e9-4889-98d5-a3d0ad54912f")).respond(HttpResponse.response().withBody(getResource("load_aggregate.json")));
+    mockServerClient.reset();
   }
 
   @Test
   public void listFeeds() throws IOException {
+    mockServerClient.when(HttpRequest.request("/feeds")).respond(HttpResponse.response().withBody(getResource("feeds.json")));
+
+    SerializedApiClient client = clientBuilder.build();
     assertThat(client.feedApi().feeds().feeds().size(), is(1));
   }
 
   @Test
   public void feedEntries() throws IOException {
+    mockServerClient.when(HttpRequest.request("/feeds/games")).respond(HttpResponse.response().withBody(getResource("feedentries.json")));
+
+    SerializedApiClient client = clientBuilder.build();
     FeedResponse feedResponse = client.feedApi().feed("games");
     assertThat(feedResponse.entries().size(), is(48));
     assertThat(feedResponse.events().size(), is(96));
@@ -54,11 +57,28 @@ public class SerializedApiClientTest {
 
   @Test
   public void loadAggregate() throws IOException {
+    mockServerClient.when(HttpRequest.request("/aggregates/order/723ecfce-14e9-4889-98d5-a3d0ad54912f")).respond(HttpResponse.response().withBody(getResource("load_aggregate.json")));
+
+    SerializedApiClient client = clientBuilder.registerEventType(OrderPlacedEvent.class).build();
     LoadAggregateResponse aggregateResponse = client.aggregatesApi().load("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
     assertThat(aggregateResponse.aggregateId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
     assertThat(aggregateResponse.aggregateType(), is("order"));
     assertThat(aggregateResponse.aggregateVersion(), is(1L));
     assertThat(aggregateResponse.events().size(), is(1));
+    assertThat(aggregateResponse.events().get(0).data().getClass().getSimpleName(), is(OrderPlacedEvent.class.getSimpleName()));
+  }
+
+  @Test
+  public void loadAggregateWithSpecificedEventType() throws IOException {
+    mockServerClient.when(HttpRequest.request("/aggregates/order/723ecfce-14e9-4889-98d5-a3d0ad54912f")).respond(HttpResponse.response().withBody(getResource("load_aggregate_not_classname.json")));
+
+    SerializedApiClient client = clientBuilder.registerEventType("order-placed", OrderPlacedEvent.class).build();
+    LoadAggregateResponse aggregateResponse = client.aggregatesApi().load("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    assertThat(aggregateResponse.aggregateId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
+    assertThat(aggregateResponse.aggregateType(), is("order"));
+    assertThat(aggregateResponse.aggregateVersion(), is(1L));
+    assertThat(aggregateResponse.events().size(), is(1));
+    assertThat(aggregateResponse.events().get(0).data().getClass().getSimpleName(), is(OrderPlacedEvent.class.getSimpleName()));
   }
 
   private String getResource(String s) throws IOException {

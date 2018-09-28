@@ -117,6 +117,18 @@ public class EventBatch {
       this.eventType = eventType;
       this.data = data;
     }
+
+    public String eventId() {
+      return eventId;
+    }
+
+    public String eventType() {
+      return eventType;
+    }
+
+    public Object data() {
+      return data;
+    }
   }
 
 }

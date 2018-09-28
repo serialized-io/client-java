@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.samples.client.aggregates.AggregatesApiClient;
 import io.serialized.samples.client.aggregates.EventDeserializer;
-import io.serialized.samples.client.aggregates.LoadAggregateDeserializer;
 import io.serialized.samples.client.feed.FeedApiClient;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -13,8 +12,8 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 
 import java.net.URI;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -26,9 +25,9 @@ public class SerializedApiClient {
   private final FeedApiClient feedApiClient;
   private final AggregatesApiClient aggregatesApiClient;
 
-  private SerializedApiClient(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot, Set<Class> eventTypes) {
-    this.feedApiClient = new FeedApiClient(httpClient, objectMapper, apiRoot, eventTypes);
-    this.aggregatesApiClient = new AggregatesApiClient(httpClient, objectMapper, apiRoot, eventTypes);
+  private SerializedApiClient(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot) {
+    this.feedApiClient = new FeedApiClient(httpClient, objectMapper, apiRoot);
+    this.aggregatesApiClient = new AggregatesApiClient(httpClient, objectMapper, apiRoot);
   }
 
   public static Builder builder() {
@@ -53,7 +52,7 @@ public class SerializedApiClient {
         .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
         .setSerializationInclusion(NON_NULL);
 
-    private Set<Class> eventTypes = new LinkedHashSet<>();
+    private Map<String, Class> eventTypes = new HashMap<>();
 
     public Builder rootApiUrl(String rootApiUrl) {
       rootUrl = URI.create(rootApiUrl);
@@ -75,8 +74,12 @@ public class SerializedApiClient {
       return this;
     }
 
-    public Builder registerEventType(Class eventType) {
-      this.eventTypes.add(eventType);
+    public Builder registerEventType(Class eventClass) {
+      return registerEventType(eventClass.getSimpleName(), eventClass);
+    }
+
+    public Builder registerEventType(String eventType, Class eventClass) {
+      this.eventTypes.put(eventType, eventClass);
       return this;
     }
 
@@ -93,7 +96,7 @@ public class SerializedApiClient {
                   .build())
               .build()))
           .build();
-      return new SerializedApiClient(client, objectMapper, apiRoot, eventTypes);
+      return new SerializedApiClient(client, objectMapper, apiRoot);
     }
   }
 
