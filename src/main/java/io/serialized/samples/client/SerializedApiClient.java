@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.samples.client.aggregates.AggregatesApiClient;
 import io.serialized.samples.client.aggregates.EventDeserializer;
 import io.serialized.samples.client.feed.FeedApiClient;
+import io.serialized.samples.client.projection.ProjectionApiClient;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -24,10 +25,12 @@ public class SerializedApiClient {
 
   private final FeedApiClient feedApiClient;
   private final AggregatesApiClient aggregatesApiClient;
+  private final ProjectionApiClient projectionApiClient;
 
   private SerializedApiClient(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot) {
     this.feedApiClient = new FeedApiClient(httpClient, objectMapper, apiRoot);
     this.aggregatesApiClient = new AggregatesApiClient(httpClient, objectMapper, apiRoot);
+    this.projectionApiClient = new ProjectionApiClient(httpClient, objectMapper, apiRoot);
   }
 
   public static Builder builder() {
@@ -40,6 +43,10 @@ public class SerializedApiClient {
 
   public AggregatesApiClient aggregatesApi() {
     return aggregatesApiClient;
+  }
+
+  public ProjectionApiClient projectionApi() {
+    return projectionApiClient;
   }
 
   public static class Builder {

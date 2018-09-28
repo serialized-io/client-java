@@ -2,6 +2,8 @@ package io.serialized.samples.client;
 
 import io.serialized.samples.client.aggregates.LoadAggregateResponse;
 import io.serialized.samples.client.feed.FeedResponse;
+import io.serialized.samples.client.projection.ProjectionApiClient;
+import io.serialized.samples.client.projection.ProjectionResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -13,12 +15,19 @@ import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
 
+import static io.serialized.samples.client.projection.ProjectionQuery.singleProjection;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 public class SerializedApiClientTest {
 
   public static class OrderPlacedEvent {
+
+  }
+
+  public static class OrderBalanceProjection {
+
+    public long orderAmount;
 
   }
 
@@ -59,6 +68,24 @@ public class SerializedApiClientTest {
   }
 
   @Test
+  public void testSingleProjection() throws IOException {
+    mockServerClient.when(HttpRequest.request("/projections/single/orders/723ecfce-14e9-4889-98d5-a3d0ad54912f")).respond(HttpResponse.response().withBody(getResource("single_projection.json")));
+
+    ProjectionApiClient client = clientBuilder.build().projectionApi();
+
+    ProjectionResponse<OrderBalanceProjection> projection = client.query(
+        singleProjection("orders")
+            .id("723ecfce-14e9-4889-98d5-a3d0ad54912f")
+            .as(OrderBalanceProjection.class)
+            .build()
+    );
+
+    assertThat(projection.projectionId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
+    assertThat(projection.updatedAt(), is(1505754083976L));
+    assertThat(projection.data().orderAmount, is(12345L));
+  }
+
+  @Test
   public void loadAggregate() throws IOException {
     mockServerClient.when(HttpRequest.request("/aggregates/order/723ecfce-14e9-4889-98d5-a3d0ad54912f")).respond(HttpResponse.response().withBody(getResource("load_aggregate.json")));
 
@@ -66,7 +93,7 @@ public class SerializedApiClientTest {
         .registerEventType(OrderPlacedEvent.class)
         .build();
 
-    LoadAggregateResponse aggregateResponse = client.aggregatesApi().load("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    LoadAggregateResponse aggregateResponse = client.aggregatesApi().loadAggregate("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
     assertThat(aggregateResponse.aggregateId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
     assertThat(aggregateResponse.aggregateType(), is("order"));
@@ -83,7 +110,7 @@ public class SerializedApiClientTest {
         .registerEventType("order-placed", OrderPlacedEvent.class)
         .build();
 
-    LoadAggregateResponse aggregateResponse = client.aggregatesApi().load("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    LoadAggregateResponse aggregateResponse = client.aggregatesApi().loadAggregate("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
     assertThat(aggregateResponse.aggregateId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
     assertThat(aggregateResponse.aggregateType(), is("order"));

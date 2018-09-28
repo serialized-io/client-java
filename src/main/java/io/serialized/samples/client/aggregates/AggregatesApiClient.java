@@ -33,7 +33,7 @@ public class AggregatesApiClient {
     }
   }
 
-  public LoadAggregateResponse load(String aggregateType, String aggregateId) throws IOException {
+  public LoadAggregateResponse loadAggregate(String aggregateType, String aggregateId) throws IOException {
     HttpUrl.Builder urlBuilder = apiRoot.newBuilder().addPathSegment("aggregates").addPathSegment(aggregateType).addPathSegment(aggregateId);
 
     Request request = new Request.Builder()
