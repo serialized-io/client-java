@@ -14,6 +14,12 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 @Consumes(APPLICATION_JSON)
 public class ProjectionApi {
 
+  private final Callback callback;
+
+  public ProjectionApi(Callback callback) {
+    this.callback = callback;
+  }
+
   @GET
   @Path("single/{projectionName}/{id}")
   public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id) throws IOException {
@@ -28,7 +34,21 @@ public class ProjectionApi {
     return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
   }
 
+  @PUT
+  @Path("definitions")
+  public Response createProjection(CreateProjectionDefinitionRequest definition) {
+    callback.projectionCreated(definition);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
   private String getResource(String s) throws IOException {
     return IOUtils.toString(getClass().getResourceAsStream(s), "UTF-8");
   }
+
+  public interface Callback {
+
+    void projectionCreated(CreateProjectionDefinitionRequest request);
+
+  }
+
 }

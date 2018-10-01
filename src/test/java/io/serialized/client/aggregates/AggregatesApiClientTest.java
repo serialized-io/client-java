@@ -34,7 +34,7 @@ public class AggregatesApiClientTest {
   public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new AggregatesApi());
 
   private AggregatesApiClient.Builder aggregatesClientBuilder = AggregatesApiClient.aggregatesClient(
-      SerializedClientConfig.builder()
+      SerializedClientConfig.serializedConfig()
           .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
           .accessKey("aaaaa")
           .secretAccessKey("bbbbb").build());

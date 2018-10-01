@@ -69,13 +69,8 @@ public class ProjectionQuery {
       return this;
     }
 
-    public Builder as(Class responseClass) {
+    public ProjectionQuery build(Class responseClass) {
       this.responseClass = responseClass;
-      return this;
-    }
-
-
-    public ProjectionQuery build() {
       return new ProjectionQuery(this);
     }
 

@@ -29,7 +29,7 @@ public class SerializedClientConfig {
     this.apiRoot = apiRoot;
   }
 
-  public static Builder builder() {
+  public static Builder serializedConfig() {
     return new Builder();
   }
 

@@ -16,7 +16,7 @@ public class FeedApiClientTest {
   public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new FeedApi());
 
   private FeedApiClient feedClient = FeedApiClient.feedClient(
-      SerializedClientConfig.builder()
+      SerializedClientConfig.serializedConfig()
           .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
           .accessKey("aaaaa")
           .secretAccessKey("bbbbb")

@@ -1,16 +1,16 @@
 package io.serialized.client.projection;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.client.SerializedClientConfig;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+
+import static io.serialized.client.SerializedClientConfig.JSON_MEDIA_TYPE;
 
 public class ProjectionApiClient {
 
@@ -22,6 +22,17 @@ public class ProjectionApiClient {
     this.httpClient = builder.httpClient;
     this.objectMapper = builder.objectMapper;
     this.apiRoot = builder.apiRoot;
+  }
+
+  public void createProjection(ProjectionDefinition projectionDefinition) throws IOException {
+    Request request = new Request.Builder()
+        .url(apiRoot.newBuilder().addPathSegment("projections").addPathSegment("definitions").build())
+        .put(RequestBody.create(JSON_MEDIA_TYPE, toJson(projectionDefinition)))
+        .build();
+
+    try (Response response = httpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+    }
   }
 
   public <T> ProjectionResponse<T> query(ProjectionQuery query) throws IOException {
@@ -36,6 +47,14 @@ public class ProjectionApiClient {
         .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
 
     return readResponse(request, javaType);
+  }
+
+  private String toJson(Object payload) {
+    try {
+      return objectMapper.writeValueAsString(payload);
+    } catch (JsonProcessingException e) {
+      throw new IllegalArgumentException("Failed to parse json from object", e);
+    }
   }
 
   private <T> T readResponse(Request request, JavaType type) throws IOException {
