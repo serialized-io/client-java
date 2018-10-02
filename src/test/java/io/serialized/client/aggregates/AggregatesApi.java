@@ -16,9 +16,16 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 @Consumes(APPLICATION_JSON)
 public class AggregatesApi {
 
+  private final Callback callback;
+
+  public AggregatesApi(Callback callback) {
+    this.callback = callback;
+  }
+
   @POST
   @Path("{aggregateType}/events")
-  public Response saveEvents(@PathParam("aggregateType") String aggregateType, @NotNull @Valid EventBatch eventBatch) {
+  public Response saveEvents(@PathParam("aggregateType") String aggregateType, @NotNull @Valid EventBatchDto eventBatch) {
+    callback.eventsStored(eventBatch);
     return Response.ok().build();
   }
 
@@ -34,6 +41,12 @@ public class AggregatesApi {
   public Response loadAggregateWithSpecifiedEventNamed(@PathParam("aggregateId") String aggregateId) throws IOException {
     String responseBody = getResource("load_aggregate_not_classname.json");
     return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
+  }
+
+  public interface Callback {
+
+    void eventsStored(EventBatchDto eventBatch);
+
   }
 
   private String getResource(String s) throws IOException {

@@ -17,19 +17,21 @@ public class AggregatesApiClient {
   private final OkHttpClient httpClient;
   private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
+  private final Map<String, StateLoader> loaders;
 
   private AggregatesApiClient(Builder builder) {
     this.httpClient = builder.httpClient;
     this.objectMapper = builder.objectMapper;
     this.apiRoot = builder.apiRoot;
+    this.loaders = builder.loaders;
   }
 
   public void storeEvent(String aggregateType, String aggregateId, Event event) throws IOException {
-    EventBatch eventBatch = newBatch().aggregateId(aggregateId).addEvent(event).build();
+    EventBatch eventBatch = newBatch(aggregateId).addEvent(event).build();
     storeEvents(aggregateType, eventBatch);
   }
 
-  public void storeEvents(String aggregateType, EventBatch eventBatch) throws IOException {
+  public void storeEvents(String aggregateType, EventBatch eventBatch) {
 
     HttpUrl url = apiRoot.newBuilder()
         .addPathSegment("aggregates")
@@ -45,11 +47,15 @@ public class AggregatesApiClient {
         .build();
 
     try (Response response = httpClient.newCall(request).execute()) {
-      if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+      if (!response.isSuccessful()) {
+        throw new RuntimeException("Failed to store events " + response);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to store events " + e.getMessage());
     }
   }
 
-  public LoadAggregateResponse loadAggregate(String aggregateType, String aggregateId) throws IOException {
+  public LoadAggregateResponse loadAggregate(String aggregateType, String aggregateId) {
     HttpUrl.Builder urlBuilder = apiRoot.newBuilder().addPathSegment("aggregates").addPathSegment(aggregateType).addPathSegment(aggregateId);
 
     Request request = new Request.Builder()
@@ -57,7 +63,12 @@ public class AggregatesApiClient {
         .get()
         .build();
 
-    return responseFor(request, LoadAggregateResponse.class);
+    try {
+      LoadAggregateResponse loadAggregateResponse = responseFor(request, LoadAggregateResponse.class);
+      return loadAggregateResponse;
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load aggregate");
+    }
   }
 
   private <T> T responseFor(Request request, Class<T> responseClass) throws IOException {
@@ -85,6 +96,7 @@ public class AggregatesApiClient {
     private ObjectMapper objectMapper;
     private final HttpUrl apiRoot;
     private final Map<String, Class> eventTypes = new HashMap<>();
+    private final Map<String, StateLoader> loaders = new HashMap<>();
 
     Builder(SerializedClientConfig config) {
       this.httpClient = config.httpClient();
@@ -94,6 +106,12 @@ public class AggregatesApiClient {
 
     public Builder registerEventType(Class eventClass) {
       return registerEventType(eventClass.getSimpleName(), eventClass);
+    }
+
+    public <T> Builder registerStateLoader(Class<T> eventClass, StateLoader<T> loader) {
+      this.eventTypes.put(eventClass.getSimpleName(), eventClass);
+      this.loaders.put(eventClass.getSimpleName(), loader);
+      return this;
     }
 
     public Builder registerEventType(String eventType, Class eventClass) {

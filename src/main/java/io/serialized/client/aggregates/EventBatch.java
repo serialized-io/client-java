@@ -1,9 +1,11 @@
 package io.serialized.client.aggregates;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 public class EventBatch {
@@ -19,17 +21,12 @@ public class EventBatch {
     this.events = unmodifiableList(builder.events);
   }
 
-  public static Builder newBatch() {
-    return new Builder();
+  public static Builder newBatch(String aggregateId) {
+    return new Builder().aggregateId(aggregateId);
   }
 
-  public static Event.Builder newEvent(String eventType) {
-    return new Event.Builder(eventType);
-  }
-
-  public static Event.Builder newEvent(Object event) {
-    String eventType = event.getClass().getSimpleName();
-    return newEvent(eventType).data(event);
+  public static Builder newBatch(UUID aggregateId) {
+    return new Builder().aggregateId(aggregateId);
   }
 
   public static class Builder {
@@ -49,6 +46,16 @@ public class EventBatch {
 
     public Builder addEvent(Event event) {
       this.events.add(event);
+      return this;
+    }
+
+    public Builder addEvents(Collection<Event> events) {
+      this.events.addAll(events);
+      return this;
+    }
+
+    public Builder addEvents(Event... events) {
+      this.events.addAll(asList(events));
       return this;
     }
 

@@ -5,7 +5,7 @@
   "events": [
     {
       "eventId": "127b80b5-4a05-4774-b870-1c9a2e2a27a3",
-      "eventType": "OrderPlacedEvent",
+      "eventType": "OrderPlaced",
       "data": {
         "customerId": "some-test-id-1",
         "orderAmount": 12345

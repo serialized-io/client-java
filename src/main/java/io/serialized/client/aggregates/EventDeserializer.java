@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static io.serialized.client.aggregates.EventBatch.newEvent;
+import static io.serialized.client.aggregates.Event.newEvent;
 
 class EventDeserializer extends StdDeserializer<Event> {
 
@@ -36,7 +36,6 @@ class EventDeserializer extends StdDeserializer<Event> {
 
     String eventId = node.get("eventId").asText();
     String eventType = node.get("eventType").asText();
-    Event.Builder eventBuilder = newEvent(eventType).eventId(UUID.fromString(eventId));
 
     Optional<Class> matchingClass = eventTypes
         .entrySet()
@@ -47,11 +46,14 @@ class EventDeserializer extends StdDeserializer<Event> {
 
     JsonNode data = node.get("data");
     if (matchingClass.isPresent()) {
+      Event.TypedBuilder eventBuilder = newEvent(matchingClass.get()).eventId(UUID.fromString(eventId));
       eventBuilder.data(jp.getCodec().treeToValue(data, matchingClass.get()));
+      return eventBuilder.build();
     } else {
+      Event.RawBuilder eventBuilder = newEvent(eventType).eventId(UUID.fromString(eventId));
       eventBuilder.data(jp.getCodec().treeToValue(data, Map.class));
+      return eventBuilder.build();
     }
 
-    return eventBuilder.build();
   }
 }
