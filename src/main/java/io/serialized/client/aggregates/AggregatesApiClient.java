@@ -108,12 +108,6 @@ public class AggregatesApiClient {
       return registerEventType(eventClass.getSimpleName(), eventClass);
     }
 
-    public <T> Builder registerStateLoader(Class<T> eventClass, StateLoader<T> loader) {
-      this.eventTypes.put(eventClass.getSimpleName(), eventClass);
-      this.loaders.put(eventClass.getSimpleName(), loader);
-      return this;
-    }
-
     public Builder registerEventType(String eventType, Class eventClass) {
       this.eventTypes.put(eventType, eventClass);
       return this;
