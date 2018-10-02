@@ -17,13 +17,11 @@ public class AggregatesApiClient {
   private final OkHttpClient httpClient;
   private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
-  private final Map<String, StateLoader> loaders;
 
   private AggregatesApiClient(Builder builder) {
     this.httpClient = builder.httpClient;
     this.objectMapper = builder.objectMapper;
     this.apiRoot = builder.apiRoot;
-    this.loaders = builder.loaders;
   }
 
   public void storeEvent(String aggregateType, String aggregateId, Event event) throws IOException {
@@ -96,7 +94,6 @@ public class AggregatesApiClient {
     private ObjectMapper objectMapper;
     private final HttpUrl apiRoot;
     private final Map<String, Class> eventTypes = new HashMap<>();
-    private final Map<String, StateLoader> loaders = new HashMap<>();
 
     Builder(SerializedClientConfig config) {
       this.httpClient = config.httpClient();
