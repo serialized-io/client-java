@@ -15,6 +15,7 @@ import java.util.UUID;
 import static io.serialized.client.aggregates.AggregatesApiClientTest.OrderPlaced.orderPlaced;
 import static io.serialized.client.aggregates.Event.newEvent;
 import static io.serialized.client.aggregates.EventBatch.newBatch;
+import static io.serialized.client.aggregates.StateBuilder.stateBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
@@ -35,6 +36,22 @@ public class AggregatesApiClientTest {
 
   }
 
+  public static class OrderState extends State {
+
+    private String status;
+
+    static OrderState orderPlaced(OrderState currentState, Event<OrderPlaced> event) {
+      currentState.status = "placed";
+      return currentState;
+    }
+
+  }
+
+  public static class Order implements Aggregate {
+
+  }
+
+
   private static AggregatesApi.Callback apiCallback = mock(AggregatesApi.Callback.class);
 
   @ClassRule
@@ -53,12 +70,27 @@ public class AggregatesApiClientTest {
   }
 
   @Test
+  public void testLoadAggregateState() {
+    AggregatesApiClient aggregatesApiClient = aggregatesClientBuilder
+        .registerEventType(OrderPlaced.class)
+        .build();
+
+    OrderState orderState = aggregatesApiClient.loadAggregate("order",
+        "723ecfce-14e9-4889-98d5-a3d0ad54912f",
+        stateBuilder(OrderState.class)
+            .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
+            .build());
+
+    assertThat(orderState.status, is("placed"));
+  }
+
+  @Test
   public void loadAggregate() {
     AggregatesApiClient aggregatesApiClient = aggregatesClientBuilder
         .registerEventType(OrderPlaced.class)
         .build();
 
-    LoadAggregateResponse aggregateResponse = aggregatesApiClient.loadAggregate("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    LoadAggregateResponse aggregateResponse = aggregatesApiClient.loadEvents("order", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
     assertThat(aggregateResponse.aggregateId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
     assertThat(aggregateResponse.aggregateType(), is("order"));
@@ -97,7 +129,7 @@ public class AggregatesApiClientTest {
         .registerEventType("order-placed", OrderPlaced.class)
         .build();
 
-    LoadAggregateResponse aggregateResponse = aggregatesApiClient.loadAggregate("order-specific", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    LoadAggregateResponse aggregateResponse = aggregatesApiClient.loadEvents("order-specific", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
     assertThat(aggregateResponse.aggregateId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
     assertThat(aggregateResponse.aggregateType(), is("order-specific"));

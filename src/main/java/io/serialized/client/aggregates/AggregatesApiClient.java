@@ -53,7 +53,12 @@ public class AggregatesApiClient {
     }
   }
 
-  public LoadAggregateResponse loadAggregate(String aggregateType, String aggregateId) {
+  public <T extends State> T loadAggregate(String aggregateType, String aggregateId, StateBuilder<T> stateBuilder) {
+    LoadAggregateResponse loadAggregateResponse = loadEvents(aggregateType, aggregateId);
+    return stateBuilder.buildState(loadAggregateResponse.events());
+  }
+
+  public LoadAggregateResponse loadEvents(String aggregateType, String aggregateId) {
     HttpUrl.Builder urlBuilder = apiRoot.newBuilder().addPathSegment("aggregates").addPathSegment(aggregateType).addPathSegment(aggregateId);
 
     Request request = new Request.Builder()
