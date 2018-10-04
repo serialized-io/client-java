@@ -15,7 +15,6 @@ import java.util.UUID;
 import static io.serialized.client.aggregates.AggregatesApiClientTest.OrderPlaced.orderPlaced;
 import static io.serialized.client.aggregates.Event.newEvent;
 import static io.serialized.client.aggregates.EventBatch.newBatch;
-import static io.serialized.client.aggregates.StateBuilder.stateBuilder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
@@ -51,17 +50,17 @@ public class AggregatesApiClientTest {
 
   }
 
-
   private static AggregatesApi.Callback apiCallback = mock(AggregatesApi.Callback.class);
 
   @ClassRule
   public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new AggregatesApi(apiCallback));
 
-  private AggregatesApiClient.Builder aggregatesClientBuilder = AggregatesApiClient.aggregatesClient(
-      SerializedClientConfig.serializedConfig()
-          .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
-          .accessKey("aaaaa")
-          .secretAccessKey("bbbbb").build());
+  private final SerializedClientConfig serializedClientConfig = SerializedClientConfig.serializedConfig()
+      .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
+      .accessKey("aaaaa")
+      .secretAccessKey("bbbbb").build();
+
+  private AggregatesApiClient.Builder aggregatesClientBuilder = AggregatesApiClient.aggregatesClient(serializedClientConfig);
 
   @Before
   public void setUp() {
@@ -71,15 +70,13 @@ public class AggregatesApiClientTest {
 
   @Test
   public void testLoadAggregateState() {
-    AggregatesApiClient aggregatesApiClient = aggregatesClientBuilder
-        .registerEventType(OrderPlaced.class)
+
+    StateLoader<OrderState> build = StateLoader.stateLoader(OrderState.class, serializedClientConfig)
+        .forAggregateType("order")
+        .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
         .build();
 
-    OrderState orderState = aggregatesApiClient.loadAggregate("order",
-        "723ecfce-14e9-4889-98d5-a3d0ad54912f",
-        stateBuilder(OrderState.class)
-            .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
-            .build());
+    OrderState orderState = build.loadState("723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
     assertThat(orderState.status, is("placed"));
   }

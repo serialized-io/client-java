@@ -24,7 +24,7 @@ public class AggregatesApiClient {
     this.apiRoot = builder.apiRoot;
   }
 
-  public void storeEvent(String aggregateType, String aggregateId, Event event) throws IOException {
+  public void storeEvent(String aggregateType, String aggregateId, Event event) {
     EventBatch eventBatch = newBatch(aggregateId).addEvent(event).build();
     storeEvents(aggregateType, eventBatch);
   }
@@ -53,11 +53,6 @@ public class AggregatesApiClient {
     }
   }
 
-  public <T extends State> T loadAggregate(String aggregateType, String aggregateId, StateBuilder<T> stateBuilder) {
-    LoadAggregateResponse loadAggregateResponse = loadEvents(aggregateType, aggregateId);
-    return stateBuilder.buildState(loadAggregateResponse.events());
-  }
-
   public LoadAggregateResponse loadEvents(String aggregateType, String aggregateId) {
     HttpUrl.Builder urlBuilder = apiRoot.newBuilder().addPathSegment("aggregates").addPathSegment(aggregateType).addPathSegment(aggregateId);
 
@@ -67,8 +62,7 @@ public class AggregatesApiClient {
         .build();
 
     try {
-      LoadAggregateResponse loadAggregateResponse = responseFor(request, LoadAggregateResponse.class);
-      return loadAggregateResponse;
+      return responseFor(request, LoadAggregateResponse.class);
     } catch (IOException e) {
       throw new RuntimeException("Failed to load aggregate");
     }
