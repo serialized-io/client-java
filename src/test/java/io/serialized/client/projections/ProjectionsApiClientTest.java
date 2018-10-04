@@ -66,7 +66,7 @@ public class ProjectionsApiClientTest {
                 setref("wins"))
             .build();
 
-    projectionsClient.createProjection(highScoreProjection);
+    projectionsClient.createOrUpdate(highScoreProjection);
 
     ArgumentCaptor<CreateProjectionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateProjectionDefinitionRequest.class);
     verify(apiCallback, times(1)).projectionCreated(captor.capture());
@@ -98,7 +98,7 @@ public class ProjectionsApiClientTest {
             .withIdFIeld("winner")
             .addHandler(singleFunctionHandler("GameFinished", inc("wins"))).build();
 
-    projectionsClient.createProjection(projectionDefinition);
+    projectionsClient.createOrUpdate(projectionDefinition);
 
     ArgumentCaptor<CreateProjectionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateProjectionDefinitionRequest.class);
     verify(apiCallback, times(1)).projectionCreated(captor.capture());

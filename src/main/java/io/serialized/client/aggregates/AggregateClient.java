@@ -7,29 +7,62 @@ import okhttp3.*;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static io.serialized.client.SerializedClientConfig.JSON_MEDIA_TYPE;
 import static io.serialized.client.aggregates.EventBatch.newBatch;
 
-public class AggregatesApiClient {
+public class AggregateClient<T extends State> {
 
+  private final Class<T> stateClass;
+  private final Map<String, EventHandler> handlers;
+  private final String aggregateType;
+  private final HttpUrl apiRoot;
   private final OkHttpClient httpClient;
   private final ObjectMapper objectMapper;
-  private final HttpUrl apiRoot;
 
-  private AggregatesApiClient(Builder builder) {
+  private AggregateClient(Builder<T> builder) {
+    this.aggregateType = builder.aggregateType;
+    this.stateClass = builder.stateClass;
+    this.handlers = builder.handlers;
+    this.apiRoot = builder.apiRoot;
     this.httpClient = builder.httpClient;
     this.objectMapper = builder.objectMapper;
-    this.apiRoot = builder.apiRoot;
   }
 
-  public void storeEvent(String aggregateType, String aggregateId, Event event) {
+  public T buildState(List<? extends Event> events) {
+    try {
+      AtomicReference<T> currentState = new AtomicReference<>(stateClass.newInstance());
+      events.forEach(e -> {
+            String simpleName = e.data().getClass().getSimpleName();
+            EventHandler handler = handlers.get(simpleName);
+            T handle = (T) handler.handle(currentState.get(), e);
+            currentState.set(handle);
+          }
+      );
+      return currentState.get();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new RuntimeException("Failed to build State");
+    }
+  }
+
+  public static <T extends State> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
+    return new Builder<>(aggregateType, stateClass, config);
+  }
+
+  public T loadState(String aggregateId) {
+    LoadAggregateResponse loadAggregateResponse = loadEvents(aggregateId);
+    return buildState(loadAggregateResponse.events());
+  }
+
+  public void storeEvent(String aggregateId, Event event) {
     EventBatch eventBatch = newBatch(aggregateId).addEvent(event).build();
-    storeEvents(aggregateType, eventBatch);
+    storeEvents(eventBatch);
   }
 
-  public void storeEvents(String aggregateType, EventBatch eventBatch) {
+  public void storeEvents(EventBatch eventBatch) {
 
     HttpUrl url = apiRoot.newBuilder()
         .addPathSegment("aggregates")
@@ -53,7 +86,7 @@ public class AggregatesApiClient {
     }
   }
 
-  public LoadAggregateResponse loadEvents(String aggregateType, String aggregateId) {
+  public LoadAggregateResponse loadEvents(String aggregateId) {
     HttpUrl.Builder urlBuilder = apiRoot.newBuilder().addPathSegment("aggregates").addPathSegment(aggregateType).addPathSegment(aggregateId);
 
     Request request = new Request.Builder()
@@ -83,35 +116,35 @@ public class AggregatesApiClient {
     }
   }
 
-  public static Builder aggregatesClient(SerializedClientConfig config) {
-    return new Builder(config);
-  }
+  public static class Builder<T extends State> {
 
-  public static class Builder {
-
+    private final Class<T> stateClass;
+    private final HttpUrl apiRoot;
     private final OkHttpClient httpClient;
     private ObjectMapper objectMapper;
-    private final HttpUrl apiRoot;
-    private final Map<String, Class> eventTypes = new HashMap<>();
 
-    Builder(SerializedClientConfig config) {
+    public String aggregateType;
+    private Map<String, EventHandler> handlers = new HashMap<>();
+    private Map<String, Class> eventTypes = new HashMap<>();
+
+    public Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
+      this.aggregateType = aggregateType;
+      this.apiRoot = config.apiRoot();
       this.httpClient = config.httpClient();
       this.objectMapper = config.objectMapper();
-      this.apiRoot = config.apiRoot();
+      this.stateClass = stateClass;
     }
 
-    public Builder registerEventType(Class eventClass) {
-      return registerEventType(eventClass.getSimpleName(), eventClass);
-    }
-
-    public Builder registerEventType(String eventType, Class eventClass) {
-      this.eventTypes.put(eventType, eventClass);
+    public <E extends Event> Builder<T> registerHandler(Class<E> eventType, EventHandler<T, E> handler) {
+      this.eventTypes.put(eventType.getSimpleName(), eventType);
+      this.handlers.put(eventType.getSimpleName(), handler);
       return this;
     }
 
-    public AggregatesApiClient build() {
+    public AggregateClient<T> build() {
       objectMapper.registerModule(EventDeserializer.module(eventTypes));
-      return new AggregatesApiClient(this);
+      return new AggregateClient<>(this);
     }
   }
+
 }

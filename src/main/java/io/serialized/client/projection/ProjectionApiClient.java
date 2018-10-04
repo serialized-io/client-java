@@ -24,18 +24,20 @@ public class ProjectionApiClient {
     this.apiRoot = builder.apiRoot;
   }
 
-  public void createProjection(ProjectionDefinition projectionDefinition) throws IOException {
+  public void createOrUpdate(ProjectionDefinition projectionDefinition) {
     Request request = new Request.Builder()
         .url(apiRoot.newBuilder().addPathSegment("projections").addPathSegment("definitions").build())
         .put(RequestBody.create(JSON_MEDIA_TYPE, toJson(projectionDefinition)))
         .build();
 
     try (Response response = httpClient.newCall(request).execute()) {
-      if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+      if (!response.isSuccessful()) throw new RuntimeException("Unexpected code " + response);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to save projection", e);
     }
   }
 
-  public <T> ProjectionResponse<T> query(ProjectionQuery query) throws IOException {
+  public <T> ProjectionResponse<T> query(ProjectionQuery query) {
 
     Request request = new Request.Builder()
         .url(query.constructUrl(apiRoot))
@@ -57,11 +59,13 @@ public class ProjectionApiClient {
     }
   }
 
-  private <T> T readResponse(Request request, JavaType type) throws IOException {
+  private <T> T readResponse(Request request, JavaType type) {
     try (Response response = httpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
       InputStream src = response.body().byteStream();
       return objectMapper.readValue(src, type);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to read ", e);
     }
   }
 
