@@ -54,7 +54,7 @@ public class ProjectionsApiClientTest {
   }
 
   @Test
-  public void testCreateProjection() throws IOException {
+  public void testCreateProjection() {
 
     ProjectionDefinition highScoreProjection =
         projectionDefinition("high-score")

@@ -17,7 +17,7 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 public class SerializedClientConfig {
 
   public static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
-  public static final String HTTPS_API_SERIALIZED_IO = "https://api.serialized.io/)";
+  public static final String HTTPS_API_SERIALIZED_IO = "https://api.serialized.io/";
 
   private final OkHttpClient httpClient;
   private final Supplier<ObjectMapper> objectMapper;

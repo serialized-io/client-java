@@ -26,7 +26,7 @@ public class ProjectionApiClient {
 
   public void createOrUpdate(ProjectionDefinition projectionDefinition) {
     Request request = new Request.Builder()
-        .url(apiRoot.newBuilder().addPathSegment("projections").addPathSegment("definitions").build())
+        .url(apiRoot.newBuilder().addPathSegment("projections").addPathSegment("definitions").addPathSegment(projectionDefinition.projectionName()).build())
         .put(RequestBody.create(JSON_MEDIA_TYPE, toJson(projectionDefinition)))
         .build();
 

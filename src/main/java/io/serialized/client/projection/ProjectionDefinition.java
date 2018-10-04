@@ -29,6 +29,10 @@ public class ProjectionDefinition {
     return new Builder(projectionName);
   }
 
+  public String projectionName() {
+    return projectionName;
+  }
+
   public static class Builder {
 
     private List<ProjectionHandler> handlers = new ArrayList<>();

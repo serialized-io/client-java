@@ -35,8 +35,8 @@ public class ProjectionApi {
   }
 
   @PUT
-  @Path("definitions")
-  public Response createProjection(CreateProjectionDefinitionRequest definition) {
+  @Path("definitions/{projectionName}")
+  public Response createProjection(@PathParam("projectionName") String projectionName, CreateProjectionDefinitionRequest definition) {
     callback.projectionCreated(definition);
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
