@@ -44,7 +44,7 @@ public class AggregateClient<T extends State> {
       );
       return currentState.get();
     } catch (InstantiationException | IllegalAccessException e) {
-      throw new RuntimeException("Failed to build State");
+      throw new RuntimeException("Failed to build State", e);
     }
   }
 
