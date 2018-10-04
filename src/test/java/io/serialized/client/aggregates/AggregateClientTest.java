@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 
 public class AggregateClientTest {
 
-  public static class OrderPlaced extends Event<OrderPlaced> {
+  public static class OrderPlaced {
 
     private String customerId;
     private long orderAmount;

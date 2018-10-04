@@ -34,7 +34,7 @@ public class Event<T> {
 
   public static <T> Event.TypedBuilder<T> newEvent(T data) {
     Class<T> aClass = (Class<T>) data.getClass();
-    return (TypedBuilder<T>) new TypedBuilder<>(aClass).data(data);
+    return new TypedBuilder<>(aClass).data(data);
   }
 
   public static class TypedBuilder<T> {
@@ -48,7 +48,7 @@ public class Event<T> {
       this.eventType = eventType;
     }
 
-    public <T> TypedBuilder(Class<T> eventType) {
+    public TypedBuilder(Class<T> eventType) {
       this(eventType.getSimpleName());
     }
 
