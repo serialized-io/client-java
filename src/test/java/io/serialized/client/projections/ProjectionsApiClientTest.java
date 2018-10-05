@@ -10,8 +10,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.io.IOException;
-
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.ProjectionDefinition.projectionDefinition;
 import static io.serialized.client.projection.ProjectionHandler.Function.*;
@@ -90,7 +88,7 @@ public class ProjectionsApiClientTest {
   }
 
   @Test
-  public void testCreateProjectionWithSingleHandler() throws IOException {
+  public void testCreateProjectionWithSingleHandler() {
 
     ProjectionDefinition projectionDefinition =
         projectionDefinition("high-score")
@@ -110,27 +108,27 @@ public class ProjectionsApiClientTest {
   }
 
   @Test
-  public void testSingleProjection() throws IOException {
+  public void testSingleProjection() {
     ProjectionResponse<OrderBalanceProjection> projection = projectionsClient.query(
         singleProjection("orders")
             .id("723ecfce-14e9-4889-98d5-a3d0ad54912f")
             .build(OrderBalanceProjection.class));
 
-    assertThat(projection.projectionId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
-    assertThat(projection.updatedAt(), is(1505754083976L));
-    assertThat(projection.data().orderAmount, is(12345L));
+    assertThat(projection.projectionId, is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
+    assertThat(projection.updatedAt, is(1505754083976L));
+    assertThat(projection.data.orderAmount, is(12345L));
   }
 
   @Test
-  public void testAggregatedProjection() throws IOException {
+  public void testAggregatedProjection() {
     ProjectionResponse<OrderTotalsProjection> projection = projectionsClient.query(
         aggregatedProjection("order-totals")
             .build(OrderTotalsProjection.class));
 
-    assertThat(projection.projectionId(), is("order-totals"));
-    assertThat(projection.updatedAt(), is(1505850788368L));
-    assertThat(projection.data().orderAmount, is(1000L));
-    assertThat(projection.data().orderCount, is(2L));
+    assertThat(projection.projectionId, is("order-totals"));
+    assertThat(projection.updatedAt, is(1505850788368L));
+    assertThat(projection.data.orderAmount, is(1000L));
+    assertThat(projection.data.orderCount, is(2L));
   }
 
 }

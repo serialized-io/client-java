@@ -128,7 +128,7 @@ public class AggregateClientTest {
 //    assertThat(aggregateResponse.aggregateType(), is("order-specific"));
 //    assertThat(aggregateResponse.aggregateVersion(), is(1L));
 //    assertThat(aggregateResponse.events().size(), is(1));
-//    assertThat(aggregateResponse.events().get(0).data().getClass().getSimpleName(), is(OrderPlaced.class.getSimpleName()));
+//    assertThat(aggregateResponse.events().get(0).getData().getClass().getSimpleName(), is(OrderPlaced.class.getSimpleName()));
 //  }
 
   @Test

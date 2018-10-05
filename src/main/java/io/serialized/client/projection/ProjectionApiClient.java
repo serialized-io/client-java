@@ -51,6 +51,20 @@ public class ProjectionApiClient {
     return readResponse(request, javaType);
   }
 
+  public <T> ProjectionsResponse<T> list(ListProjectionQuery query) {
+
+    Request request = new Request.Builder()
+        .url(query.constructUrl(apiRoot))
+        .get()
+        .build();
+
+    JavaType javaType = query.responseClass()
+        .map(dataClass -> objectMapper.getTypeFactory().constructParametricType(ProjectionsResponse.class, dataClass))
+        .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
+
+    return readResponse(request, javaType);
+  }
+
   private String toJson(Object payload) {
     try {
       return objectMapper.writeValueAsString(payload);

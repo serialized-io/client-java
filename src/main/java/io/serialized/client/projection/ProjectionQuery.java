@@ -3,45 +3,33 @@ package io.serialized.client.projection;
 import okhttp3.HttpUrl;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import static io.serialized.client.projection.ProjectionType.AGGREGATED;
 import static io.serialized.client.projection.ProjectionType.SINGLE;
 
-public class ProjectionQuery {
+public class ProjectionQuery implements Query {
 
-  private final ProjectionType projectionType;
-  private final String projectionName;
-  private final String projectionId;
   private final Class responseClass;
+  private final Function<HttpUrl, HttpUrl> urlBuilder;
 
-  private ProjectionQuery(Builder builder) {
-    this.projectionType = builder.projectionType;
-    this.projectionName = builder.projectionName;
-    this.projectionId = builder.projectionId;
-    this.responseClass = builder.responseClass;
+  public ProjectionQuery(Function<HttpUrl, HttpUrl> urlBuilder, Class responseClass) {
+    this.urlBuilder = urlBuilder;
+    this.responseClass = responseClass;
   }
 
-  HttpUrl constructUrl(HttpUrl rootUrl) {
-    if (SINGLE.equals(projectionType)) {
-      return rootUrl.newBuilder()
-          .addPathSegment("projections")
-          .addPathSegment(projectionType.name().toLowerCase())
-          .addPathSegment(projectionName)
-          .addPathSegment(projectionId)
-          .build();
-    } else if (AGGREGATED.equals(projectionType)) {
-      return rootUrl.newBuilder()
-          .addPathSegment("projections")
-          .addPathSegment(projectionType.name().toLowerCase())
-          .addPathSegment(projectionName)
-          .build();
-    } else {
-      throw new IllegalStateException("Invalid projectionType: " + projectionType);
-    }
+  @Override
+  public HttpUrl constructUrl(HttpUrl rootUrl) {
+    return urlBuilder.apply(rootUrl);
   }
 
-  Optional<Class> responseClass() {
+  @Override
+  public Optional<Class> responseClass() {
     return Optional.ofNullable(responseClass);
+  }
+
+  public static ListQueryBuilder list(String projectionName) {
+    return new ListQueryBuilder(projectionName);
   }
 
   public static Builder singleProjection(String projectionName) {
@@ -52,12 +40,55 @@ public class ProjectionQuery {
     return new Builder(AGGREGATED, projectionName);
   }
 
+  public static class ListQueryBuilder {
+
+    private final String projectionName;
+    private Integer limit;
+    private String sort;
+
+    public ListQueryBuilder(String projectionName) {
+      this.projectionName = projectionName;
+    }
+
+    public ListQueryBuilder limit(int limit) {
+      this.limit = limit;
+      return this;
+    }
+
+    public ListQueryBuilder sortDescending(String field) {
+      this.sort = "-" + field;
+      return this;
+    }
+
+    public ListQueryBuilder sortAscending(String field) {
+      this.sort = field;
+      return this;
+    }
+
+    private HttpUrl urlBuilder(HttpUrl rootUrl) {
+      HttpUrl.Builder projections = rootUrl.newBuilder()
+          .addPathSegment("projections")
+          .addPathSegment(SINGLE.name())
+          .addPathSegment(projectionName);
+
+      Optional.ofNullable(limit).ifPresent(limit -> projections.addQueryParameter("limit", String.valueOf(limit)));
+      Optional.ofNullable(sort).ifPresent(limit -> projections.addQueryParameter("sort", sort));
+
+      return projections
+          .build();
+    }
+
+    public ProjectionQuery build(Class responseClass) {
+      return new ProjectionQuery(this::urlBuilder, responseClass);
+    }
+
+  }
+
   public static class Builder {
 
     private final ProjectionType projectionType;
     private final String projectionName;
     private String projectionId;
-    private Class responseClass;
 
     public Builder(ProjectionType projectionType, String projectionName) {
       this.projectionType = projectionType;
@@ -69,9 +100,27 @@ public class ProjectionQuery {
       return this;
     }
 
+    private HttpUrl urlBuilder(HttpUrl rootUrl) {
+      if (SINGLE.equals(projectionType)) {
+        return rootUrl.newBuilder()
+            .addPathSegment("projections")
+            .addPathSegment(projectionType.name().toLowerCase())
+            .addPathSegment(projectionName)
+            .addPathSegment(projectionId)
+            .build();
+      } else if (AGGREGATED.equals(projectionType)) {
+        return rootUrl.newBuilder()
+            .addPathSegment("projections")
+            .addPathSegment(projectionType.name().toLowerCase())
+            .addPathSegment(projectionName)
+            .build();
+      } else {
+        throw new IllegalStateException("Invalid projectionType: " + projectionType);
+      }
+    }
+
     public ProjectionQuery build(Class responseClass) {
-      this.responseClass = responseClass;
-      return new ProjectionQuery(this);
+      return new ProjectionQuery(this::urlBuilder, responseClass);
     }
 
   }
