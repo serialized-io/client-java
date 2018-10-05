@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
 
 public class SerializedClientConfig {
 
@@ -53,6 +54,7 @@ public class SerializedClientConfig {
 
     private Supplier<ObjectMapper> objectMapper = () -> new ObjectMapper()
         .configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .configure(FAIL_ON_EMPTY_BEANS, false)
         .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
         .setSerializationInclusion(NON_NULL);
 

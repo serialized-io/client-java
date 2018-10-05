@@ -121,7 +121,7 @@ public class AggregateClient<T extends State> {
     private final Class<T> stateClass;
     private final HttpUrl apiRoot;
     private final OkHttpClient httpClient;
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     public String aggregateType;
     private Map<String, EventHandler> handlers = new HashMap<>();
