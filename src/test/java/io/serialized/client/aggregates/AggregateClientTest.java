@@ -39,9 +39,9 @@ public class AggregateClientTest {
 
     private String status;
 
-    static OrderState orderPlaced(OrderState currentState, Event<OrderPlaced> event) {
-      currentState.status = "placed";
-      return currentState;
+    public OrderState orderPlaced(Event<OrderPlaced> event) {
+      this.status = "placed";
+      return this;
     }
 
   }
@@ -115,21 +115,22 @@ public class AggregateClientTest {
     assertThat(eventsStored.events.get(0).data.get("customerId"), is("customer-123"));
 
   }
-//
-//  @Test
-//  public void loadAggregateWithSpecificedEventType() {
-//    AggregatesApiClient aggregatesApiClient = aggregatesClientBuilder
-//        .registerEventType("order-placed", OrderPlaced.class)
-//        .build();
-//
-//    LoadAggregateResponse aggregateResponse = aggregatesApiClient.loadEvents("order-specific", "723ecfce-14e9-4889-98d5-a3d0ad54912f");
-//
-//    assertThat(aggregateResponse.aggregateId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
-//    assertThat(aggregateResponse.aggregateType(), is("order-specific"));
-//    assertThat(aggregateResponse.aggregateVersion(), is(1L));
-//    assertThat(aggregateResponse.events().size(), is(1));
-//    assertThat(aggregateResponse.events().get(0).getData().getClass().getSimpleName(), is(OrderPlaced.class.getSimpleName()));
-//  }
+
+  @Test
+  public void loadAggregateWithSpecificedEventType() {
+
+    AggregateClient<OrderState> aggregatesApiClient = aggregateClient("order-specific", OrderState.class, serializedConfig)
+        .registerHandler("order-placed", OrderPlaced.class, OrderState::orderPlaced)
+        .build();
+
+    LoadAggregateResponse aggregateResponse = aggregatesApiClient.loadEvents("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+
+    assertThat(aggregateResponse.aggregateId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
+    assertThat(aggregateResponse.aggregateType(), is("order-specific"));
+    assertThat(aggregateResponse.aggregateVersion(), is(1L));
+    assertThat(aggregateResponse.events().size(), is(1));
+    assertThat(aggregateResponse.events().get(0).data().getClass().getSimpleName(), is("OrderPlaced"));
+  }
 
   @Test
   public void storeEventsInBatch() {

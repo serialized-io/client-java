@@ -135,9 +135,15 @@ public class AggregateClient<T extends State> {
       this.stateClass = stateClass;
     }
 
-    public <E> Builder<T> registerHandler(Class<E> eventType, EventHandler<T, E> handler) {
-      this.eventTypes.put(eventType.getSimpleName(), eventType);
-      this.handlers.put(eventType.getSimpleName(), handler);
+    public <E> Builder<T> registerHandler(Class<E> eventClass, EventHandler<T, E> handler) {
+      this.eventTypes.put(eventClass.getSimpleName(), eventClass);
+      this.handlers.put(eventClass.getSimpleName(), handler);
+      return this;
+    }
+
+    public <E> Builder<T> registerHandler(String eventType, Class<E> eventClass, EventHandler<T, E> handler) {
+      this.eventTypes.put(eventType, eventClass);
+      this.handlers.put(eventType, handler);
       return this;
     }
 
