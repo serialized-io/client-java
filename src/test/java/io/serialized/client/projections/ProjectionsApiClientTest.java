@@ -119,6 +119,36 @@ public class ProjectionsApiClientTest {
   }
 
   @Test
+  public void testCreateAggregatedProjection() {
+    ProjectionDefinition projectionDefinition =
+        ProjectionDefinition.aggregatedProjection("game-count")
+            .feed("games")
+            .addHandler(singleFunctionHandler("GameFinished", inc("count"))).build();
+
+    projectionsClient.createOrUpdate(projectionDefinition);
+
+    ArgumentCaptor<CreateProjectionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateProjectionDefinitionRequest.class);
+    verify(apiCallback, times(1)).projectionCreated(captor.capture());
+
+    CreateProjectionDefinitionRequest value = captor.getValue();
+    assertThat(value.projectionName, is("game-count"));
+    assertThat(value.feedName, is("games"));
+    assertThat(value.idField, nullValue());
+    assertThat(value.handlers.size(), is(1));
+
+    CreateProjectionDefinitionRequest.ProjectionHandler projectionHandler = value.handlers.get(0);
+    assertThat(projectionHandler.eventType, is("GameFinished"));
+    assertThat(projectionHandler.functions.size(), is(1));
+    CreateProjectionDefinitionRequest.ProjectionHandler.Function function = projectionHandler.functions.get(0);
+    assertThat(function.function, is("inc"));
+    assertThat(function.eventSelector, nullValue());
+    assertThat(function.targetSelector, is("$.projection.count"));
+    assertThat(function.eventFilter, nullValue());
+    assertThat(function.targetFilter, nullValue());
+    assertThat(function.rawData, nullValue());
+  }
+
+  @Test
   public void testSingleProjection() {
     ProjectionResponse<OrderBalanceProjection> projection = projectionsClient.query(
         singleProjection("orders")

@@ -25,55 +25,83 @@ public class ProjectionDefinition {
     this.handlers = handlers;
   }
 
-  public static Builder singleProjection(String projectionName) {
-    return new Builder(projectionName, false);
+  public static SingleProjectionBuilder singleProjection(String projectionName) {
+    return new SingleProjectionBuilder(projectionName);
+  }
+
+  public static AggregatedProjectionBuilder aggregatedProjection(String projectionName) {
+    return new AggregatedProjectionBuilder(projectionName);
   }
 
   public String projectionName() {
     return projectionName;
   }
 
-  public static class Builder {
+  public static class AggregatedProjectionBuilder {
 
     private List<ProjectionHandler> handlers = new ArrayList<>();
-    private boolean aggregated;
     private final String projectionName;
     private String feedName;
-    private String idField;
 
-    public Builder(String projectionName, boolean aggregated) {
+    public AggregatedProjectionBuilder(String projectionName) {
       this.projectionName = projectionName;
-      this.aggregated = aggregated;
     }
 
-    public Builder feed(String feedName) {
+    public AggregatedProjectionBuilder feed(String feedName) {
       this.feedName = feedName;
       return this;
     }
 
-    public Builder addHandler(ProjectionHandler handler) {
+    public AggregatedProjectionBuilder addHandler(ProjectionHandler handler) {
       this.handlers.add(handler);
       return this;
     }
 
-    public Builder withHandler(String eventType, ProjectionHandler.Function... functions) {
+    public AggregatedProjectionBuilder withHandler(String eventType, ProjectionHandler.Function... functions) {
       ProjectionHandler.Builder builder = ProjectionHandler.newHandler(eventType);
       asList(functions).forEach(builder::addFunction);
       return addHandler(builder.build());
     }
 
-    public Builder asAggregated() {
-      this.aggregated = true;
+    public ProjectionDefinition build() {
+      return new ProjectionDefinition(projectionName, feedName, true, null, handlers);
+    }
+  }
+
+  public static class SingleProjectionBuilder {
+
+    private List<ProjectionHandler> handlers = new ArrayList<>();
+    private final String projectionName;
+    private String feedName;
+    private String idField;
+
+    public SingleProjectionBuilder(String projectionName) {
+      this.projectionName = projectionName;
+    }
+
+    public SingleProjectionBuilder feed(String feedName) {
+      this.feedName = feedName;
       return this;
     }
 
-    public Builder withIdField(String idField) {
+    public SingleProjectionBuilder addHandler(ProjectionHandler handler) {
+      this.handlers.add(handler);
+      return this;
+    }
+
+    public SingleProjectionBuilder withHandler(String eventType, ProjectionHandler.Function... functions) {
+      ProjectionHandler.Builder builder = ProjectionHandler.newHandler(eventType);
+      asList(functions).forEach(builder::addFunction);
+      return addHandler(builder.build());
+    }
+
+    public SingleProjectionBuilder withIdField(String idField) {
       this.idField = idField;
       return this;
     }
 
     public ProjectionDefinition build() {
-      return new ProjectionDefinition(projectionName, feedName, aggregated, idField, handlers);
+      return new ProjectionDefinition(projectionName, feedName, false, idField, handlers);
     }
   }
 
