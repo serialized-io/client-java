@@ -46,10 +46,6 @@ public class AggregateClientTest {
 
   }
 
-  public static class Order implements Aggregate {
-
-  }
-
   private static AggregatesApi.Callback apiCallback = mock(AggregatesApi.Callback.class);
 
   @ClassRule
