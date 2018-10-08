@@ -7,17 +7,15 @@ import okhttp3.*;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static io.serialized.client.SerializedClientConfig.JSON_MEDIA_TYPE;
 import static io.serialized.client.aggregates.EventBatch.newBatch;
+import static io.serialized.client.aggregates.StateBuilder.stateBuilder;
 
 public class AggregateClient<T extends State> {
 
-  private final Class<T> stateClass;
-  private final Map<String, EventHandler> handlers;
+  private final StateBuilder<T> stateBuilder;
   private final String aggregateType;
   private final HttpUrl apiRoot;
   private final OkHttpClient httpClient;
@@ -25,27 +23,10 @@ public class AggregateClient<T extends State> {
 
   private AggregateClient(Builder<T> builder) {
     this.aggregateType = builder.aggregateType;
-    this.stateClass = builder.stateClass;
-    this.handlers = builder.handlers;
+    this.stateBuilder = stateBuilder(builder.stateClass, builder.handlers);
     this.apiRoot = builder.apiRoot;
     this.httpClient = builder.httpClient;
     this.objectMapper = builder.objectMapper;
-  }
-
-  public T buildState(List<? extends Event> events) {
-    try {
-      AtomicReference<T> currentState = new AtomicReference<>(stateClass.newInstance());
-      events.forEach(e -> {
-            String simpleName = e.data().getClass().getSimpleName();
-            EventHandler handler = handlers.get(simpleName);
-            T handle = (T) handler.handle(currentState.get(), e);
-            currentState.set(handle);
-          }
-      );
-      return currentState.get();
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new RuntimeException("Failed to build State", e);
-    }
   }
 
   public static <T extends State> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
@@ -54,7 +35,7 @@ public class AggregateClient<T extends State> {
 
   public T loadState(String aggregateId) {
     LoadAggregateResponse loadAggregateResponse = loadEvents(aggregateId);
-    return buildState(loadAggregateResponse.events());
+    return stateBuilder.buildState(loadAggregateResponse.events());
   }
 
   public void storeEvent(String aggregateId, Event event) {
