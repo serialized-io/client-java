@@ -23,7 +23,7 @@ public class AggregateClient<T extends State> {
 
   private AggregateClient(Builder<T> builder) {
     this.aggregateType = builder.aggregateType;
-    this.stateBuilder = stateBuilder(builder.stateClass, builder.handlers);
+    this.stateBuilder = builder.stateBuilder;
     this.apiRoot = builder.apiRoot;
     this.httpClient = builder.httpClient;
     this.objectMapper = builder.objectMapper;
@@ -82,7 +82,7 @@ public class AggregateClient<T extends State> {
     }
   }
 
-  private <T> T responseFor(Request request, Class<T> responseClass) throws IOException {
+  private <R> R responseFor(Request request, Class<R> responseClass) throws IOException {
     try (Response response = httpClient.newCall(request).execute()) {
       String responseContents = response.body().string();
       return objectMapper.readValue(responseContents, responseClass);
@@ -99,13 +99,12 @@ public class AggregateClient<T extends State> {
 
   public static class Builder<T extends State> {
 
-    private final Class<T> stateClass;
     private final HttpUrl apiRoot;
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private StateBuilder<T> stateBuilder;
 
     public String aggregateType;
-    private Map<String, EventHandler> handlers = new HashMap<>();
     private Map<String, Class> eventTypes = new HashMap<>();
 
     public Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
@@ -113,18 +112,16 @@ public class AggregateClient<T extends State> {
       this.apiRoot = config.apiRoot();
       this.httpClient = config.httpClient();
       this.objectMapper = config.objectMapper();
-      this.stateClass = stateClass;
+      this.stateBuilder = stateBuilder(stateClass);
     }
 
     public <E> Builder<T> registerHandler(Class<E> eventClass, EventHandler<T, E> handler) {
-      this.eventTypes.put(eventClass.getSimpleName(), eventClass);
-      this.handlers.put(eventClass.getSimpleName(), handler);
-      return this;
+      return registerHandler(eventClass.getSimpleName(), eventClass, handler);
     }
 
     public <E> Builder<T> registerHandler(String eventType, Class<E> eventClass, EventHandler<T, E> handler) {
       this.eventTypes.put(eventType, eventClass);
-      this.handlers.put(eventType, handler);
+      this.stateBuilder = stateBuilder.withHandler(eventClass, handler);
       return this;
     }
 
