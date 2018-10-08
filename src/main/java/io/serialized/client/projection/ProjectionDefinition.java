@@ -25,8 +25,8 @@ public class ProjectionDefinition {
     this.handlers = handlers;
   }
 
-  public static Builder projectionDefinition(String projectionName) {
-    return new Builder(projectionName);
+  public static Builder singleProjection(String projectionName) {
+    return new Builder(projectionName, false);
   }
 
   public String projectionName() {
@@ -41,8 +41,9 @@ public class ProjectionDefinition {
     private String feedName;
     private String idField;
 
-    public Builder(String projectionName) {
+    public Builder(String projectionName, boolean aggregated) {
       this.projectionName = projectionName;
+      this.aggregated = aggregated;
     }
 
     public Builder feed(String feedName) {
