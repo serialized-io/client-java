@@ -35,7 +35,7 @@ public class AggregateClientTest {
 
   }
 
-  public static class OrderState extends State {
+  public static class OrderState {
 
     private String status;
 
@@ -77,9 +77,9 @@ public class AggregateClientTest {
         .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
         .build();
 
-    OrderState orderState = build.loadState("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    State<OrderState> orderState = build.loadState("723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
-    assertThat(orderState.status, is("placed"));
+    assertThat(orderState.data().status, is("placed"));
   }
 
   @Test

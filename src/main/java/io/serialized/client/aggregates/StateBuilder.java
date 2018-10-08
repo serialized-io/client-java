@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class StateBuilder<T extends State> {
+public class StateBuilder<T> {
 
   private final Class<T> stateClass;
   private final Map<String, EventHandler<T, ?>> handlers;
@@ -15,11 +15,11 @@ public class StateBuilder<T extends State> {
     this.handlers = handlers;
   }
 
-  public static <T extends State> StateBuilder<T> stateBuilder(Class<T> stateClass) {
+  public static <T> StateBuilder<T> stateBuilder(Class<T> stateClass) {
     return new StateBuilder<>(stateClass, new HashMap<>());
   }
 
-  public static <T extends State> StateBuilder<T> stateBuilder(Class<T> stateClass, Map<String, EventHandler<T, ?>> handlers) {
+  public static <T> StateBuilder<T> stateBuilder(Class<T> stateClass, Map<String, EventHandler<T, ?>> handlers) {
     return new StateBuilder<>(stateClass, handlers);
   }
 
@@ -28,20 +28,22 @@ public class StateBuilder<T extends State> {
     return this;
   }
 
-  public T buildState(List<? extends Event> events) {
+  public State<T> buildState(List<? extends Event> events, long aggregateVersion) {
     try {
-      AtomicReference<T> currentState = new AtomicReference<>(stateClass.newInstance());
+      AtomicReference<T> data = new AtomicReference<>(stateClass.newInstance());
       events.forEach(e -> {
             String simpleName = e.data().getClass().getSimpleName();
-            EventHandler handler = handlers.get(simpleName);
+        EventHandler<T, ?> handler = handlers.get(simpleName);
+
         if (handler == null) {
           throw new IllegalStateException("No matching handler for event type: " + simpleName);
         }
-            T handle = (T) handler.handle(currentState.get(), e);
-            currentState.set(handle);
+
+        T handle = (T) handler.handle(data.get(), e);
+        data.set(handle);
           }
       );
-      return currentState.get();
+      return new State<>(aggregateVersion, data.get());
     } catch (InstantiationException | IllegalAccessException e) {
       throw new RuntimeException("Failed to build State", e);
     }

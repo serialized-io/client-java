@@ -13,7 +13,7 @@ import static io.serialized.client.SerializedClientConfig.JSON_MEDIA_TYPE;
 import static io.serialized.client.aggregates.EventBatch.newBatch;
 import static io.serialized.client.aggregates.StateBuilder.stateBuilder;
 
-public class AggregateClient<T extends State> {
+public class AggregateClient<T> {
 
   private final StateBuilder<T> stateBuilder;
   private final String aggregateType;
@@ -29,13 +29,13 @@ public class AggregateClient<T extends State> {
     this.objectMapper = builder.objectMapper;
   }
 
-  public static <T extends State> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
+  public static <T> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
     return new Builder<>(aggregateType, stateClass, config);
   }
 
-  public T loadState(String aggregateId) {
+  public State<T> loadState(String aggregateId) {
     LoadAggregateResponse loadAggregateResponse = loadEvents(aggregateId);
-    return stateBuilder.buildState(loadAggregateResponse.events());
+    return stateBuilder.buildState(loadAggregateResponse.events(), loadAggregateResponse.aggregateVersion());
   }
 
   public void storeEvent(String aggregateId, Event event) {
@@ -97,7 +97,7 @@ public class AggregateClient<T extends State> {
     }
   }
 
-  public static class Builder<T extends State> {
+  public static class Builder<T> {
 
     private final HttpUrl apiRoot;
     private final OkHttpClient httpClient;
