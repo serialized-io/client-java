@@ -19,6 +19,7 @@ import static io.serialized.client.projection.ProjectionQuery.singleProjection;
 import static io.serialized.client.projection.Selector.eventSelector;
 import static io.serialized.client.projection.Selector.targetSelector;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -57,7 +58,7 @@ public class ProjectionsApiClientTest {
     ProjectionDefinition highScoreProjection =
         projectionDefinition("high-score")
             .feed("game")
-            .withIdFIeld("winner")
+            .withIdField("winner")
             .withHandler("GameFinished",
                 set(targetSelector("playerName"), eventSelector("winner")),
                 inc("wins"),
@@ -89,11 +90,10 @@ public class ProjectionsApiClientTest {
 
   @Test
   public void testCreateProjectionWithSingleHandler() {
-
     ProjectionDefinition projectionDefinition =
         projectionDefinition("high-score")
             .feed("games")
-            .withIdFIeld("winner")
+            .withIdField("winner")
             .addHandler(singleFunctionHandler("GameFinished", inc("wins"))).build();
 
     projectionsClient.createOrUpdate(projectionDefinition);
@@ -105,6 +105,18 @@ public class ProjectionsApiClientTest {
     assertThat(value.projectionName, is("high-score"));
     assertThat(value.feedName, is("games"));
     assertThat(value.idField, is("winner"));
+    assertThat(value.handlers.size(), is(1));
+
+    CreateProjectionDefinitionRequest.ProjectionHandler projectionHandler = value.handlers.get(0);
+    assertThat(projectionHandler.eventType, is("GameFinished"));
+    assertThat(projectionHandler.functions.size(), is(1));
+    CreateProjectionDefinitionRequest.ProjectionHandler.Function function = projectionHandler.functions.get(0);
+    assertThat(function.function, is("inc"));
+    assertThat(function.eventSelector, nullValue());
+    assertThat(function.targetSelector, is("$.projection.wins"));
+    assertThat(function.eventFilter, nullValue());
+    assertThat(function.targetFilter, nullValue());
+    assertThat(function.rawData, nullValue());
   }
 
   @Test

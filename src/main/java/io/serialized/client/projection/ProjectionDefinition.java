@@ -66,7 +66,7 @@ public class ProjectionDefinition {
       return this;
     }
 
-    public Builder withIdFIeld(String idField) {
+    public Builder withIdField(String idField) {
       this.idField = idField;
       return this;
     }
