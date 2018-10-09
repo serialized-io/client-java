@@ -1,8 +1,5 @@
 package io.serialized.client.projection;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.serialized.client.SerializedClientConfig;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -167,7 +164,6 @@ public class ProjectionHandler {
       return new Builder("subtract");
     }
 
-
     private static Builder setBuilder() {
       return new Builder("set");
     }
@@ -176,22 +172,12 @@ public class ProjectionHandler {
       return new Builder("merge");
     }
 
-
     public static Function setref(String fieldName) {
       return new Builder("setref").targetSelector(targetSelector(fieldName)).build();
     }
 
     public static Function clearref() {
       return new Builder("clearref").build();
-    }
-
-
-    public String jsonString(SerializedClientConfig config) {
-      try {
-        return config.objectMapper().writeValueAsString(this);
-      } catch (JsonProcessingException e) {
-        throw new RuntimeException("Failed to write JSON", e);
-      }
     }
 
     public static class Builder {
