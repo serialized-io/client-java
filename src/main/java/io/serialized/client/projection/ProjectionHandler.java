@@ -19,7 +19,7 @@ public class ProjectionHandler {
     private String eventFilter;
     private String rawData;
 
-    public static Builder newHandlerFunction(String function) {
+    public static Builder handlerFunction(String function) {
       return new Builder(function);
     }
 
@@ -30,7 +30,6 @@ public class ProjectionHandler {
     public static Function dec(String fieldName) {
       return new Builder("dec").targetSelector(targetSelector(fieldName)).build();
     }
-
 
     public static Function push(Selector targetSelector, RawData rawData) {
       return pushBuilder().targetSelector(targetSelector).rawData(rawData).build();
@@ -128,7 +127,6 @@ public class ProjectionHandler {
     public static Function set(Selector targetSelector, Filter targetFilter, Selector eventSelector, Filter eventFilter) {
       return setBuilder().targetSelector(targetSelector).targetFilter(targetFilter).eventSelector(eventSelector).eventFilter(eventFilter).build();
     }
-
 
     public static Function merge(Selector targetSelector, RawData rawData) {
       return mergeBuilder().targetSelector(targetSelector).rawData(rawData).build();
@@ -229,12 +227,16 @@ public class ProjectionHandler {
 
   }
 
-  public static Builder newHandler(String eventType) {
+  public static Builder handler(String eventType) {
     return new Builder(eventType);
   }
 
-  public static ProjectionHandler singleFunctionHandler(String eventType, Function function) {
-    return new Builder(eventType).addFunction(function).build();
+  public static ProjectionHandler handler(String eventType, Function... functions) {
+    Builder builder = new Builder(eventType);
+    for (Function function : functions) {
+      builder.addFunction(function);
+    }
+    return builder.build();
   }
 
   public static class Builder {
@@ -258,8 +260,5 @@ public class ProjectionHandler {
       return projectionHandler;
     }
 
-
   }
-
-
 }

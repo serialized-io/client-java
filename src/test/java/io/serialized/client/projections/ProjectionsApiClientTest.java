@@ -13,7 +13,7 @@ import org.mockito.ArgumentCaptor;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.ProjectionHandler.Function.*;
-import static io.serialized.client.projection.ProjectionHandler.singleFunctionHandler;
+import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.Selector.eventSelector;
 import static io.serialized.client.projection.Selector.targetSelector;
 import static io.serialized.client.projection.query.SingleProjectionQuery.singleProjection;
@@ -93,7 +93,7 @@ public class ProjectionsApiClientTest {
         ProjectionDefinition.singleProjection("high-score")
             .feed("games")
             .withIdField("winner")
-            .addHandler(singleFunctionHandler("GameFinished", inc("wins"))).build();
+            .addHandler(handler("GameFinished", inc("wins"))).build();
 
     projectionsClient.createOrUpdate(projectionDefinition);
 
@@ -123,7 +123,7 @@ public class ProjectionsApiClientTest {
     ProjectionDefinition projectionDefinition =
         ProjectionDefinition.aggregatedProjection("game-count")
             .feed("games")
-            .addHandler(singleFunctionHandler("GameFinished", inc("count"))).build();
+            .addHandler(handler("GameFinished", inc("count"))).build();
 
     projectionsClient.createOrUpdate(projectionDefinition);
 
