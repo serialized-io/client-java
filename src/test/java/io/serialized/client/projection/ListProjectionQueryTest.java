@@ -1,11 +1,12 @@
 package io.serialized.client.projection;
 
+import io.serialized.client.projection.query.ProjectionQueries;
 import okhttp3.HttpUrl;
 import org.junit.Test;
 
 import java.util.Map;
 
-import static io.serialized.client.projection.ListProjectionQuery.list;
+import static io.serialized.client.projection.query.ListProjectionQuery.list;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -17,7 +18,7 @@ public class ListProjectionQueryTest {
 
   @Test
   public void listSimple() {
-    HttpUrl httpUrl = list("game").build(Map.class).constructUrl(ROOT_URL);
+    HttpUrl httpUrl = ProjectionQueries.list("game").build(Map.class).constructUrl(ROOT_URL);
     assertThat(httpUrl.pathSegments(), hasItems("projections", "single", "game"));
     assertThat(httpUrl.queryParameter("limit"), nullValue());
     assertThat(httpUrl.queryParameter("sort"), nullValue());

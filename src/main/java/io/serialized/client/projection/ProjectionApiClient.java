@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.client.SerializedClientConfig;
+import io.serialized.client.projection.query.ListProjectionQuery;
+import io.serialized.client.projection.query.Query;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -37,7 +39,7 @@ public class ProjectionApiClient {
     }
   }
 
-  public <T> ProjectionResponse<T> query(ProjectionQuery query) {
+  public <T> ProjectionResponse<T> query(Query query) {
 
     Request request = new Request.Builder()
         .url(query.constructUrl(apiRoot))

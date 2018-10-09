@@ -1,4 +1,4 @@
-package io.serialized.client.projection;
+package io.serialized.client.projection.query;
 
 import okhttp3.HttpUrl;
 
@@ -27,31 +27,31 @@ public class ListProjectionQuery implements Query {
     return Optional.ofNullable(responseClass);
   }
 
-  public static ListQueryBuilder list(String projectionName) {
-    return new ListQueryBuilder(projectionName);
+  public static Builder list(String projectionName) {
+    return new Builder(projectionName);
   }
 
-  public static class ListQueryBuilder {
+  public static class Builder {
 
     private final String projectionName;
     private Integer limit;
     private String sort;
 
-    public ListQueryBuilder(String projectionName) {
+    public Builder(String projectionName) {
       this.projectionName = projectionName;
     }
 
-    public ListQueryBuilder limit(int limit) {
+    public Builder limit(int limit) {
       this.limit = limit;
       return this;
     }
 
-    public ListQueryBuilder sortDescending(String field) {
+    public Builder sortDescending(String field) {
       this.sort = "-" + field;
       return this;
     }
 
-    public ListQueryBuilder sortAscending(String field) {
+    public Builder sortAscending(String field) {
       this.sort = field;
       return this;
     }

@@ -5,6 +5,7 @@ import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.projection.ProjectionApiClient;
 import io.serialized.client.projection.ProjectionDefinition;
 import io.serialized.client.projection.ProjectionResponse;
+import io.serialized.client.projection.query.ProjectionQueries;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -13,10 +14,9 @@ import org.mockito.ArgumentCaptor;
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.ProjectionHandler.Function.*;
 import static io.serialized.client.projection.ProjectionHandler.singleFunctionHandler;
-import static io.serialized.client.projection.ProjectionQuery.aggregatedProjection;
-import static io.serialized.client.projection.ProjectionQuery.singleProjection;
 import static io.serialized.client.projection.Selector.eventSelector;
 import static io.serialized.client.projection.Selector.targetSelector;
+import static io.serialized.client.projection.query.SingleProjectionQuery.singleProjection;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
@@ -163,7 +163,7 @@ public class ProjectionsApiClientTest {
   @Test
   public void testAggregatedProjection() {
     ProjectionResponse<OrderTotalsProjection> projection = projectionsClient.query(
-        aggregatedProjection("order-totals")
+        ProjectionQueries.aggregated("order-totals")
             .build(OrderTotalsProjection.class));
 
     assertThat(projection.projectionId, is("order-totals"));

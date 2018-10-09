@@ -1,5 +1,6 @@
-package io.serialized.client.projection;
+package io.serialized.client.projection.query;
 
+import io.serialized.client.projection.ProjectionType;
 import okhttp3.HttpUrl;
 
 import java.util.Optional;
@@ -8,12 +9,15 @@ import java.util.function.Function;
 import static io.serialized.client.projection.ProjectionType.AGGREGATED;
 import static io.serialized.client.projection.ProjectionType.SINGLE;
 
-public class ProjectionQuery implements Query {
+/**
+ * A query object
+ */
+public class AggregatedProjectionQuery implements Query {
 
   private final Class responseClass;
   private final Function<HttpUrl, HttpUrl> urlBuilder;
 
-  public ProjectionQuery(Function<HttpUrl, HttpUrl> urlBuilder, Class responseClass) {
+  public AggregatedProjectionQuery(Function<HttpUrl, HttpUrl> urlBuilder, Class responseClass) {
     this.urlBuilder = urlBuilder;
     this.responseClass = responseClass;
   }
@@ -28,60 +32,8 @@ public class ProjectionQuery implements Query {
     return Optional.ofNullable(responseClass);
   }
 
-  public static ListQueryBuilder list(String projectionName) {
-    return new ListQueryBuilder(projectionName);
-  }
-
-  public static Builder singleProjection(String projectionName) {
-    return new Builder(SINGLE, projectionName);
-  }
-
   public static Builder aggregatedProjection(String projectionName) {
     return new Builder(AGGREGATED, projectionName);
-  }
-
-  public static class ListQueryBuilder {
-
-    private final String projectionName;
-    private Integer limit;
-    private String sort;
-
-    public ListQueryBuilder(String projectionName) {
-      this.projectionName = projectionName;
-    }
-
-    public ListQueryBuilder limit(int limit) {
-      this.limit = limit;
-      return this;
-    }
-
-    public ListQueryBuilder sortDescending(String field) {
-      this.sort = "-" + field;
-      return this;
-    }
-
-    public ListQueryBuilder sortAscending(String field) {
-      this.sort = field;
-      return this;
-    }
-
-    private HttpUrl urlBuilder(HttpUrl rootUrl) {
-      HttpUrl.Builder projections = rootUrl.newBuilder()
-          .addPathSegment("projections")
-          .addPathSegment(SINGLE.name())
-          .addPathSegment(projectionName);
-
-      Optional.ofNullable(limit).ifPresent(limit -> projections.addQueryParameter("limit", String.valueOf(limit)));
-      Optional.ofNullable(sort).ifPresent(limit -> projections.addQueryParameter("sort", sort));
-
-      return projections
-          .build();
-    }
-
-    public ProjectionQuery build(Class responseClass) {
-      return new ProjectionQuery(this::urlBuilder, responseClass);
-    }
-
   }
 
   public static class Builder {
@@ -119,8 +71,8 @@ public class ProjectionQuery implements Query {
       }
     }
 
-    public ProjectionQuery build(Class responseClass) {
-      return new ProjectionQuery(this::urlBuilder, responseClass);
+    public AggregatedProjectionQuery build(Class responseClass) {
+      return new AggregatedProjectionQuery(this::urlBuilder, responseClass);
     }
 
   }
