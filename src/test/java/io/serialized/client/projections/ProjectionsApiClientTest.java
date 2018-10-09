@@ -58,7 +58,7 @@ public class ProjectionsApiClientTest {
         ProjectionDefinition.singleProjection("high-score")
             .feed("game")
             .withIdField("winner")
-            .withHandler("GameFinished",
+            .addHandler("GameFinished",
                 set(targetSelector("playerName"), eventSelector("winner")),
                 inc("wins"),
                 setref("wins"))

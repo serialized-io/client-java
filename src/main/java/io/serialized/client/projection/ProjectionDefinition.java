@@ -57,7 +57,7 @@ public class ProjectionDefinition {
       return this;
     }
 
-    public AggregatedProjectionBuilder withHandler(String eventType, ProjectionHandler.Function... functions) {
+    public AggregatedProjectionBuilder addHandler(String eventType, ProjectionHandler.Function... functions) {
       ProjectionHandler.Builder builder = ProjectionHandler.handler(eventType);
       asList(functions).forEach(builder::addFunction);
       return addHandler(builder.build());
@@ -89,7 +89,7 @@ public class ProjectionDefinition {
       return this;
     }
 
-    public SingleProjectionBuilder withHandler(String eventType, ProjectionHandler.Function... functions) {
+    public SingleProjectionBuilder addHandler(String eventType, ProjectionHandler.Function... functions) {
       ProjectionHandler.Builder builder = ProjectionHandler.handler(eventType);
       asList(functions).forEach(builder::addFunction);
       return addHandler(builder.build());
