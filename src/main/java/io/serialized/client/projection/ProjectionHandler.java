@@ -55,7 +55,6 @@ public class ProjectionHandler {
           .build();
     }
 
-
     public static Function add(Selector targetSelector, RawData rawData) {
       return addBuilder().targetSelector(targetSelector).rawData(rawData).build();
     }
@@ -109,7 +108,6 @@ public class ProjectionHandler {
           .eventFilter(eventFilter)
           .build();
     }
-
 
     public static Function set(Selector targetSelector, RawData rawData) {
       return setBuilder().targetSelector(targetSelector).rawData(rawData).build();
