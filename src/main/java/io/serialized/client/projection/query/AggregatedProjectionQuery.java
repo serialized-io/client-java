@@ -1,23 +1,21 @@
 package io.serialized.client.projection.query;
 
-import io.serialized.client.projection.ProjectionType;
 import okhttp3.HttpUrl;
 
 import java.util.Optional;
 import java.util.function.Function;
 
 import static io.serialized.client.projection.ProjectionType.AGGREGATED;
-import static io.serialized.client.projection.ProjectionType.SINGLE;
 
 /**
  * A query object
  */
-public class AggregatedProjectionQuery implements Query {
+public class AggregatedProjectionQuery implements ProjectionQuery {
 
   private final Class responseClass;
   private final Function<HttpUrl, HttpUrl> urlBuilder;
 
-  public AggregatedProjectionQuery(Function<HttpUrl, HttpUrl> urlBuilder, Class responseClass) {
+  private AggregatedProjectionQuery(Function<HttpUrl, HttpUrl> urlBuilder, Class responseClass) {
     this.urlBuilder = urlBuilder;
     this.responseClass = responseClass;
   }
@@ -32,43 +30,20 @@ public class AggregatedProjectionQuery implements Query {
     return Optional.ofNullable(responseClass);
   }
 
-  public static Builder aggregatedProjection(String projectionName) {
-    return new Builder(AGGREGATED, projectionName);
-  }
-
   public static class Builder {
 
-    private final ProjectionType projectionType;
     private final String projectionName;
-    private String projectionId;
 
-    public Builder(ProjectionType projectionType, String projectionName) {
-      this.projectionType = projectionType;
+    public Builder(String projectionName) {
       this.projectionName = projectionName;
     }
 
-    public Builder id(String projectionId) {
-      this.projectionId = projectionId;
-      return this;
-    }
-
     private HttpUrl urlBuilder(HttpUrl rootUrl) {
-      if (SINGLE.equals(projectionType)) {
-        return rootUrl.newBuilder()
-            .addPathSegment("projections")
-            .addPathSegment(projectionType.name().toLowerCase())
-            .addPathSegment(projectionName)
-            .addPathSegment(projectionId)
-            .build();
-      } else if (AGGREGATED.equals(projectionType)) {
-        return rootUrl.newBuilder()
-            .addPathSegment("projections")
-            .addPathSegment(projectionType.name().toLowerCase())
-            .addPathSegment(projectionName)
-            .build();
-      } else {
-        throw new IllegalStateException("Invalid projectionType: " + projectionType);
-      }
+      return rootUrl.newBuilder()
+          .addPathSegment("projections")
+          .addPathSegment(AGGREGATED.name().toLowerCase())
+          .addPathSegment(projectionName)
+          .build();
     }
 
     public AggregatedProjectionQuery build(Class responseClass) {

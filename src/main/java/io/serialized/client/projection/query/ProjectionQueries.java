@@ -3,15 +3,15 @@ package io.serialized.client.projection.query;
 public class ProjectionQueries {
 
   public static ListProjectionQuery.Builder list(String projectionName) {
-    return ListProjectionQuery.list(projectionName);
+    return new ListProjectionQuery.Builder(projectionName);
   }
 
   public static SingleProjectionQuery.Builder single(String projectionName) {
-    return SingleProjectionQuery.singleProjection(projectionName);
+    return new SingleProjectionQuery.Builder(projectionName);
   }
 
   public static AggregatedProjectionQuery.Builder aggregated(String projectionName) {
-    return AggregatedProjectionQuery.aggregatedProjection(projectionName);
+    return new AggregatedProjectionQuery.Builder(projectionName);
   }
 
 }

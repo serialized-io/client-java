@@ -16,7 +16,7 @@ import static io.serialized.client.projection.ProjectionHandler.Function.*;
 import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.Selector.eventSelector;
 import static io.serialized.client.projection.Selector.targetSelector;
-import static io.serialized.client.projection.query.SingleProjectionQuery.singleProjection;
+import static io.serialized.client.projection.query.ProjectionQueries.single;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
@@ -151,7 +151,7 @@ public class ProjectionsApiClientTest {
   @Test
   public void testSingleProjection() {
     ProjectionResponse<OrderBalanceProjection> projection = projectionsClient.query(
-        singleProjection("orders")
+        single("orders")
             .id("723ecfce-14e9-4889-98d5-a3d0ad54912f")
             .build(OrderBalanceProjection.class));
 

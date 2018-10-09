@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.projection.query.ListProjectionQuery;
-import io.serialized.client.projection.query.Query;
+import io.serialized.client.projection.query.ProjectionQuery;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -39,14 +39,14 @@ public class ProjectionApiClient {
     }
   }
 
-  public <T> ProjectionResponse<T> query(Query query) {
+  public <T> ProjectionResponse<T> query(ProjectionQuery projectionQuery) {
 
     Request request = new Request.Builder()
-        .url(query.constructUrl(apiRoot))
+        .url(projectionQuery.constructUrl(apiRoot))
         .get()
         .build();
 
-    JavaType javaType = query.responseClass()
+    JavaType javaType = projectionQuery.responseClass()
         .map(dataClass -> objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, dataClass))
         .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
 

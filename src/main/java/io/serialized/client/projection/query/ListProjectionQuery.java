@@ -7,7 +7,7 @@ import java.util.function.Function;
 
 import static io.serialized.client.projection.ProjectionType.SINGLE;
 
-public class ListProjectionQuery implements Query {
+public class ListProjectionQuery implements ProjectionQuery {
 
   private final Class responseClass;
   private final Function<HttpUrl, HttpUrl> urlBuilder;
@@ -25,10 +25,6 @@ public class ListProjectionQuery implements Query {
   @Override
   public Optional<Class> responseClass() {
     return Optional.ofNullable(responseClass);
-  }
-
-  public static Builder list(String projectionName) {
-    return new Builder(projectionName);
   }
 
   public static class Builder {

@@ -4,7 +4,7 @@ import okhttp3.HttpUrl;
 
 import java.util.Optional;
 
-public interface Query {
+public interface ProjectionQuery {
 
   /**
    * Build the full URL for the projection query
