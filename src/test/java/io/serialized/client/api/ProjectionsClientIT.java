@@ -24,7 +24,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
-public class ProjectionsApiClientTest {
+public class ProjectionsClientIT {
 
   public static class OrderBalanceProjection {
     public long orderAmount;

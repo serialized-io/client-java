@@ -11,7 +11,7 @@ import org.junit.Test;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-public class FeedApiClientTest {
+public class FeedClientIT {
 
   @ClassRule
   public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new FeedApi());

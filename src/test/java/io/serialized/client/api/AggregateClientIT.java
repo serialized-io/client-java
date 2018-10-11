@@ -15,12 +15,12 @@ import java.util.UUID;
 import static io.serialized.client.aggregates.AggregateClient.aggregateClient;
 import static io.serialized.client.aggregates.Event.newEvent;
 import static io.serialized.client.aggregates.EventBatch.newBatch;
-import static io.serialized.client.api.AggregateClientTest.OrderPlaced.orderPlaced;
+import static io.serialized.client.api.AggregateClientIT.OrderPlaced.orderPlaced;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
-public class AggregateClientTest {
+public class AggregateClientIT {
 
   public static class OrderPlaced {
 
