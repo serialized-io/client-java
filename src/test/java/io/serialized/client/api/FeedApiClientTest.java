@@ -1,11 +1,12 @@
-package io.serialized.client.feed;
+package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
+import io.serialized.client.feed.FeedApi;
+import io.serialized.client.feed.FeedApiClient;
+import io.serialized.client.feed.FeedResponse;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -24,7 +25,7 @@ public class FeedApiClientTest {
       .build();
 
   @Test
-  public void listFeeds() throws IOException {
+  public void listFeeds() {
     assertThat(feedClient.listFeeds().size(), is(1));
     assertThat(feedClient.listFeeds().get(0).aggregateType(), is("games"));
     assertThat(feedClient.listFeeds().get(0).aggregateCount(), is(10L));
@@ -33,7 +34,7 @@ public class FeedApiClientTest {
   }
 
   @Test
-  public void feedEntries() throws IOException {
+  public void feedEntries() {
     FeedResponse feedResponse = feedClient.feed("games");
 
     assertThat(feedResponse.entries().size(), is(48));

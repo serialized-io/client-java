@@ -1,4 +1,4 @@
-package io.serialized.client.projections;
+package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
@@ -6,6 +6,8 @@ import io.serialized.client.projection.ProjectionApiClient;
 import io.serialized.client.projection.ProjectionDefinition;
 import io.serialized.client.projection.ProjectionResponse;
 import io.serialized.client.projection.query.ProjectionQueries;
+import io.serialized.client.projections.CreateProjectionDefinitionRequest;
+import io.serialized.client.projections.ProjectionApi;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;

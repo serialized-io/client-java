@@ -1,9 +1,10 @@
-package io.serialized.client.aggregates;
+package io.serialized.client.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
+import io.serialized.client.aggregates.*;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -12,9 +13,9 @@ import org.mockito.ArgumentCaptor;
 import java.util.UUID;
 
 import static io.serialized.client.aggregates.AggregateClient.aggregateClient;
-import static io.serialized.client.aggregates.AggregateClientTest.OrderPlaced.orderPlaced;
 import static io.serialized.client.aggregates.Event.newEvent;
 import static io.serialized.client.aggregates.EventBatch.newBatch;
+import static io.serialized.client.api.AggregateClientTest.OrderPlaced.orderPlaced;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
