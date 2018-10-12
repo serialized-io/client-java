@@ -7,7 +7,7 @@ public class CreateProjectionDefinitionRequest {
 
   public String projectionName;
   public String feedName;
-  public String type;
+  public boolean aggregated;
   public String idField;
   public List<ProjectionHandler> handlers;
 

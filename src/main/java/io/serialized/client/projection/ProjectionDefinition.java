@@ -9,7 +9,7 @@ public class ProjectionDefinition {
 
   private String projectionName;
   private String feedName;
-  private String type;
+  private boolean aggregated;
   private String idField;
   private List<ProjectionHandler> handlers;
 
@@ -20,7 +20,7 @@ public class ProjectionDefinition {
   private ProjectionDefinition(String projectionName, String feedName, boolean aggregated, String idField, List<ProjectionHandler> handlers) {
     this.projectionName = projectionName;
     this.feedName = feedName;
-    this.type = aggregated ? "aggregated" : "single";
+    this.aggregated = aggregated;
     this.idField = idField;
     this.handlers = handlers;
   }
