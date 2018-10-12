@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
-import static io.serialized.client.projection.ProjectionHandler.Function.*;
+import static io.serialized.client.projection.Function.*;
 import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.Selector.eventSelector;
 import static io.serialized.client.projection.Selector.targetSelector;
