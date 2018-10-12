@@ -19,12 +19,9 @@ public class AggregateFactoryTest {
     StateBuilder<OrderState> orderStateBuilder = StateBuilder.stateBuilder(OrderState.class)
         .withHandler(OrderPlaced.class, OrderState::orderPlaced);
 
-    AggregateFactory<Order, OrderState> orderFactory = newFactory(Order.class, orderStateBuilder)
-        .initializer(Order::new)
-        .build();
-
     UUID orderId = UUID.randomUUID();
 
+    AggregateFactory<Order, OrderState> orderFactory = newFactory(Order::new, orderStateBuilder);
     Order order = orderFactory.fromCommands(aggregate -> aggregate.placeOrder(orderId, 1000));
 
     assertThat(order.placeOrder(orderId, 1000).size(), is(0));

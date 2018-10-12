@@ -11,9 +11,9 @@ public class AggregateFactory<A, T> {
   private final StateBuilder<T> stateBuilder;
   private final Function<T, A> initializer;
 
-  public AggregateFactory(Builder<A, T> builder) {
-    this.stateBuilder = builder.stateBuilder;
-    this.initializer = builder.initializer;
+  public AggregateFactory(Function<T, A> initializer, StateBuilder<T> stateBuilder) {
+    this.stateBuilder = stateBuilder;
+    this.initializer = initializer;
   }
 
   public A fromCommands(List<Command<A>> commands) {
@@ -39,29 +39,8 @@ public class AggregateFactory<A, T> {
     return fromCommands(asList(commands));
   }
 
-  public static <A, T> Builder<A, T> newFactory(Class<A> aggregateClass, StateBuilder<T> stateBuilder) {
-    return new Builder<>(aggregateClass, stateBuilder);
-  }
-
-  public static class Builder<A, T> {
-
-    private Class<A> aggregateClass;
-    private final StateBuilder<T> stateBuilder;
-    private Function<T, A> initializer;
-
-    public Builder(Class<A> aggregateClass, StateBuilder<T> stateBuilder) {
-      this.aggregateClass = aggregateClass;
-      this.stateBuilder = stateBuilder;
-    }
-
-    Builder<A, T> initializer(Function<T, A> initializer) {
-      this.initializer = initializer;
-      return this;
-    }
-
-    public AggregateFactory<A, T> build() {
-      return new AggregateFactory<>(this);
-    }
+  public static <A, T> AggregateFactory<A, T> newFactory(Function<T, A> initializer, StateBuilder<T> stateBuilder) {
+    return new AggregateFactory<>(initializer, stateBuilder);
   }
 
 }
