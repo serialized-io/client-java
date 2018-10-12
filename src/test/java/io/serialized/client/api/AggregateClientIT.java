@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.aggregates.*;
+import io.serialized.client.aggregates.order.OrderPlaced;
+import io.serialized.client.aggregates.order.OrderState;
+import io.serialized.client.aggregates.order.OrderStatus;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -13,39 +16,13 @@ import org.mockito.ArgumentCaptor;
 import java.util.UUID;
 
 import static io.serialized.client.aggregates.AggregateClient.aggregateClient;
-import static io.serialized.client.aggregates.Event.newEvent;
 import static io.serialized.client.aggregates.EventBatch.newBatch;
-import static io.serialized.client.api.AggregateClientIT.OrderPlaced.orderPlaced;
+import static io.serialized.client.aggregates.order.OrderPlaced.orderPlaced;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 public class AggregateClientIT {
-
-  public static class OrderPlaced {
-
-    private String customerId;
-    private long orderAmount;
-
-    public static OrderPlaced orderPlaced(String customerId, long orderAmount) {
-      OrderPlaced orderPlacedEvent = new OrderPlaced();
-      orderPlacedEvent.customerId = customerId;
-      orderPlacedEvent.orderAmount = orderAmount;
-      return orderPlacedEvent;
-    }
-
-  }
-
-  public static class OrderState {
-
-    private String status;
-
-    public OrderState orderPlaced(Event<OrderPlaced> event) {
-      this.status = "placed";
-      return this;
-    }
-
-  }
 
   private static AggregatesApi.Callback apiCallback = mock(AggregatesApi.Callback.class);
 
@@ -76,7 +53,7 @@ public class AggregateClientIT {
 
     State<OrderState> orderState = build.loadState("723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
-    assertThat(orderState.data().status, is("placed"));
+    assertThat(orderState.data().status, is(OrderStatus.PLACED));
   }
 
   @Test
@@ -97,7 +74,7 @@ public class AggregateClientIT {
     UUID aggregateId = UUID.randomUUID();
     orderClient.storeEvents(
         newBatch(aggregateId)
-            .addEvent(newEvent(orderPlaced("customer-123", 1234L)).build())
+            .addEvent(orderPlaced("order-123", 1234L))
             .build());
 
     ArgumentCaptor<EventBatchDto> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatchDto.class);
@@ -109,7 +86,7 @@ public class AggregateClientIT {
     assertThat(eventsStored.events.size(), is(1));
     assertThat(eventsStored.events.get(0).eventType, is(OrderPlaced.class.getSimpleName()));
     assertThat(eventsStored.events.get(0).data.get("orderAmount"), is(1234));
-    assertThat(eventsStored.events.get(0).data.get("customerId"), is("customer-123"));
+    assertThat(eventsStored.events.get(0).data.get("orderId"), is("order-123"));
 
   }
 
@@ -131,7 +108,7 @@ public class AggregateClientIT {
 
   @Test
   public void storeEventsInBatch() {
-    Event<OrderPlaced> orderPlacedEvent = newEvent(orderPlaced("some-test-id-1", 12345)).build();
+    Event<OrderPlaced> orderPlacedEvent = orderPlaced("some-test-id-1", 12345);
 
     EventBatch eventBatch = newBatch("723ecfce-14e9-4889-98d5-a3d0ad54912f")
         .addEvent(orderPlacedEvent).build();
@@ -142,7 +119,7 @@ public class AggregateClientIT {
   @Test
   public void storeSingleEvent() {
 
-    Event orderPlacedEvent = newEvent(orderPlaced("ACME Inc.", 12345)).build();
+    Event orderPlacedEvent = orderPlaced("ACME Inc.", 12345);
 
     orderClient.storeEvent("723ecfce-14e9-4889-98d5-a3d0ad54912f", orderPlacedEvent);
   }
