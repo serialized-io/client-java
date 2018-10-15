@@ -27,6 +27,6 @@ public class StateBuilderTest {
     );
     State<OrderState> orderStateState = orderStateBuilder.buildState(events, 2);
 
-    assertThat(orderStateState.data().status, is(PLACED));
+    assertThat(orderStateState.data().status(), is(PLACED));
   }
 }

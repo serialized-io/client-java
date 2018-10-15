@@ -4,8 +4,8 @@ import io.serialized.client.aggregates.Event;
 
 public class OrderState {
 
-  public OrderStatus status;
-  public String orderId;
+  private OrderStatus status;
+  private String orderId;
 
   public OrderState orderPlaced(Event<OrderPlaced> event) {
     this.status = OrderStatus.PLACED;
@@ -13,4 +13,11 @@ public class OrderState {
     return this;
   }
 
+  public OrderStatus status() {
+    return status;
+  }
+
+  public String orderId() {
+    return orderId;
+  }
 }

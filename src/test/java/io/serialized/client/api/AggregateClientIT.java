@@ -53,7 +53,7 @@ public class AggregateClientIT {
 
     State<OrderState> orderState = build.loadState("723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
-    assertThat(orderState.data().status, is(OrderStatus.PLACED));
+    assertThat(orderState.data().status(), is(OrderStatus.PLACED));
   }
 
   @Test

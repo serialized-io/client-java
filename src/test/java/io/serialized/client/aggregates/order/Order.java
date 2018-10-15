@@ -15,8 +15,8 @@ public class Order {
   private final String orderId;
 
   public Order(OrderState state) {
-    this.status = state.status;
-    this.orderId = state.orderId;
+    this.status = state.status();
+    this.orderId = state.orderId();
   }
 
   public List<Event> placeOrder(UUID orderId, long amount) {
