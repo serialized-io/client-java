@@ -19,10 +19,6 @@ public class Order {
     this.orderId = state.orderId;
   }
 
-  public static Order initialize() {
-    return null;
-  }
-
   public List<Event> placeOrder(UUID orderId, long amount) {
     if (orderId.toString().equals(this.orderId)) {
       return emptyList();
