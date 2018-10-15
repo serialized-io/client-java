@@ -31,6 +31,14 @@ public class EventBatch {
     return new Builder().aggregateId(aggregateId);
   }
 
+  public static EventBatch newBatch(UUID aggregateId, List<Event> events) {
+    return new Builder().aggregateId(aggregateId).addEvents(events).build();
+  }
+
+  public static EventBatch newBatch(String aggregateId, List<Event> events) {
+    return newBatch(UUID.fromString(aggregateId), events);
+  }
+
   public static class Builder {
 
     private final List<Event> events = new ArrayList<>();
