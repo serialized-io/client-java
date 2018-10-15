@@ -2,6 +2,7 @@ package io.serialized.client.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.google.common.collect.ImmutableList;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.aggregates.*;
@@ -13,6 +14,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.List;
 import java.util.UUID;
 
 import static io.serialized.client.aggregates.AggregateClient.aggregateClient;
@@ -47,11 +49,11 @@ public class AggregateClientIT {
   @Test
   public void testLoadAggregateState() {
 
-    AggregateClient<OrderState> build = aggregateClient("order", OrderState.class, serializedConfig)
+    AggregateClient<OrderState> orderClient = aggregateClient("order", OrderState.class, serializedConfig)
         .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
         .build();
 
-    State<OrderState> orderState = build.loadState("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    State<OrderState> orderState = orderClient.loadState("723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
     assertThat(orderState.data().status(), is(OrderStatus.PLACED));
   }
@@ -93,11 +95,11 @@ public class AggregateClientIT {
   @Test
   public void loadAggregateWithSpecificedEventType() {
 
-    AggregateClient<OrderState> aggregatesApiClient = aggregateClient("order-specific", OrderState.class, serializedConfig)
+    AggregateClient<OrderState> orderClient = aggregateClient("order-specific", OrderState.class, serializedConfig)
         .registerHandler("order-placed", OrderPlaced.class, OrderState::orderPlaced)
         .build();
 
-    LoadAggregateResponse aggregateResponse = aggregatesApiClient.loadEvents("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    LoadAggregateResponse aggregateResponse = orderClient.loadEvents("723ecfce-14e9-4889-98d5-a3d0ad54912f");
 
     assertThat(aggregateResponse.aggregateId(), is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
     assertThat(aggregateResponse.aggregateType(), is("order-specific"));
@@ -108,10 +110,9 @@ public class AggregateClientIT {
 
   @Test
   public void storeEventsInBatch() {
-    Event<OrderPlaced> orderPlacedEvent = orderPlaced("some-test-id-1", 12345);
+    List<Event> events = ImmutableList.of(orderPlaced("some-test-id-1", 12345));
 
-    EventBatch eventBatch = newBatch("723ecfce-14e9-4889-98d5-a3d0ad54912f")
-        .addEvent(orderPlacedEvent).build();
+    EventBatch eventBatch = newBatch("723ecfce-14e9-4889-98d5-a3d0ad54912f", events);
 
     orderClient.storeEvents(eventBatch);
   }
