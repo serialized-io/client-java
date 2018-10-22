@@ -77,7 +77,7 @@ To create a client handling order events we create a client for the aggregates A
 ### Loading aggregate state from events
 
 ```
-AggregateClient<OrderState> orderClient = aggregateClient("order", OrderState.class, serializedConfig)
+AggregateClient<OrderState> orderClient = AggregateClient.aggregateClient("order", OrderState.class, serializedConfig)
     .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
     .build();
     
