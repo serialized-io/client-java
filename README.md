@@ -97,14 +97,14 @@ orderClient.storeEvents(newBatch(aggregateId, events));
 ## Creating projections
 To create projections using the client we need to create a `ProjectionApiClient` by calling `projectionsClient(SerializedClientConfig config)`:
 ```
-ProjectionApiClient projectionsClient = projectionsClient(serializedConfig).build();
+ProjectionApiClient projectionsClient = ProjectionApiClient.projectionsClient(serializedConfig).build();
 ```
 
 There are numerous combinations of projection definitions that you can create and we encourage you to explore the [documentation](https://www.serialized.io/docs/apis/event-projection/) as well as the [sample code](https://github.com/serialized-io/samples-java).
 
 To illustrate we can take the following example which will count the number of placed orders
 ```
-projectionApiClient.createOrUpdate(
+projectionsClient.createOrUpdate(
         aggregatedProjection("order-count")
             .feed("order")
             .addHandler("OrderPlaced", inc("totalPlacedOrders"))
