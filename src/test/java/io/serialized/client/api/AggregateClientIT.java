@@ -5,10 +5,16 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.google.common.collect.ImmutableList;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.aggregates.*;
-import io.serialized.client.aggregates.order.OrderPlaced;
-import io.serialized.client.aggregates.order.OrderState;
-import io.serialized.client.aggregates.order.OrderStatus;
+import io.serialized.client.aggregate.AggregateApiStub;
+import io.serialized.client.aggregate.AggregateClient;
+import io.serialized.client.aggregate.Event;
+import io.serialized.client.aggregate.EventBatch;
+import io.serialized.client.aggregate.EventBatchDto;
+import io.serialized.client.aggregate.LoadAggregateResponse;
+import io.serialized.client.aggregate.State;
+import io.serialized.client.aggregate.order.OrderPlaced;
+import io.serialized.client.aggregate.order.OrderState;
+import io.serialized.client.aggregate.order.OrderStatus;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -17,19 +23,19 @@ import org.mockito.ArgumentCaptor;
 import java.util.List;
 import java.util.UUID;
 
-import static io.serialized.client.aggregates.AggregateClient.aggregateClient;
-import static io.serialized.client.aggregates.EventBatch.newBatch;
-import static io.serialized.client.aggregates.order.OrderPlaced.orderPlaced;
+import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
+import static io.serialized.client.aggregate.EventBatch.newBatch;
+import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 public class AggregateClientIT {
 
-  private static AggregatesApi.Callback apiCallback = mock(AggregatesApi.Callback.class);
+  private static AggregateApiStub.Callback apiCallback = mock(AggregateApiStub.Callback.class);
 
   @ClassRule
-  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new AggregatesApi(apiCallback));
+  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new AggregateApiStub(apiCallback));
 
   private final SerializedClientConfig serializedConfig = SerializedClientConfig.serializedConfig()
       .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")

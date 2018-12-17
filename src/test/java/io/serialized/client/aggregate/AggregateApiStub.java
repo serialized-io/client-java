@@ -1,10 +1,15 @@
-package io.serialized.client.aggregates;
+package io.serialized.client.aggregate;
 
 import org.apache.commons.io.IOUtils;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
@@ -14,11 +19,11 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 @Path("/api-stub/aggregates")
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
-public class AggregatesApi {
+public class AggregateApiStub {
 
   private final Callback callback;
 
-  public AggregatesApi(Callback callback) {
+  public AggregateApiStub(Callback callback) {
     this.callback = callback;
   }
 
@@ -52,4 +57,5 @@ public class AggregatesApi {
   private String getResource(String s) throws IOException {
     return IOUtils.toString(getClass().getResourceAsStream(s), "UTF-8");
   }
+
 }

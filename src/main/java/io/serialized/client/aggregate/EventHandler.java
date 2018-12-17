@@ -1,4 +1,4 @@
-package io.serialized.client.aggregates;
+package io.serialized.client.aggregate;
 
 public interface EventHandler<T, E> {
 

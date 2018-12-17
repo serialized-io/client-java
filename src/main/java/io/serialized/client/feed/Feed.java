@@ -22,4 +22,5 @@ public class Feed {
   public long eventCount() {
     return eventCount;
   }
+
 }

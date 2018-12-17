@@ -11,16 +11,16 @@ import okhttp3.OkHttpClient;
 
 import java.util.Map;
 
-public class ProjectionApiClient {
+public class ProjectionClient {
 
   private final SerializedOkHttpClient client;
-  private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
+  private final ObjectMapper objectMapper;
 
-  private ProjectionApiClient(Builder builder) {
+  private ProjectionClient(Builder builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
-    this.objectMapper = builder.objectMapper;
     this.apiRoot = builder.apiRoot;
+    this.objectMapper = builder.objectMapper;
   }
 
   public void createOrUpdate(ProjectionDefinition projectionDefinition) {
@@ -33,7 +33,6 @@ public class ProjectionApiClient {
   }
 
   public <T> ProjectionResponse<T> query(ProjectionQuery projectionQuery) {
-
     HttpUrl url = projectionQuery.constructUrl(apiRoot);
 
     JavaType javaType = projectionQuery.responseClass()
@@ -44,7 +43,6 @@ public class ProjectionApiClient {
   }
 
   public <T> ProjectionsResponse<T> list(ListProjectionQuery query) {
-
     HttpUrl url = query.constructUrl(apiRoot);
 
     JavaType javaType = query.responseClass()
@@ -52,11 +50,10 @@ public class ProjectionApiClient {
         .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
 
     return client.get(url, javaType);
-
   }
 
-  public static ProjectionApiClient.Builder projectionsClient(SerializedClientConfig config) {
-    return new ProjectionApiClient.Builder(config);
+  public static ProjectionClient.Builder projectionsClient(SerializedClientConfig config) {
+    return new ProjectionClient.Builder(config);
   }
 
   public static class Builder {
@@ -71,8 +68,8 @@ public class ProjectionApiClient {
       this.apiRoot = config.apiRoot();
     }
 
-    public ProjectionApiClient build() {
-      return new ProjectionApiClient(this);
+    public ProjectionClient build() {
+      return new ProjectionClient(this);
     }
   }
 

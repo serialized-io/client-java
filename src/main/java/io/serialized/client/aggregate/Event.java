@@ -1,4 +1,4 @@
-package io.serialized.client.aggregates;
+package io.serialized.client.aggregate;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -135,4 +135,5 @@ public class Event<T> {
       return eventId(UUID.fromString(eventId));
     }
   }
+
 }

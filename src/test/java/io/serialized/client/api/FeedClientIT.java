@@ -2,8 +2,8 @@ package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.feed.FeedApi;
-import io.serialized.client.feed.FeedApiClient;
+import io.serialized.client.feed.FeedApiStub;
+import io.serialized.client.feed.FeedClient;
 import io.serialized.client.feed.FeedResponse;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -14,9 +14,9 @@ import static org.junit.Assert.assertThat;
 public class FeedClientIT {
 
   @ClassRule
-  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new FeedApi());
+  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new FeedApiStub());
 
-  private FeedApiClient feedClient = FeedApiClient.feedClient(
+  private FeedClient feedClient = FeedClient.feedClient(
       SerializedClientConfig.serializedConfig()
           .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
           .accessKey("aaaaa")

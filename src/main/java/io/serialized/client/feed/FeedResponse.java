@@ -14,4 +14,5 @@ public class FeedResponse {
   public List<FeedEntry> entries() {
     return entries;
   }
+
 }

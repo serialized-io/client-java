@@ -1,4 +1,4 @@
-package io.serialized.client.aggregates;
+package io.serialized.client.aggregate;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,7 +77,6 @@ public class EventBatch {
     public EventBatch build() {
       return new EventBatch(this);
     }
-
   }
 
 }

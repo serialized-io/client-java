@@ -1,4 +1,4 @@
-package io.serialized.client.projections;
+package io.serialized.client.projection;
 
 import java.util.ArrayList;
 import java.util.List;

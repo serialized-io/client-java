@@ -15,4 +15,5 @@ public class Filter {
   public String filterString() {
     return filter;
   }
+
 }

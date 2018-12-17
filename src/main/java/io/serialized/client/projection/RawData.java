@@ -21,4 +21,5 @@ public class RawData {
   public Object value() {
     return data;
   }
+
 }

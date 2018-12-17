@@ -20,4 +20,5 @@ public interface ProjectionQuery {
    * @return the response class
    */
   Optional<Class> responseClass();
+
 }

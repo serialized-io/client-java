@@ -2,12 +2,12 @@ package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.projection.ProjectionApiClient;
+import io.serialized.client.projection.CreateProjectionDefinitionRequest;
+import io.serialized.client.projection.ProjectionApiStub;
+import io.serialized.client.projection.ProjectionClient;
 import io.serialized.client.projection.ProjectionDefinition;
 import io.serialized.client.projection.ProjectionResponse;
 import io.serialized.client.projection.query.ProjectionQueries;
-import io.serialized.client.projections.CreateProjectionDefinitionRequest;
-import io.serialized.client.projections.ProjectionApi;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -24,7 +24,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
-public class ProjectionsClientIT {
+public class ProjectionClientIT {
 
   public static class OrderBalanceProjection {
     public long orderAmount;
@@ -35,10 +35,10 @@ public class ProjectionsClientIT {
     public long orderCount;
   }
 
-  private static ProjectionApi.Callback apiCallback = mock(ProjectionApi.Callback.class);
+  private static ProjectionApiStub.Callback apiCallback = mock(ProjectionApiStub.Callback.class);
 
   @ClassRule
-  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ProjectionApi(apiCallback));
+  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ProjectionApiStub(apiCallback));
 
   private SerializedClientConfig config = serializedConfig()
       .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
@@ -46,7 +46,7 @@ public class ProjectionsClientIT {
       .secretAccessKey("bbbbb")
       .build();
 
-  private ProjectionApiClient projectionsClient = ProjectionApiClient.projectionsClient(config).build();
+  private ProjectionClient projectionClient = ProjectionClient.projectionsClient(config).build();
 
   @Before
   public void setUp() {
@@ -66,7 +66,7 @@ public class ProjectionsClientIT {
                 setref("wins"))
             .build();
 
-    projectionsClient.createOrUpdate(highScoreProjection);
+    projectionClient.createOrUpdate(highScoreProjection);
 
     ArgumentCaptor<CreateProjectionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateProjectionDefinitionRequest.class);
     verify(apiCallback, times(1)).projectionCreated(captor.capture());
@@ -97,7 +97,7 @@ public class ProjectionsClientIT {
             .withIdField("winner")
             .addHandler(handler("GameFinished", inc("wins"))).build();
 
-    projectionsClient.createOrUpdate(projectionDefinition);
+    projectionClient.createOrUpdate(projectionDefinition);
 
     ArgumentCaptor<CreateProjectionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateProjectionDefinitionRequest.class);
     verify(apiCallback, times(1)).projectionCreated(captor.capture());
@@ -127,7 +127,7 @@ public class ProjectionsClientIT {
             .feed("games")
             .addHandler(handler("GameFinished", inc("count"))).build();
 
-    projectionsClient.createOrUpdate(projectionDefinition);
+    projectionClient.createOrUpdate(projectionDefinition);
 
     ArgumentCaptor<CreateProjectionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateProjectionDefinitionRequest.class);
     verify(apiCallback, times(1)).projectionCreated(captor.capture());
@@ -152,7 +152,7 @@ public class ProjectionsClientIT {
 
   @Test
   public void testSingleProjection() {
-    ProjectionResponse<OrderBalanceProjection> projection = projectionsClient.query(
+    ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(
         single("orders")
             .id("723ecfce-14e9-4889-98d5-a3d0ad54912f")
             .build(OrderBalanceProjection.class));
@@ -164,7 +164,7 @@ public class ProjectionsClientIT {
 
   @Test
   public void testAggregatedProjection() {
-    ProjectionResponse<OrderTotalsProjection> projection = projectionsClient.query(
+    ProjectionResponse<OrderTotalsProjection> projection = projectionClient.query(
         ProjectionQueries.aggregated("order-totals")
             .build(OrderTotalsProjection.class));
 

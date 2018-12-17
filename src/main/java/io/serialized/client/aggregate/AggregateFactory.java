@@ -1,4 +1,4 @@
-package io.serialized.client.aggregates;
+package io.serialized.client.aggregate;
 
 import java.util.ArrayList;
 import java.util.List;

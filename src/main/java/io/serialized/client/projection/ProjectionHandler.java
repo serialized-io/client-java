@@ -56,6 +56,6 @@ public class ProjectionHandler {
       projectionHandler.idField = this.idField;
       return projectionHandler;
     }
-
   }
+
 }

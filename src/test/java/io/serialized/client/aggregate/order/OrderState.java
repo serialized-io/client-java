@@ -1,6 +1,6 @@
-package io.serialized.client.aggregates.order;
+package io.serialized.client.aggregate.order;
 
-import io.serialized.client.aggregates.Event;
+import io.serialized.client.aggregate.Event;
 
 public class OrderState {
 

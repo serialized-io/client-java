@@ -1,13 +1,13 @@
-package io.serialized.client.aggregates.order;
+package io.serialized.client.aggregate.order;
 
-import io.serialized.client.aggregates.Event;
+import io.serialized.client.aggregate.Event;
 
-import static io.serialized.client.aggregates.Event.newEvent;
+import static io.serialized.client.aggregate.Event.newEvent;
 
 public class OrderPlaced {
 
   String orderId;
-  private long orderAmount;
+  long orderAmount;
 
   public static Event<OrderPlaced> orderPlaced(String orderId, long orderAmount) {
     OrderPlaced orderPlaced = new OrderPlaced();

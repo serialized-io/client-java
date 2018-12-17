@@ -8,12 +8,12 @@ import okhttp3.OkHttpClient;
 
 import java.util.List;
 
-public class FeedApiClient {
+public class FeedClient {
 
-  private final HttpUrl apiRoot;
   private final SerializedOkHttpClient client;
+  private final HttpUrl apiRoot;
 
-  private FeedApiClient(Builder builder) {
+  private FeedClient(Builder builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
     this.apiRoot = builder.apiRoot;
   }
@@ -25,11 +25,8 @@ public class FeedApiClient {
 
   public FeedResponse feed(String feedName) {
     HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment(feedName).build();
-
     return client.get(url, FeedResponse.class);
-
   }
-
 
   public static Builder feedClient(SerializedClientConfig config) {
     return new Builder(config);
@@ -47,8 +44,8 @@ public class FeedApiClient {
       this.apiRoot = config.apiRoot();
     }
 
-    public FeedApiClient build() {
-      return new FeedApiClient(this);
+    public FeedClient build() {
+      return new FeedClient(this);
     }
   }
 

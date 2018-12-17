@@ -13,7 +13,7 @@ import static org.junit.Assert.assertThat;
 
 public class ListProjectionQueryTest {
 
-  public static final HttpUrl ROOT_URL = HttpUrl.get("https://api.serialized.io");
+  private static final HttpUrl ROOT_URL = HttpUrl.get("https://api.serialized.io");
 
   @Test
   public void listSimple() {

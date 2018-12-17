@@ -1,11 +1,11 @@
-package io.serialized.client.aggregates.order;
+package io.serialized.client.aggregate.order;
 
-import io.serialized.client.aggregates.Event;
+import io.serialized.client.aggregate.Event;
 
 import java.util.List;
 import java.util.UUID;
 
-import static io.serialized.client.aggregates.order.OrderPlaced.orderPlaced;
+import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 

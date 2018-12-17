@@ -1,4 +1,4 @@
-package io.serialized.client.aggregates;
+package io.serialized.client.aggregate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.client.SerializedClientConfig;
@@ -9,21 +9,21 @@ import okhttp3.OkHttpClient;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.serialized.client.aggregates.EventBatch.newBatch;
-import static io.serialized.client.aggregates.StateBuilder.stateBuilder;
+import static io.serialized.client.aggregate.EventBatch.newBatch;
+import static io.serialized.client.aggregate.StateBuilder.stateBuilder;
 
 public class AggregateClient<T> {
 
   private final SerializedOkHttpClient client;
+  private final HttpUrl apiRoot;
   private final StateBuilder<T> stateBuilder;
   private final String aggregateType;
-  private final HttpUrl apiRoot;
 
   private AggregateClient(Builder<T> builder) {
+    this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
+    this.apiRoot = builder.apiRoot;
     this.aggregateType = builder.aggregateType;
     this.stateBuilder = builder.stateBuilder;
-    this.apiRoot = builder.apiRoot;
-    this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
   }
 
   public static <T> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
@@ -41,7 +41,6 @@ public class AggregateClient<T> {
   }
 
   public void storeEvents(EventBatch eventBatch) {
-
     HttpUrl url = apiRoot.newBuilder()
         .addPathSegment("aggregates")
         .addPathSegment(aggregateType)
@@ -58,7 +57,6 @@ public class AggregateClient<T> {
         .addPathSegment(aggregateId).build();
 
     return client.get(url, LoadAggregateResponse.class);
-
   }
 
   public static class Builder<T> {

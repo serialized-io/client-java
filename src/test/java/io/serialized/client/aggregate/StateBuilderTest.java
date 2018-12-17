@@ -1,16 +1,15 @@
-package io.serialized.client.aggregates;
+package io.serialized.client.aggregate;
 
-import io.serialized.client.aggregates.order.OrderPlaced;
-import io.serialized.client.aggregates.order.OrderState;
+import io.serialized.client.aggregate.order.OrderPlaced;
+import io.serialized.client.aggregate.order.OrderState;
+import io.serialized.client.aggregate.order.OrderStatus;
+import org.hamcrest.core.Is;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.UUID;
 
-import static io.serialized.client.aggregates.order.OrderPlaced.orderPlaced;
-import static io.serialized.client.aggregates.order.OrderStatus.PLACED;
 import static java.util.Arrays.asList;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 public class StateBuilderTest {
@@ -22,11 +21,13 @@ public class StateBuilderTest {
         .withHandler(OrderPlaced.class, OrderState::orderPlaced);
 
     List<Event<OrderPlaced>> events = asList(
-        orderPlaced(UUID.randomUUID().toString(), 1000),
-        orderPlaced(UUID.randomUUID().toString(), 1000)
+        OrderPlaced.orderPlaced(UUID.randomUUID().toString(), 1000),
+        OrderPlaced.orderPlaced(UUID.randomUUID().toString(), 1000)
     );
+
     State<OrderState> orderStateState = orderStateBuilder.buildState(events, 2);
 
-    assertThat(orderStateState.data().status(), is(PLACED));
+    assertThat(orderStateState.data().status(), Is.is(OrderStatus.PLACED));
   }
+
 }

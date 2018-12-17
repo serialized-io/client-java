@@ -1,4 +1,4 @@
-package io.serialized.client.aggregates;
+package io.serialized.client.aggregate;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static io.serialized.client.aggregates.Event.newEvent;
+import static io.serialized.client.aggregate.Event.newEvent;
 
 class EventDeserializer extends StdDeserializer<Event> {
 
@@ -54,6 +54,6 @@ class EventDeserializer extends StdDeserializer<Event> {
       eventBuilder.data(jp.getCodec().treeToValue(data, Map.class));
       return eventBuilder.build();
     }
-
   }
+
 }

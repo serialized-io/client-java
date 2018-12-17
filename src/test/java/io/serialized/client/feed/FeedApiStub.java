@@ -2,7 +2,11 @@ package io.serialized.client.feed;
 
 import org.apache.commons.io.IOUtils;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
@@ -12,7 +16,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 @Path("/api-stub/feeds")
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
-public class FeedApi {
+public class FeedApiStub {
 
   @GET
   public Response listFeeds() throws IOException {
