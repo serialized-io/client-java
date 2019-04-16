@@ -43,7 +43,7 @@ public class ProjectionDefinition {
     private final String projectionName;
     private String feedName;
 
-    public AggregatedProjectionBuilder(String projectionName) {
+    AggregatedProjectionBuilder(String projectionName) {
       this.projectionName = projectionName;
     }
 
@@ -75,7 +75,7 @@ public class ProjectionDefinition {
     private String feedName;
     private String idField;
 
-    public SingleProjectionBuilder(String projectionName) {
+    SingleProjectionBuilder(String projectionName) {
       this.projectionName = projectionName;
     }
 

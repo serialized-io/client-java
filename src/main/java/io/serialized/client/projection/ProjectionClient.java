@@ -32,10 +32,10 @@ public class ProjectionClient {
     client.put(url, projectionDefinition);
   }
 
-  public <T> ProjectionResponse<T> query(ProjectionQuery projectionQuery) {
-    HttpUrl url = projectionQuery.constructUrl(apiRoot);
+  public <T> ProjectionResponse<T> query(ProjectionQuery query) {
+    HttpUrl url = query.constructUrl(apiRoot);
 
-    JavaType javaType = projectionQuery.responseClass()
+    JavaType javaType = query.responseClass()
         .map(dataClass -> objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, dataClass))
         .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
 
@@ -52,7 +52,7 @@ public class ProjectionClient {
     return client.get(url, javaType);
   }
 
-  public static ProjectionClient.Builder projectionsClient(SerializedClientConfig config) {
+  public static ProjectionClient.Builder projectionClient(SerializedClientConfig config) {
     return new ProjectionClient.Builder(config);
   }
 

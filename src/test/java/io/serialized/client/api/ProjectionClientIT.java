@@ -2,11 +2,7 @@ package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.projection.CreateProjectionDefinitionRequest;
-import io.serialized.client.projection.ProjectionApiStub;
-import io.serialized.client.projection.ProjectionClient;
-import io.serialized.client.projection.ProjectionDefinition;
-import io.serialized.client.projection.ProjectionResponse;
+import io.serialized.client.projection.*;
 import io.serialized.client.projection.query.ProjectionQueries;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -46,7 +42,7 @@ public class ProjectionClientIT {
       .secretAccessKey("bbbbb")
       .build();
 
-  private ProjectionClient projectionClient = ProjectionClient.projectionsClient(config).build();
+  private ProjectionClient projectionClient = ProjectionClient.projectionClient(config).build();
 
   @Before
   public void setUp() {
@@ -54,7 +50,7 @@ public class ProjectionClientIT {
   }
 
   @Test
-  public void testCreateProjection() {
+  public void testCreateProjectionDefinition() {
 
     ProjectionDefinition highScoreProjection =
         ProjectionDefinition.singleProjection("high-score")
