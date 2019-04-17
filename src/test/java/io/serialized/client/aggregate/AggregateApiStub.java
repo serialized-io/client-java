@@ -52,7 +52,18 @@ public class AggregateApiStub {
       callback.aggregateDeletePerformed(aggregateType, aggregateId, deleteToken);
       return Response.ok(APPLICATION_JSON_TYPE).build();
     }
+  }
 
+  @DELETE
+  @Path("{aggregateType}")
+  public Response deleteAggregate(@PathParam("aggregateType") String aggregateType, @QueryParam("deleteToken") String deleteToken) {
+    if (isBlank(deleteToken)) {
+      Map tokenResponse = callback.aggregateTypeDeleteRequested(aggregateType);
+      return Response.ok(APPLICATION_JSON_TYPE).entity(tokenResponse).build();
+    } else {
+      callback.aggregateTypeDeletePerformed(aggregateType, deleteToken);
+      return Response.ok(APPLICATION_JSON_TYPE).build();
+    }
   }
 
   public interface Callback {
@@ -66,6 +77,10 @@ public class AggregateApiStub {
     Map aggregateDeleteRequested(String aggregateType, String aggregateId);
 
     void aggregateDeletePerformed(String aggregateType, String aggregateId, String deleteToken);
+
+    Map aggregateTypeDeleteRequested(String aggregateType);
+
+    void aggregateTypeDeletePerformed(String aggregateType, String deleteToken);
   }
 
 }
