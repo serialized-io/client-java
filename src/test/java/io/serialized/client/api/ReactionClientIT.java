@@ -5,16 +5,19 @@ import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.reaction.ReactionApiStub;
 import io.serialized.client.reaction.ReactionClient;
 import io.serialized.client.reaction.ReactionDefinition;
+import io.serialized.client.reaction.ReactionDefinitions;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.net.URI;
+import java.util.List;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.reaction.Actions.httpAction;
+import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
@@ -49,7 +52,7 @@ public class ReactionClientIT {
     String feedName = "orders";
 
     ReactionDefinition orderNotifier =
-        ReactionDefinition.newDefinition(reactionName)
+        ReactionDefinition.newReactionDefinition(reactionName)
             .feed(feedName)
             .reactOnEventType(eventType)
             .action(httpAction(targetUri).build())
@@ -58,7 +61,7 @@ public class ReactionClientIT {
     reactionClient.createOrUpdate(orderNotifier);
 
     ArgumentCaptor<ReactionDefinition> captor = ArgumentCaptor.forClass(ReactionDefinition.class);
-    verify(apiCallback, times(1)).reactionCreated(captor.capture());
+    verify(apiCallback, times(1)).definitionCreated(captor.capture());
 
     ReactionDefinition value = captor.getValue();
     assertThat(value.getReactionName(), is(reactionName));
@@ -71,7 +74,7 @@ public class ReactionClientIT {
   public void testDeleteReactionDefinition() {
     String reactionName = "order-notifier";
     reactionClient.deleteDefinition(reactionName);
-    verify(apiCallback, times(1)).reactionDeleted(reactionName);
+    verify(apiCallback, times(1)).definitionDeleted(reactionName);
   }
 
   @Test
@@ -82,15 +85,40 @@ public class ReactionClientIT {
     String feedName = "orders";
     String eventType = "OrderPlacedEvent";
 
-    ReactionDefinition expected = ReactionDefinition.newDefinition(reactionName)
+    ReactionDefinition expected = ReactionDefinition.newReactionDefinition(reactionName)
         .reactOnEventType(eventType)
         .feed(feedName)
         .action(httpAction(targetUri).build())
         .build();
-    when(apiCallback.reactionFetched()).thenReturn(expected);
+    when(apiCallback.definitionFetched()).thenReturn(expected);
 
     ReactionDefinition definition = reactionClient.getDefinition(reactionName);
 
+    assertThat(definition.getReactionName(), is(reactionName));
+    assertThat(definition.getFeedName(), is(feedName));
+    assertThat(definition.getReactOnEventType(), is(eventType));
+    assertThat(definition.getAction().getTargetUri(), is(targetUri));
+  }
+
+  @Test
+  public void testListReactionDefinitions() {
+
+    URI targetUri = URI.create("https://example.com");
+    String reactionName = "order-notifier";
+    String feedName = "orders";
+    String eventType = "OrderPlacedEvent";
+
+    List<ReactionDefinition> expected = asList(ReactionDefinition.newReactionDefinition(reactionName)
+        .reactOnEventType(eventType)
+        .feed(feedName)
+        .action(httpAction(targetUri).build())
+        .build());
+
+    when(apiCallback.definitionsFetched()).thenReturn(expected);
+
+    ReactionDefinitions reactionDefinitions = reactionClient.listDefinitions();
+
+    ReactionDefinition definition = reactionDefinitions.getDefinitions().get(0);
     assertThat(definition.getReactionName(), is(reactionName));
     assertThat(definition.getFeedName(), is(feedName));
     assertThat(definition.getReactOnEventType(), is(eventType));

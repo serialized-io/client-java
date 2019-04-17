@@ -19,25 +19,30 @@ public class ReactionClient {
   }
 
   public void createOrUpdate(ReactionDefinition reactionDefinition) {
-    HttpUrl url = pathForDefinition(reactionDefinition.getReactionName());
+    String reactionName = reactionDefinition.getReactionName();
+    HttpUrl url = pathForDefinition().addPathSegment(reactionName).build();
     client.put(url, reactionDefinition);
   }
 
   public ReactionDefinition getDefinition(String reactionName) {
-    HttpUrl url = pathForDefinition(reactionName);
+    HttpUrl url = pathForDefinition().addPathSegment(reactionName).build();
     return client.get(url, ReactionDefinition.class);
   }
 
+  public ReactionDefinitions listDefinitions() {
+    HttpUrl url = pathForDefinition().build();
+    return client.get(url, ReactionDefinitions.class);
+  }
+
   public void deleteDefinition(String reactionName) {
-    HttpUrl url = pathForDefinition(reactionName);
+    HttpUrl url = pathForDefinition().addPathSegment(reactionName).build();
     client.delete(url);
   }
 
-  private HttpUrl pathForDefinition(String reactionName) {
+  private HttpUrl.Builder pathForDefinition() {
     return apiRoot.newBuilder()
         .addPathSegment("reactions")
-        .addPathSegment("definitions")
-        .addPathSegment(reactionName).build();
+        .addPathSegment("definitions");
   }
 
   public static ReactionClient.Builder reactionClient(SerializedClientConfig config) {
