@@ -24,12 +24,29 @@ public class ProjectionClient {
   }
 
   public void createOrUpdate(ProjectionDefinition projectionDefinition) {
-    HttpUrl url = apiRoot.newBuilder()
-        .addPathSegment("projections")
-        .addPathSegment("definitions")
-        .addPathSegment(projectionDefinition.getProjectionName()).build();
-
+    HttpUrl url = pathForDefinitions().addPathSegment(projectionDefinition.getProjectionName()).build();
     client.put(url, projectionDefinition);
+  }
+
+  public void deleteDefinition(String projectionName) {
+    HttpUrl url = pathForDefinitions().addPathSegment(projectionName).build();
+    client.delete(url);
+  }
+
+  public ProjectionDefinition getDefinition(String projectionName) {
+    HttpUrl url = pathForDefinitions().addPathSegment(projectionName).build();
+    return client.get(url, ProjectionDefinition.class);
+  }
+
+  public ProjectionDefinitions listDefinitions() {
+    HttpUrl url = pathForDefinitions().build();
+    return client.get(url, ProjectionDefinitions.class);
+  }
+
+  private HttpUrl.Builder pathForDefinitions() {
+    return apiRoot.newBuilder()
+        .addPathSegment("projections")
+        .addPathSegment("definitions");
   }
 
   public <T> ProjectionResponse<T> query(ProjectionQuery query) {

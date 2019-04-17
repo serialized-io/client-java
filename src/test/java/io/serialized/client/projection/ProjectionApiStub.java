@@ -5,7 +5,9 @@ import org.apache.commons.io.IOUtils;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.List;
 
+import static io.serialized.client.projection.ProjectionDefinitions.newDefinitionList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
@@ -21,10 +23,31 @@ public class ProjectionApiStub {
   }
 
   @GET
-  @Path("single/{projectionName}/{id}")
-  public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id) throws IOException {
-    String responseBody = getResource("single_projection.json");
-    return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
+  @Path("definitions")
+  public Response listDefinitions() {
+    List<ProjectionDefinition> definitions = callback.definitionsFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(newDefinitionList(definitions)).build();
+  }
+
+  @GET
+  @Path("definitions/{projectionName}")
+  public Response getDefinition(@PathParam("projectionName") String projectionName) {
+    ProjectionDefinition definition = callback.definitionFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(definition).build();
+  }
+
+  @PUT
+  @Path("definitions/{projectionName}")
+  public Response createDefinition(@PathParam("projectionName") String projectionName, ProjectionDefinition definition) {
+    callback.definitionCreated(definition);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
+  @DELETE
+  @Path("definitions/{projectionName}")
+  public Response deleteDefinition(@PathParam("projectionName") String projectionName) {
+    callback.definitionDeleted(projectionName);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
   @GET
@@ -34,11 +57,11 @@ public class ProjectionApiStub {
     return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
   }
 
-  @PUT
-  @Path("definitions/{projectionName}")
-  public Response createProjectionDefinition(@PathParam("projectionName") String projectionName, ProjectionDefinition definition) {
-    callback.projectionCreated(definition);
-    return Response.ok(APPLICATION_JSON_TYPE).build();
+  @GET
+  @Path("single/{projectionName}/{id}")
+  public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id) throws IOException {
+    String responseBody = getResource("single_projection.json");
+    return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
   }
 
   private String getResource(String s) throws IOException {
@@ -47,8 +70,13 @@ public class ProjectionApiStub {
 
   public interface Callback {
 
-    void projectionCreated(ProjectionDefinition request);
+    void definitionCreated(ProjectionDefinition request);
 
+    void definitionDeleted(String projectionName);
+
+    ProjectionDefinition definitionFetched();
+
+    List<ProjectionDefinition> definitionsFetched();
   }
 
 }

@@ -9,12 +9,15 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.List;
+
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.Function.*;
 import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.Selector.eventSelector;
 import static io.serialized.client.projection.Selector.targetSelector;
 import static io.serialized.client.projection.query.ProjectionQueries.single;
+import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
@@ -65,7 +68,7 @@ public class ProjectionClientIT {
     projectionClient.createOrUpdate(highScoreProjection);
 
     ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
-    verify(apiCallback, times(1)).projectionCreated(captor.capture());
+    verify(apiCallback, times(1)).definitionCreated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
     assertThat(value.getProjectionName(), is("high-score"));
@@ -96,7 +99,7 @@ public class ProjectionClientIT {
     projectionClient.createOrUpdate(projectionDefinition);
 
     ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
-    verify(apiCallback, times(1)).projectionCreated(captor.capture());
+    verify(apiCallback, times(1)).definitionCreated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
     assertThat(value.getProjectionName(), is("high-score"));
@@ -117,7 +120,7 @@ public class ProjectionClientIT {
   }
 
   @Test
-  public void testCreateAggregatedProjection() {
+  public void testCreateAggregatedProjectionDefinition() {
     ProjectionDefinition projectionDefinition =
         ProjectionDefinition.aggregatedProjection("game-count")
             .feed("games")
@@ -126,7 +129,7 @@ public class ProjectionClientIT {
     projectionClient.createOrUpdate(projectionDefinition);
 
     ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
-    verify(apiCallback, times(1)).projectionCreated(captor.capture());
+    verify(apiCallback, times(1)).definitionCreated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
     assertThat(value.getProjectionName(), is("game-count"));
@@ -144,6 +147,49 @@ public class ProjectionClientIT {
     assertThat(function.getEventFilter(), nullValue());
     assertThat(function.getTargetFilter(), nullValue());
     assertThat(function.getRawData(), nullValue());
+  }
+
+  @Test
+  public void testDeleteDefinition() {
+    String projectionName = "orders";
+    projectionClient.deleteDefinition(projectionName);
+    verify(apiCallback, times(1)).definitionDeleted(projectionName);
+  }
+
+  @Test
+  public void testGetDefinition() {
+    String projectionName = "game-count";
+    String feedName = "games";
+    ProjectionDefinition expected =
+        ProjectionDefinition.aggregatedProjection(projectionName)
+            .feed(feedName)
+            .addHandler(handler("GameFinished", inc("count"))).build();
+
+    when(apiCallback.definitionFetched()).thenReturn(expected);
+
+    ProjectionDefinition definition = projectionClient.getDefinition(projectionName);
+    assertThat(definition.getProjectionName(), is(projectionName));
+    assertThat(definition.getFeedName(), is(feedName));
+    assertThat(definition.getHandlers().size(), is(1));
+  }
+
+  @Test
+  public void testListDefinitions() {
+
+    String projectionName = "game-count";
+    String feedName = "games";
+    List<ProjectionDefinition> expected =
+        asList(ProjectionDefinition.aggregatedProjection(projectionName)
+            .feed(feedName)
+            .addHandler(handler("GameFinished", inc("count"))).build());
+
+    when(apiCallback.definitionsFetched()).thenReturn(expected);
+
+    ProjectionDefinitions definitions = projectionClient.listDefinitions();
+    ProjectionDefinition definition = definitions.getDefinitions().get(0);
+    assertThat(definition.getProjectionName(), is(projectionName));
+    assertThat(definition.getFeedName(), is(feedName));
+    assertThat(definition.getHandlers().size(), is(1));
   }
 
   @Test
