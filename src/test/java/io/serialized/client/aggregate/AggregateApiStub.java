@@ -1,17 +1,9 @@
 package io.serialized.client.aggregate;
 
-import org.apache.commons.io.IOUtils;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -35,16 +27,9 @@ public class AggregateApiStub {
   }
 
   @GET
-  @Path("order/{aggregateId}")
-  public Response loadAggregate(@PathParam("aggregateId") String aggregateId) throws IOException {
-    String responseBody = getResource("load_aggregate.json");
-    return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
-  }
-
-  @GET
-  @Path("order-specific/{aggregateId}")
-  public Response loadAggregateWithSpecifiedEventNamed(@PathParam("aggregateId") String aggregateId) throws IOException {
-    String responseBody = getResource("load_aggregate_not_classname.json");
+  @Path("{aggregateType}/{aggregateId}")
+  public Response loadAggregate(@PathParam("aggregateType") String aggregateType, @PathParam("aggregateId") String aggregateId) {
+    String responseBody = callback.aggregateLoaded(aggregateType, aggregateId);
     return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
   }
 
@@ -52,10 +37,7 @@ public class AggregateApiStub {
 
     void eventsStored(EventBatchDto eventBatch);
 
-  }
-
-  private String getResource(String s) throws IOException {
-    return IOUtils.toString(getClass().getResourceAsStream(s), "UTF-8");
+    String aggregateLoaded(String aggregateType, String aggregateId);
   }
 
 }
