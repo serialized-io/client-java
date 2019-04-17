@@ -2,15 +2,19 @@ package io.serialized.client.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.aggregate.AggregateApiStub;
+import io.serialized.client.aggregate.EventBatch;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.util.Map;
@@ -135,6 +139,42 @@ public class JerseyClientIT {
         .delete();
 
     verify(apiCallback, times(1)).aggregateTypeDeletePerformed("order", expectedToken);
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+  @Test
+  public void testStoreEvents() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Map eventBatch = ImmutableMap.of(
+        "aggregateId", "3070b6fb-f31b-4a8e-bc03-e22d38f4076e",
+        "events", ImmutableList.of(
+            ImmutableMap.of(
+                "eventId", "",
+                "eventType", "PaymentProcessed",
+                "data", ImmutableMap.of(
+                    "paymentMethod", "CARD",
+                    "amount", "1000",
+                    "currency", "SEK"
+                )
+            )
+        ),
+        "expectedVersion", "0"
+    );
+
+    Response response = client.target(apiRoot)
+        .path("aggregates")
+        .path("order")
+        .path("events")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .post(Entity.json(eventBatch));
+
+    verify(apiCallback, times(1)).eventsStored(any(EventBatch.class));
+
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 
