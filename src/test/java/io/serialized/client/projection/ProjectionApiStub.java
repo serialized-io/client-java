@@ -61,14 +61,14 @@ public class ProjectionApiStub {
   @Path("aggregated/{projectionName}")
   public Response getAggregatedProjection(@PathParam("projectionName") String projectionName) throws IOException {
     String responseBody = getResource("aggregated_projection.json");
-    return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 
   @GET
   @Path("single/{projectionName}/{id}")
   public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id) throws IOException {
     String responseBody = getResource("single_projection.json");
-    return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 
   private String getResource(String s) throws IOException {

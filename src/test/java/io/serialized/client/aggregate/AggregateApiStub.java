@@ -4,9 +4,11 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import java.util.Map;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 @Path("/api-stub/aggregates")
 @Produces(APPLICATION_JSON)
@@ -29,15 +31,41 @@ public class AggregateApiStub {
   @GET
   @Path("{aggregateType}/{aggregateId}")
   public Response loadAggregate(@PathParam("aggregateType") String aggregateType, @PathParam("aggregateId") String aggregateId) {
-    String responseBody = callback.aggregateLoaded(aggregateType, aggregateId);
-    return Response.ok(responseBody, APPLICATION_JSON_TYPE).build();
+    Object responseBody = callback.aggregateLoaded(aggregateType, aggregateId);
+    return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+  }
+
+  @HEAD
+  @Path("{aggregateType}/{aggregateId}")
+  public Response checkAggregate(@PathParam("aggregateType") String aggregateType, @PathParam("aggregateId") String aggregateId) {
+    callback.aggregateChecked(aggregateType, aggregateId);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
+  @DELETE
+  @Path("{aggregateType}/{aggregateId}")
+  public Response deleteAggregate(@PathParam("aggregateType") String aggregateType, @PathParam("aggregateId") String aggregateId, @QueryParam("deleteToken") String deleteToken) {
+    if (isBlank(deleteToken)) {
+      Map tokenResponse = callback.aggregateDeleteRequested(aggregateType, aggregateId);
+      return Response.ok(APPLICATION_JSON_TYPE).entity(tokenResponse).build();
+    } else {
+      callback.aggregateDeletePerformed(aggregateType, aggregateId, deleteToken);
+      return Response.ok(APPLICATION_JSON_TYPE).build();
+    }
+
   }
 
   public interface Callback {
 
     void eventsStored(EventBatchDto eventBatch);
 
-    String aggregateLoaded(String aggregateType, String aggregateId);
+    Object aggregateLoaded(String aggregateType, String aggregateId);
+
+    void aggregateChecked(String aggregateType, String aggregateId);
+
+    Map aggregateDeleteRequested(String aggregateType, String aggregateId);
+
+    void aggregateDeletePerformed(String aggregateType, String aggregateId, String deleteToken);
   }
 
 }
