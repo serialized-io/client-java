@@ -23,7 +23,7 @@ public class AggregateApiStub {
 
   @POST
   @Path("{aggregateType}/events")
-  public Response saveEvents(@PathParam("aggregateType") String aggregateType, @NotNull @Valid EventBatchDto eventBatch) {
+  public Response saveEvents(@PathParam("aggregateType") String aggregateType, @NotNull @Valid EventBatch eventBatch) {
     callback.eventsStored(eventBatch);
     return Response.ok().build();
   }
@@ -68,7 +68,7 @@ public class AggregateApiStub {
 
   public interface Callback {
 
-    void eventsStored(EventBatchDto eventBatch);
+    void eventsStored(EventBatch eventBatch);
 
     Object aggregateLoaded(String aggregateType, String aggregateId);
 

@@ -23,6 +23,7 @@ import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
 import static io.serialized.client.aggregate.EventBatch.newBatch;
 import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -79,7 +80,9 @@ public class AggregateClientIT {
     assertThat(aggregateResponse.aggregateType(), is(aggregateType));
     assertThat(aggregateResponse.aggregateVersion(), is(1L));
     assertThat(aggregateResponse.events().size(), is(1));
-    assertThat(aggregateResponse.events().get(0).data().getClass().getSimpleName(), is(OrderPlaced.class.getSimpleName()));
+    Event event = aggregateResponse.events().get(0);
+    assertNotNull(event.getData());
+    assertThat(event.getData().getClass().getSimpleName(), is(OrderPlaced.class.getSimpleName()));
   }
 
   @Test
@@ -91,17 +94,16 @@ public class AggregateClientIT {
             .addEvent(orderPlaced("order-123", 1234L))
             .build());
 
-    ArgumentCaptor<EventBatchDto> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatchDto.class);
-
+    ArgumentCaptor<EventBatch> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatch.class);
     verify(apiCallback).eventsStored(eventsStoredCaptor.capture());
 
-    EventBatchDto eventsStored = eventsStoredCaptor.getValue();
-    assertThat(eventsStored.aggregateId, is(aggregateId.toString()));
-    assertThat(eventsStored.events.size(), is(1));
-    assertThat(eventsStored.events.get(0).eventType, is(OrderPlaced.class.getSimpleName()));
-    assertThat(eventsStored.events.get(0).data.get("orderAmount"), is(1234));
-    assertThat(eventsStored.events.get(0).data.get("orderId"), is("order-123"));
-
+    EventBatch eventsStored = eventsStoredCaptor.getValue();
+    assertThat(eventsStored.getAggregateId(), is(aggregateId.toString()));
+    List<Event> events = eventsStored.getEvents();
+    assertThat(events.size(), is(1));
+    Event event = events.get(0);
+    assertThat(event.getEventType(), is(OrderPlaced.class.getSimpleName()));
+    assertNotNull(event.getData());
   }
 
   @Test
@@ -122,7 +124,7 @@ public class AggregateClientIT {
     assertThat(aggregateResponse.aggregateType(), is(order));
     assertThat(aggregateResponse.aggregateVersion(), is(1L));
     assertThat(aggregateResponse.events().size(), is(1));
-    assertThat(aggregateResponse.events().get(0).data().getClass().getSimpleName(), is("OrderPlaced"));
+    assertThat(aggregateResponse.events().get(0).getData().getClass().getSimpleName(), is("OrderPlaced"));
   }
 
   @Test

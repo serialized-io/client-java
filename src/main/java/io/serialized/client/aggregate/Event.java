@@ -12,15 +12,15 @@ public class Event<T> {
   private String eventType;
   private T data;
 
-  public String eventId() {
+  public String getEventId() {
     return eventId;
   }
 
-  public String eventType() {
+  public String getEventType() {
     return eventType;
   }
 
-  public T data() {
+  public T getData() {
     return data;
   }
 

@@ -14,13 +14,16 @@ public class EventBatch {
   private List<Event> events;
   private Long expectedVersion;
 
-  public EventBatch() {
+  public String getAggregateId() {
+    return aggregateId;
   }
 
-  private EventBatch(Builder builder) {
-    this.aggregateId = builder.aggregateId.toString();
-    this.events = unmodifiableList(builder.events);
-    this.expectedVersion = builder.expectedVersion;
+  public List<Event> getEvents() {
+    return unmodifiableList(events);
+  }
+
+  public Long getExpectedVersion() {
+    return expectedVersion;
   }
 
   public static Builder newBatch(String aggregateId) {
@@ -37,6 +40,14 @@ public class EventBatch {
 
   public static EventBatch newBatch(String aggregateId, List<Event> events) {
     return newBatch(UUID.fromString(aggregateId), events);
+  }
+
+  private static EventBatch newBatch(String aggregateId, List<Event> events, Long expectedVersion) {
+    EventBatch eventBatch = new EventBatch();
+    eventBatch.aggregateId = aggregateId;
+    eventBatch.events = events;
+    eventBatch.expectedVersion = expectedVersion;
+    return eventBatch;
   }
 
   public static class Builder {
@@ -75,7 +86,7 @@ public class EventBatch {
     }
 
     public EventBatch build() {
-      return new EventBatch(this);
+      return newBatch(aggregateId.toString(), events, expectedVersion);
     }
   }
 

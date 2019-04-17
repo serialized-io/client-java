@@ -9,7 +9,7 @@ public class OrderState {
 
   public OrderState orderPlaced(Event<OrderPlaced> event) {
     this.status = OrderStatus.PLACED;
-    this.orderId = event.data().orderId;
+    this.orderId = event.getData().orderId;
     return this;
   }
 
