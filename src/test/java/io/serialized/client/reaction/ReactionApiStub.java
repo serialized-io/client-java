@@ -19,16 +19,24 @@ public class ReactionApiStub {
 
   @PUT
   @Path("definitions/{reactionName}")
-  public Response createReactionDefinition(@PathParam("reactionName") String reactionName, CreateReactionDefinitionRequest definition) {
+  public Response createReactionDefinition(@PathParam("reactionName") String reactionName, ReactionDefinition definition) {
     callback.reactionCreated(definition);
     return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
+  @GET
+  @Path("definitions/{reactionName}")
+  public Response getReactionDefinition(@PathParam("reactionName") String reactionName) {
+    ReactionDefinition definition = callback.reactionFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(definition).build();
   }
 
 
   public interface Callback {
 
-    void reactionCreated(CreateReactionDefinitionRequest request);
+    void reactionCreated(ReactionDefinition request);
 
+    ReactionDefinition reactionFetched();
   }
 
 }

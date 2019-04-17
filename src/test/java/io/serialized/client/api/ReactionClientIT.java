@@ -2,7 +2,6 @@ package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.reaction.CreateReactionDefinitionRequest;
 import io.serialized.client.reaction.ReactionApiStub;
 import io.serialized.client.reaction.ReactionClient;
 import io.serialized.client.reaction.ReactionDefinition;
@@ -45,23 +44,49 @@ public class ReactionClientIT {
   public void testCreateReactionDefinition() {
 
     URI targetUri = URI.create("https://example.com");
+    String reactionName = "order-notifier";
+    String eventType = "OrderPlacedEvent";
+    String feedName = "orders";
+
     ReactionDefinition orderNotifier =
-        ReactionDefinition.newDefinition("order-notifier")
-            .feed("orders")
-            .reactOnEventType("OrderPlacedEvent")
+        ReactionDefinition.newDefinition(reactionName)
+            .feed(feedName)
+            .reactOnEventType(eventType)
             .action(httpAction(targetUri).build())
             .build();
 
     reactionClient.createOrUpdate(orderNotifier);
 
-    ArgumentCaptor<CreateReactionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateReactionDefinitionRequest.class);
+    ArgumentCaptor<ReactionDefinition> captor = ArgumentCaptor.forClass(ReactionDefinition.class);
     verify(apiCallback, times(1)).reactionCreated(captor.capture());
 
-    CreateReactionDefinitionRequest value = captor.getValue();
-    assertThat(value.reactionName, is("order-notifier"));
-    assertThat(value.feedName, is("orders"));
-    assertThat(value.reactOnEventType, is("OrderPlacedEvent"));
-    assertThat(value.action.targetUri, is(targetUri));
+    ReactionDefinition value = captor.getValue();
+    assertThat(value.getReactionName(), is(reactionName));
+    assertThat(value.getFeedName(), is(feedName));
+    assertThat(value.getReactOnEventType(), is(eventType));
+    assertThat(value.getAction().getTargetUri(), is(targetUri));
   }
 
+  @Test
+  public void testGetReactionDefinition() {
+
+    URI targetUri = URI.create("https://example.com");
+    String reactionName = "order-notifier";
+    String feedName = "orders";
+    String eventType = "OrderPlacedEvent";
+
+    ReactionDefinition expected = ReactionDefinition.newDefinition(reactionName)
+        .reactOnEventType(eventType)
+        .feed(feedName)
+        .action(httpAction(targetUri).build())
+        .build();
+    when(apiCallback.reactionFetched()).thenReturn(expected);
+
+    ReactionDefinition definition = reactionClient.getDefinition(reactionName);
+
+    assertThat(definition.getReactionName(), is(reactionName));
+    assertThat(definition.getFeedName(), is(feedName));
+    assertThat(definition.getReactOnEventType(), is(eventType));
+    assertThat(definition.getAction().getTargetUri(), is(targetUri));
+  }
 }

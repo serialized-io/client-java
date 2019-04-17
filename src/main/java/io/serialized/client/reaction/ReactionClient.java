@@ -19,14 +19,21 @@ public class ReactionClient {
   }
 
   public void createOrUpdate(ReactionDefinition reactionDefinition) {
-    HttpUrl url = apiRoot.newBuilder()
-        .addPathSegment("reactions")
-        .addPathSegment("definitions")
-        .addPathSegment(reactionDefinition.reactionName()).build();
-
+    HttpUrl url = pathForDefinition(reactionDefinition.getReactionName());
     client.put(url, reactionDefinition);
   }
 
+  public ReactionDefinition getDefinition(String reactionName) {
+    HttpUrl url = pathForDefinition(reactionName);
+    return client.get(url, ReactionDefinition.class);
+  }
+
+  private HttpUrl pathForDefinition(String reactionName) {
+    return apiRoot.newBuilder()
+        .addPathSegment("reactions")
+        .addPathSegment("definitions")
+        .addPathSegment(reactionName).build();
+  }
 
   public static ReactionClient.Builder reactionClient(SerializedClientConfig config) {
     return new ReactionClient.Builder(config);

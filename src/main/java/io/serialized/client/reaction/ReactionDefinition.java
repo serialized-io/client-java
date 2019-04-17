@@ -6,6 +6,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.Collections.unmodifiableSet;
+
 public class ReactionDefinition {
 
   private String reactionName;
@@ -16,22 +18,44 @@ public class ReactionDefinition {
   private Set<String> cancelOnEventTypes;
   private Action action;
 
-  // For serialization
-  private ReactionDefinition() {
+  static ReactionDefinition newReactionDefinition(String reactionName, String feedName, String reactOnEventType, String triggerTimeField, String offset, Set<String> cancelOnEventTypes, Action action) {
+    ReactionDefinition definition = new ReactionDefinition();
+    definition.reactionName = reactionName;
+    definition.feedName = feedName;
+    definition.reactOnEventType = reactOnEventType;
+    definition.triggerTimeField = triggerTimeField;
+    definition.offset = offset;
+    definition.cancelOnEventTypes = cancelOnEventTypes;
+    definition.action = action;
+    return definition;
   }
 
-  ReactionDefinition(String reactionName, String feedName, String reactOnEventType, String triggerTimeField, String offset, Set<String> cancelOnEventTypes, Action action) {
-    this.reactionName = reactionName;
-    this.feedName = feedName;
-    this.reactOnEventType = reactOnEventType;
-    this.triggerTimeField = triggerTimeField;
-    this.offset = offset;
-    this.cancelOnEventTypes = cancelOnEventTypes;
-    this.action = action;
-  }
-
-  public String reactionName() {
+  public String getReactionName() {
     return reactionName;
+  }
+
+  public String getFeedName() {
+    return feedName;
+  }
+
+  public String getReactOnEventType() {
+    return reactOnEventType;
+  }
+
+  public String getTriggerTimeField() {
+    return triggerTimeField;
+  }
+
+  public String getOffset() {
+    return offset;
+  }
+
+  public Set<String> getCancelOnEventTypes() {
+    return unmodifiableSet(cancelOnEventTypes);
+  }
+
+  public Action getAction() {
+    return action;
   }
 
   public static DefinitionBuilder newDefinition(String reactionName) {
@@ -83,7 +107,7 @@ public class ReactionDefinition {
     }
 
     public ReactionDefinition build() {
-      return new ReactionDefinition(reactionName, feedName, reactOnEventType, triggerTimeField, offset, cancelOnEventTypes, action);
+      return newReactionDefinition(reactionName, feedName, reactOnEventType, triggerTimeField, offset, cancelOnEventTypes, action);
     }
 
   }
@@ -94,6 +118,22 @@ public class ReactionDefinition {
     private Map<String, Object> httpHeaders;
     private URI targetUri;
     private String body;
+
+    public String getActionType() {
+      return actionType;
+    }
+
+    public Map<String, Object> getHttpHeaders() {
+      return httpHeaders;
+    }
+
+    public URI getTargetUri() {
+      return targetUri;
+    }
+
+    public String getBody() {
+      return body;
+    }
 
     static Action newAction(String actionType, URI targetUri, Map<String, Object> httpHeaders, String body) {
       Action action = new Action();
