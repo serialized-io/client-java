@@ -36,7 +36,7 @@ public class ProjectionApiStub {
 
   @PUT
   @Path("definitions/{projectionName}")
-  public Response createProjectionDefinition(@PathParam("projectionName") String projectionName, CreateProjectionDefinitionRequest definition) {
+  public Response createProjectionDefinition(@PathParam("projectionName") String projectionName, ProjectionDefinition definition) {
     callback.projectionCreated(definition);
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
@@ -47,7 +47,7 @@ public class ProjectionApiStub {
 
   public interface Callback {
 
-    void projectionCreated(CreateProjectionDefinitionRequest request);
+    void projectionCreated(ProjectionDefinition request);
 
   }
 

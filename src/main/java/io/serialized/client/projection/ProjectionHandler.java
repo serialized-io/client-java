@@ -3,6 +3,8 @@ package io.serialized.client.projection;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Collections.unmodifiableList;
+
 public class ProjectionHandler {
 
   private String eventType;
@@ -27,6 +29,18 @@ public class ProjectionHandler {
       builder.addFunction(function);
     }
     return builder;
+  }
+
+  public String getEventType() {
+    return eventType;
+  }
+
+  public List<Function> getFunctions() {
+    return unmodifiableList(functions);
+  }
+
+  public String getIdField() {
+    return idField;
   }
 
   public static class Builder {

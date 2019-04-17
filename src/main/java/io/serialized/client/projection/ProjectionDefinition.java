@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 
 public class ProjectionDefinition {
 
@@ -13,16 +14,14 @@ public class ProjectionDefinition {
   private String idField;
   private List<ProjectionHandler> handlers;
 
-  // For serialization
-  private ProjectionDefinition() {
-  }
-
-  private ProjectionDefinition(String projectionName, String feedName, boolean aggregated, String idField, List<ProjectionHandler> handlers) {
-    this.projectionName = projectionName;
-    this.feedName = feedName;
-    this.aggregated = aggregated;
-    this.idField = idField;
-    this.handlers = handlers;
+  private static ProjectionDefinition newProjectionDefinition(String projectionName, String feedName, boolean aggregated, String idField, List<ProjectionHandler> handlers) {
+    ProjectionDefinition definition = new ProjectionDefinition();
+    definition.projectionName = projectionName;
+    definition.feedName = feedName;
+    definition.aggregated = aggregated;
+    definition.idField = idField;
+    definition.handlers = handlers;
+    return definition;
   }
 
   public static SingleProjectionBuilder singleProjection(String projectionName) {
@@ -33,7 +32,23 @@ public class ProjectionDefinition {
     return new AggregatedProjectionBuilder(projectionName);
   }
 
-  public String projectionName() {
+  public String getFeedName() {
+    return feedName;
+  }
+
+  public boolean isAggregated() {
+    return aggregated;
+  }
+
+  public String getIdField() {
+    return idField;
+  }
+
+  public List<ProjectionHandler> getHandlers() {
+    return unmodifiableList(handlers);
+  }
+
+  public String getProjectionName() {
     return projectionName;
   }
 
@@ -64,7 +79,7 @@ public class ProjectionDefinition {
     }
 
     public ProjectionDefinition build() {
-      return new ProjectionDefinition(projectionName, feedName, true, null, handlers);
+      return newProjectionDefinition(projectionName, feedName, true, null, handlers);
     }
   }
 
@@ -101,7 +116,7 @@ public class ProjectionDefinition {
     }
 
     public ProjectionDefinition build() {
-      return new ProjectionDefinition(projectionName, feedName, false, idField, handlers);
+      return newProjectionDefinition(projectionName, feedName, false, idField, handlers);
     }
   }
 

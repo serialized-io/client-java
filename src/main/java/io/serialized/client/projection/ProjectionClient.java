@@ -27,7 +27,7 @@ public class ProjectionClient {
     HttpUrl url = apiRoot.newBuilder()
         .addPathSegment("projections")
         .addPathSegment("definitions")
-        .addPathSegment(projectionDefinition.projectionName()).build();
+        .addPathSegment(projectionDefinition.getProjectionName()).build();
 
     client.put(url, projectionDefinition);
   }

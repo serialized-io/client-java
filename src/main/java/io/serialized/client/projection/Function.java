@@ -11,6 +11,30 @@ public class Function {
   private String eventFilter;
   private String rawData;
 
+  public String getFunction() {
+    return function;
+  }
+
+  public String getTargetSelector() {
+    return targetSelector;
+  }
+
+  public String getTargetFilter() {
+    return targetFilter;
+  }
+
+  public String getEventSelector() {
+    return eventSelector;
+  }
+
+  public String getEventFilter() {
+    return eventFilter;
+  }
+
+  public String getRawData() {
+    return rawData;
+  }
+
   public static Builder handlerFunction(String function) {
     return new Builder(function);
   }

@@ -64,25 +64,25 @@ public class ProjectionClientIT {
 
     projectionClient.createOrUpdate(highScoreProjection);
 
-    ArgumentCaptor<CreateProjectionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateProjectionDefinitionRequest.class);
+    ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
     verify(apiCallback, times(1)).projectionCreated(captor.capture());
 
-    CreateProjectionDefinitionRequest value = captor.getValue();
-    assertThat(value.projectionName, is("high-score"));
-    assertThat(value.feedName, is("game"));
-    assertThat(value.idField, is("winner"));
-    assertThat(value.handlers.size(), is(1));
-    assertThat(value.handlers.get(0).functions.size(), is(3));
+    ProjectionDefinition value = captor.getValue();
+    assertThat(value.getProjectionName(), is("high-score"));
+    assertThat(value.getFeedName(), is("game"));
+    assertThat(value.getIdField(), is("winner"));
+    assertThat(value.getHandlers().size(), is(1));
+    assertThat(value.getHandlers().get(0).getFunctions().size(), is(3));
 
-    assertThat(value.handlers.get(0).functions.get(0).function, is("set"));
-    assertThat(value.handlers.get(0).functions.get(0).targetSelector, is("$.projection.playerName"));
-    assertThat(value.handlers.get(0).functions.get(0).eventSelector, is("$.event.winner"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(0).getFunction(), is("set"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(0).getTargetSelector(), is("$.projection.playerName"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(0).getEventSelector(), is("$.event.winner"));
 
-    assertThat(value.handlers.get(0).functions.get(1).function, is("inc"));
-    assertThat(value.handlers.get(0).functions.get(1).targetSelector, is("$.projection.wins"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(1).getFunction(), is("inc"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(1).getTargetSelector(), is("$.projection.wins"));
 
-    assertThat(value.handlers.get(0).functions.get(2).function, is("setref"));
-    assertThat(value.handlers.get(0).functions.get(2).targetSelector, is("$.projection.wins"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(2).getFunction(), is("setref"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(2).getTargetSelector(), is("$.projection.wins"));
   }
 
   @Test
@@ -95,25 +95,25 @@ public class ProjectionClientIT {
 
     projectionClient.createOrUpdate(projectionDefinition);
 
-    ArgumentCaptor<CreateProjectionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateProjectionDefinitionRequest.class);
+    ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
     verify(apiCallback, times(1)).projectionCreated(captor.capture());
 
-    CreateProjectionDefinitionRequest value = captor.getValue();
-    assertThat(value.projectionName, is("high-score"));
-    assertThat(value.feedName, is("games"));
-    assertThat(value.idField, is("winner"));
-    assertThat(value.handlers.size(), is(1));
+    ProjectionDefinition value = captor.getValue();
+    assertThat(value.getProjectionName(), is("high-score"));
+    assertThat(value.getFeedName(), is("games"));
+    assertThat(value.getIdField(), is("winner"));
+    assertThat(value.getHandlers().size(), is(1));
 
-    CreateProjectionDefinitionRequest.ProjectionHandler projectionHandler = value.handlers.get(0);
-    assertThat(projectionHandler.eventType, is("GameFinished"));
-    assertThat(projectionHandler.functions.size(), is(1));
-    CreateProjectionDefinitionRequest.ProjectionHandler.Function function = projectionHandler.functions.get(0);
-    assertThat(function.function, is("inc"));
-    assertThat(function.eventSelector, nullValue());
-    assertThat(function.targetSelector, is("$.projection.wins"));
-    assertThat(function.eventFilter, nullValue());
-    assertThat(function.targetFilter, nullValue());
-    assertThat(function.rawData, nullValue());
+    ProjectionHandler projectionHandler = value.getHandlers().get(0);
+    assertThat(projectionHandler.getEventType(), is("GameFinished"));
+    assertThat(projectionHandler.getFunctions().size(), is(1));
+    Function function = projectionHandler.getFunctions().get(0);
+    assertThat(function.getFunction(), is("inc"));
+    assertThat(function.getEventSelector(), nullValue());
+    assertThat(function.getTargetSelector(), is("$.projection.wins"));
+    assertThat(function.getEventFilter(), nullValue());
+    assertThat(function.getTargetFilter(), nullValue());
+    assertThat(function.getRawData(), nullValue());
   }
 
   @Test
@@ -125,25 +125,25 @@ public class ProjectionClientIT {
 
     projectionClient.createOrUpdate(projectionDefinition);
 
-    ArgumentCaptor<CreateProjectionDefinitionRequest> captor = ArgumentCaptor.forClass(CreateProjectionDefinitionRequest.class);
+    ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
     verify(apiCallback, times(1)).projectionCreated(captor.capture());
 
-    CreateProjectionDefinitionRequest value = captor.getValue();
-    assertThat(value.projectionName, is("game-count"));
-    assertThat(value.feedName, is("games"));
-    assertThat(value.idField, nullValue());
-    assertThat(value.handlers.size(), is(1));
+    ProjectionDefinition value = captor.getValue();
+    assertThat(value.getProjectionName(), is("game-count"));
+    assertThat(value.getFeedName(), is("games"));
+    assertThat(value.getIdField(), nullValue());
+    assertThat(value.getHandlers().size(), is(1));
 
-    CreateProjectionDefinitionRequest.ProjectionHandler projectionHandler = value.handlers.get(0);
-    assertThat(projectionHandler.eventType, is("GameFinished"));
-    assertThat(projectionHandler.functions.size(), is(1));
-    CreateProjectionDefinitionRequest.ProjectionHandler.Function function = projectionHandler.functions.get(0);
-    assertThat(function.function, is("inc"));
-    assertThat(function.eventSelector, nullValue());
-    assertThat(function.targetSelector, is("$.projection.count"));
-    assertThat(function.eventFilter, nullValue());
-    assertThat(function.targetFilter, nullValue());
-    assertThat(function.rawData, nullValue());
+    ProjectionHandler projectionHandler = value.getHandlers().get(0);
+    assertThat(projectionHandler.getEventType(), is("GameFinished"));
+    assertThat(projectionHandler.getFunctions().size(), is(1));
+    Function function = projectionHandler.getFunctions().get(0);
+    assertThat(function.getFunction(), is("inc"));
+    assertThat(function.getEventSelector(), nullValue());
+    assertThat(function.getTargetSelector(), is("$.projection.count"));
+    assertThat(function.getEventFilter(), nullValue());
+    assertThat(function.getTargetFilter(), nullValue());
+    assertThat(function.getRawData(), nullValue());
   }
 
   @Test
