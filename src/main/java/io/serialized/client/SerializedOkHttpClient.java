@@ -91,23 +91,19 @@ public class SerializedOkHttpClient {
   }
 
   private Request postRequest(HttpUrl url, Object payload) throws JsonProcessingException {
-    return makeRequest(url).post(create(JSON_MEDIA_TYPE, toJson(payload))).build();
+    return new Request.Builder().url(url).post(create(JSON_MEDIA_TYPE, toJson(payload))).build();
   }
 
   private Request deleteRequest(HttpUrl url) {
-    return makeRequest(url).delete().build();
+    return new Request.Builder().url(url).delete().build();
   }
 
   private Request putRequest(HttpUrl url, Object payload) throws JsonProcessingException {
-    return makeRequest(url).put(create(JSON_MEDIA_TYPE, toJson(payload))).build();
+    return new Request.Builder().url(url).put(create(JSON_MEDIA_TYPE, toJson(payload))).build();
   }
 
   private Request getRequest(HttpUrl url) {
-    return makeRequest(url).get().build();
-  }
-
-  private Request.Builder makeRequest(HttpUrl url) {
-    return new Request.Builder().url(url);
+    return new Request.Builder().url(url).get().build();
   }
 
   private String toJson(Object payload) throws JsonProcessingException {

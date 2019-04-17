@@ -1,10 +1,10 @@
 package io.serialized.client.aggregate;
 
-import com.google.common.collect.ImmutableMap;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import static java.util.Collections.unmodifiableMap;
 
 public class Event<T> {
 
@@ -107,27 +107,47 @@ public class Event<T> {
     }
 
     public RawBuilder data(String f1, Object d1) {
-      this.data = ImmutableMap.of(f1, d1);
+      Map<String, Object> map = new LinkedHashMap<>();
+      map.put(f1, d1);
+      this.data = unmodifiableMap(map);
       return this;
     }
 
     public RawBuilder data(String f1, Object d1, String f2, Object d2) {
-      this.data = ImmutableMap.of(f1, d1, f2, d2);
+      Map<String, Object> map = new LinkedHashMap<>();
+      map.put(f1, d1);
+      map.put(f2, d2);
+      this.data = unmodifiableMap(map);
       return this;
     }
 
     public RawBuilder data(String f1, Object d1, String f2, Object d2, String f3, Object d3) {
-      this.data = ImmutableMap.of(f1, d1, f2, d2, f3, d3);
+      Map<String, Object> map = new LinkedHashMap<>();
+      map.put(f1, d1);
+      map.put(f2, d2);
+      map.put(f3, d3);
+      this.data = unmodifiableMap(map);
       return this;
     }
 
     public RawBuilder data(String f1, Object d1, String f2, Object d2, String f3, Object d3, String f4, Object d4) {
-      this.data = ImmutableMap.of(f1, d1, f2, d2, f3, d3, f4, d4);
+      Map<String, Object> map = new LinkedHashMap<>();
+      map.put(f1, d1);
+      map.put(f2, d2);
+      map.put(f3, d3);
+      map.put(f4, d4);
+      this.data = unmodifiableMap(map);
       return this;
     }
 
     public RawBuilder data(String f1, Object d1, String f2, Object d2, String f3, Object d3, String f4, Object d4, String f5, Object d5) {
-      this.data = ImmutableMap.of(f1, d1, f2, d2, f3, d3, f4, d4, f5, d5);
+      Map<String, Object> map = new LinkedHashMap<>();
+      map.put(f1, d1);
+      map.put(f2, d2);
+      map.put(f3, d3);
+      map.put(f4, d4);
+      map.put(f5, d5);
+      this.data = unmodifiableMap(map);
       return this;
     }
 
