@@ -68,6 +68,13 @@ public class ReactionClientIT {
   }
 
   @Test
+  public void testDeleteReactionDefinition() {
+    String reactionName = "order-notifier";
+    reactionClient.deleteDefinition(reactionName);
+    verify(apiCallback, times(1)).reactionDeleted(reactionName);
+  }
+
+  @Test
   public void testGetReactionDefinition() {
 
     URI targetUri = URI.create("https://example.com");

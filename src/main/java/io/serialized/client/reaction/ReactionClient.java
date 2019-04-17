@@ -28,6 +28,11 @@ public class ReactionClient {
     return client.get(url, ReactionDefinition.class);
   }
 
+  public void deleteDefinition(String reactionName) {
+    HttpUrl url = pathForDefinition(reactionName);
+    client.delete(url);
+  }
+
   private HttpUrl pathForDefinition(String reactionName) {
     return apiRoot.newBuilder()
         .addPathSegment("reactions")

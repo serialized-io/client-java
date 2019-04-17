@@ -44,6 +44,16 @@ public class SerializedOkHttpClient {
     }
   }
 
+  public void delete(HttpUrl url) {
+    try (Response response = httpClient.newCall(deleteRequest(url)).execute()) {
+      if (!response.isSuccessful()) {
+        throw new ClientException("DELETE failed ");
+      }
+    } catch (Exception e) {
+      throw new ClientException("DELETE failed", e);
+    }
+  }
+
   public <T> T get(HttpUrl url, Class<T> responseClass) {
     return get(url, contents -> parseJsonAs(contents, responseClass));
   }
@@ -82,6 +92,10 @@ public class SerializedOkHttpClient {
 
   private Request postRequest(HttpUrl url, Object payload) throws JsonProcessingException {
     return makeRequest(url).post(create(JSON_MEDIA_TYPE, toJson(payload))).build();
+  }
+
+  private Request deleteRequest(HttpUrl url) {
+    return makeRequest(url).delete().build();
   }
 
   private Request putRequest(HttpUrl url, Object payload) throws JsonProcessingException {
