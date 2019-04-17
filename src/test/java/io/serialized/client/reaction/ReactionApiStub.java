@@ -19,6 +19,13 @@ public class ReactionApiStub {
     this.callback = callback;
   }
 
+  @POST
+  @Path("definitions")
+  public Response createDefinition(ReactionDefinition definition) {
+    callback.definitionCreated(definition);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
   @GET
   @Path("definitions")
   public Response listDefinitions() {
@@ -36,7 +43,7 @@ public class ReactionApiStub {
   @PUT
   @Path("definitions/{reactionName}")
   public Response createDefinition(@PathParam("reactionName") String reactionName, ReactionDefinition definition) {
-    callback.definitionCreated(definition);
+    callback.definitionUpdated(definition);
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
@@ -49,7 +56,9 @@ public class ReactionApiStub {
 
   public interface Callback {
 
-    void definitionCreated(ReactionDefinition request);
+    void definitionCreated(ReactionDefinition definition);
+
+    void definitionUpdated(ReactionDefinition request);
 
     ReactionDefinition definitionFetched();
 

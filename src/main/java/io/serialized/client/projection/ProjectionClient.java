@@ -23,6 +23,11 @@ public class ProjectionClient {
     this.objectMapper = builder.objectMapper;
   }
 
+  public void createDefinition(ProjectionDefinition projectionDefinition) {
+    HttpUrl url = pathForDefinitions().build();
+    client.post(url, projectionDefinition);
+  }
+
   public void createOrUpdate(ProjectionDefinition projectionDefinition) {
     HttpUrl url = pathForDefinitions().addPathSegment(projectionDefinition.getProjectionName()).build();
     client.put(url, projectionDefinition);

@@ -10,12 +10,15 @@ public class ReactionClient {
 
   private final SerializedOkHttpClient client;
   private final HttpUrl apiRoot;
-  private final ObjectMapper objectMapper;
 
   private ReactionClient(ReactionClient.Builder builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
     this.apiRoot = builder.apiRoot;
-    this.objectMapper = builder.objectMapper;
+  }
+
+  public void createDefinition(ReactionDefinition reactionDefinition) {
+    HttpUrl url = pathForDefinition().build();
+    client.post(url, reactionDefinition);
   }
 
   public void createOrUpdate(ReactionDefinition reactionDefinition) {

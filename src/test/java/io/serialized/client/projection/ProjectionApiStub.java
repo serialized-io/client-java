@@ -36,10 +36,17 @@ public class ProjectionApiStub {
     return Response.ok(APPLICATION_JSON_TYPE).entity(definition).build();
   }
 
+  @POST
+  @Path("definitions")
+  public Response createDefinition(ProjectionDefinition definition) {
+    callback.definitionCreated(definition);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
   @PUT
   @Path("definitions/{projectionName}")
-  public Response createDefinition(@PathParam("projectionName") String projectionName, ProjectionDefinition definition) {
-    callback.definitionCreated(definition);
+  public Response createOrUpdateDefinition(@PathParam("projectionName") String projectionName, ProjectionDefinition definition) {
+    callback.definitionUpdated(definition);
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
@@ -70,7 +77,9 @@ public class ProjectionApiStub {
 
   public interface Callback {
 
-    void definitionCreated(ProjectionDefinition request);
+    void definitionCreated(ProjectionDefinition definition);
+
+    void definitionUpdated(ProjectionDefinition request);
 
     void definitionDeleted(String projectionName);
 

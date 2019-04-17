@@ -58,10 +58,37 @@ public class ReactionClientIT {
             .action(httpAction(targetUri).build())
             .build();
 
-    reactionClient.createOrUpdate(orderNotifier);
+    reactionClient.createDefinition(orderNotifier);
 
     ArgumentCaptor<ReactionDefinition> captor = ArgumentCaptor.forClass(ReactionDefinition.class);
     verify(apiCallback, times(1)).definitionCreated(captor.capture());
+
+    ReactionDefinition value = captor.getValue();
+    assertThat(value.getReactionName(), is(reactionName));
+    assertThat(value.getFeedName(), is(feedName));
+    assertThat(value.getReactOnEventType(), is(eventType));
+    assertThat(value.getAction().getTargetUri(), is(targetUri));
+  }
+
+  @Test
+  public void testUpdateReactionDefinition() {
+
+    URI targetUri = URI.create("https://example.com");
+    String reactionName = "order-notifier";
+    String eventType = "OrderPlacedEvent";
+    String feedName = "orders";
+
+    ReactionDefinition orderNotifier =
+        ReactionDefinition.newReactionDefinition(reactionName)
+            .feed(feedName)
+            .reactOnEventType(eventType)
+            .action(httpAction(targetUri).build())
+            .build();
+
+    reactionClient.createOrUpdate(orderNotifier);
+
+    ArgumentCaptor<ReactionDefinition> captor = ArgumentCaptor.forClass(ReactionDefinition.class);
+    verify(apiCallback, times(1)).definitionUpdated(captor.capture());
 
     ReactionDefinition value = captor.getValue();
     assertThat(value.getReactionName(), is(reactionName));

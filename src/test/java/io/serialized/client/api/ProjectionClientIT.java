@@ -65,10 +65,46 @@ public class ProjectionClientIT {
                 setref("wins"))
             .build();
 
-    projectionClient.createOrUpdate(highScoreProjection);
+    projectionClient.createDefinition(highScoreProjection);
 
     ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
     verify(apiCallback, times(1)).definitionCreated(captor.capture());
+
+    ProjectionDefinition value = captor.getValue();
+    assertThat(value.getProjectionName(), is("high-score"));
+    assertThat(value.getFeedName(), is("game"));
+    assertThat(value.getIdField(), is("winner"));
+    assertThat(value.getHandlers().size(), is(1));
+    assertThat(value.getHandlers().get(0).getFunctions().size(), is(3));
+
+    assertThat(value.getHandlers().get(0).getFunctions().get(0).getFunction(), is("set"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(0).getTargetSelector(), is("$.projection.playerName"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(0).getEventSelector(), is("$.event.winner"));
+
+    assertThat(value.getHandlers().get(0).getFunctions().get(1).getFunction(), is("inc"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(1).getTargetSelector(), is("$.projection.wins"));
+
+    assertThat(value.getHandlers().get(0).getFunctions().get(2).getFunction(), is("setref"));
+    assertThat(value.getHandlers().get(0).getFunctions().get(2).getTargetSelector(), is("$.projection.wins"));
+  }
+
+  @Test
+  public void testUpdateProjectionDefinition() {
+
+    ProjectionDefinition highScoreProjection =
+        ProjectionDefinition.singleProjection("high-score")
+            .feed("game")
+            .withIdField("winner")
+            .addHandler("GameFinished",
+                set(targetSelector("playerName"), eventSelector("winner")),
+                inc("wins"),
+                setref("wins"))
+            .build();
+
+    projectionClient.createOrUpdate(highScoreProjection);
+
+    ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
+    verify(apiCallback, times(1)).definitionUpdated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
     assertThat(value.getProjectionName(), is("high-score"));
@@ -99,7 +135,7 @@ public class ProjectionClientIT {
     projectionClient.createOrUpdate(projectionDefinition);
 
     ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
-    verify(apiCallback, times(1)).definitionCreated(captor.capture());
+    verify(apiCallback, times(1)).definitionUpdated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
     assertThat(value.getProjectionName(), is("high-score"));
@@ -129,7 +165,7 @@ public class ProjectionClientIT {
     projectionClient.createOrUpdate(projectionDefinition);
 
     ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
-    verify(apiCallback, times(1)).definitionCreated(captor.capture());
+    verify(apiCallback, times(1)).definitionUpdated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
     assertThat(value.getProjectionName(), is("game-count"));
