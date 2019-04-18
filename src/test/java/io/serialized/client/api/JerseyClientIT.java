@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -192,14 +193,15 @@ public class JerseyClientIT {
 
     when(feedApiCallback.feedOverviewLoaded()).thenReturn(getResource("/feed/feeds.json"));
 
-    Response response = client.target(apiRoot)
+    Map response = client.target(apiRoot)
         .path("feeds")
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
-        .get();
+        .get(Map.class);
 
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    List<Map> feeds = (List<Map>) response.get("feeds");
+    assertThat(feeds.size(), is(1));
   }
 
   @Test
@@ -211,15 +213,16 @@ public class JerseyClientIT {
 
     when(feedApiCallback.feedEntriesLoaded(feedName)).thenReturn(getResource("/feed/feedentries.json"));
 
-    Response response = client.target(apiRoot)
+    Map response = client.target(apiRoot)
         .path("feeds")
         .path(feedName)
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
-        .get();
+        .get(Map.class);
 
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    List entries = (List) response.get("entries");
+    assertThat(entries.size(), is(48));
   }
 
 
