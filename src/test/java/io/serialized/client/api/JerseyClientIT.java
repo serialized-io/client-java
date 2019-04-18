@@ -197,7 +197,7 @@ public class JerseyClientIT {
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
-        .head();
+        .get();
 
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
@@ -217,7 +217,7 @@ public class JerseyClientIT {
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
-        .head();
+        .get();
 
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
