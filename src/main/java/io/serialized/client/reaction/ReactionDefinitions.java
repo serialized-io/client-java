@@ -10,7 +10,7 @@ public class ReactionDefinitions {
 
   private List<ReactionDefinition> definitions;
 
-  static ReactionDefinitions newDefinitionList(Collection<ReactionDefinition> definitions) {
+  public static ReactionDefinitions newDefinitionList(Collection<ReactionDefinition> definitions) {
     ReactionDefinitions reactionDefinitions = new ReactionDefinitions();
     reactionDefinitions.definitions = new ArrayList<>(definitions);
     return reactionDefinitions;

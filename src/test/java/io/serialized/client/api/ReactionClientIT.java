@@ -12,11 +12,11 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.net.URI;
-import java.util.List;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.reaction.Actions.httpAction;
+import static io.serialized.client.reaction.ReactionDefinitions.newDefinitionList;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.*;
 
 public class ReactionClientIT {
 
-  private static ReactionApiStub.Callback apiCallback = mock(ReactionApiStub.Callback.class);
+  private static ReactionApiStub.ReactionApiCallback apiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
 
   @ClassRule
   public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ReactionApiStub(apiCallback));
@@ -135,11 +135,11 @@ public class ReactionClientIT {
     String feedName = "orders";
     String eventType = "OrderPlacedEvent";
 
-    List<ReactionDefinition> expected = asList(ReactionDefinition.newReactionDefinition(reactionName)
+    ReactionDefinitions expected = newDefinitionList(asList(ReactionDefinition.newReactionDefinition(reactionName)
         .reactOnEventType(eventType)
         .feed(feedName)
         .action(httpAction(targetUri).build())
-        .build());
+        .build()));
 
     when(apiCallback.definitionsFetched()).thenReturn(expected);
 

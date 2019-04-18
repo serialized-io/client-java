@@ -1,0 +1,17 @@
+{
+  "definitions": [
+    {
+      "reactionName": "payment-processed-email-reaction",
+      "feedName": "payment",
+      "reactOnEventType": "PaymentProcessed",
+      "cancelOnEventTypes": [
+        "OrderCanceledEvent"
+      ],
+      "triggerTimeField": "my.event.data.field",
+      "offset": "PT1H",
+      "action": {
+        "actionType": "HTTP_POST"
+      }
+    }
+  ]
+}

@@ -2,9 +2,7 @@ package io.serialized.client.reaction;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.List;
 
-import static io.serialized.client.reaction.ReactionDefinitions.newDefinitionList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
@@ -13,9 +11,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 @Consumes(APPLICATION_JSON)
 public class ReactionApiStub {
 
-  private final ReactionApiStub.Callback callback;
+  private final ReactionApiCallback callback;
 
-  public ReactionApiStub(ReactionApiStub.Callback callback) {
+  public ReactionApiStub(ReactionApiCallback callback) {
     this.callback = callback;
   }
 
@@ -29,14 +27,14 @@ public class ReactionApiStub {
   @GET
   @Path("definitions")
   public Response listDefinitions() {
-    List<ReactionDefinition> definitions = callback.definitionsFetched();
-    return Response.ok(APPLICATION_JSON_TYPE).entity(newDefinitionList(definitions)).build();
+    Object definitions = callback.definitionsFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(definitions).build();
   }
 
   @GET
   @Path("definitions/{reactionName}")
   public Response getDefinition(@PathParam("reactionName") String reactionName) {
-    ReactionDefinition definition = callback.definitionFetched();
+    Object definition = callback.definitionFetched();
     return Response.ok(APPLICATION_JSON_TYPE).entity(definition).build();
   }
 
@@ -54,15 +52,15 @@ public class ReactionApiStub {
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
-  public interface Callback {
+  public interface ReactionApiCallback {
 
     void definitionCreated(ReactionDefinition definition);
 
     void definitionUpdated(ReactionDefinition request);
 
-    ReactionDefinition definitionFetched();
+    Object definitionFetched();
 
-    List<ReactionDefinition> definitionsFetched();
+    Object definitionsFetched();
 
     void definitionDeleted(String reactionName);
   }

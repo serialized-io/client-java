@@ -8,6 +8,8 @@ import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.aggregate.AggregateApiStub;
 import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.feed.FeedApiStub;
+import io.serialized.client.reaction.ReactionApiStub;
+import io.serialized.client.reaction.ReactionDefinition;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,11 +35,13 @@ public class JerseyClientIT {
 
   private AggregateApiStub.AggregateApiCallback aggregateApiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
   private FeedApiStub.FeedApiCallback feedApiCallback = mock(FeedApiStub.FeedApiCallback.class);
+  private ReactionApiStub.ReactionApiCallback reactionApiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
 
   @Rule
   public final DropwizardClientRule dropwizardRule = new DropwizardClientRule(
       new AggregateApiStub(aggregateApiCallback),
-      new FeedApiStub(feedApiCallback));
+      new FeedApiStub(feedApiCallback),
+      new ReactionApiStub(reactionApiCallback));
 
   @Before
   public void setUp() {
@@ -264,6 +268,134 @@ public class JerseyClientIT {
 
     List<Map> entries = (List<Map>) response.get("entries");
     assertThat(entries.size(), is(1));
+  }
+
+  @Test
+  public void testListReactionDefinitions() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(reactionApiCallback.definitionsFetched()).thenReturn(getResource("/reaction/listDefinitions.json"));
+
+    Map response = client.target(apiRoot)
+        .path("reactions")
+        .path("definitions")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+    List<Map> definitions = (List<Map>) response.get("definitions");
+    assertThat(definitions.size(), is(1));
+    assertThat(definitions.get(0).get("feedName"), is("payment"));
+  }
+
+  @Test
+  public void testCreateReactionDefinition() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Map<String, Object> reactionDefinition = ImmutableMap.of(
+        "reactionName", "payment-processed-email-reaction",
+        "feedName", "payment",
+        "reactOnEventType", "PaymentProcessed",
+        "action", ImmutableMap.of(
+            "actionType", "HTTP_POST",
+            "targetUri", "https://your-email-service"
+        )
+    );
+
+    Response response = client.target(apiRoot)
+        .path("reactions")
+        .path("definitions")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .post(Entity.json(reactionDefinition));
+
+    verify(reactionApiCallback, times(1)).definitionCreated(any(ReactionDefinition.class));
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+  @Test
+  public void testCreateOrUpdateReactionDefinition() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Map<String, Object> reactionDefinition = ImmutableMap.of(
+        "reactionName", "payment-processed-email-reaction",
+        "feedName", "payment",
+        "reactOnEventType", "PaymentProcessed",
+        "action", ImmutableMap.of(
+            "actionType", "HTTP_POST",
+            "targetUri", "https://your-email-service"
+        )
+    );
+
+    Response response = client.target(apiRoot)
+        .path("reactions")
+        .path("definitions")
+        .path("payment-processed-email-reaction")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .put(Entity.json(reactionDefinition));
+
+    verify(reactionApiCallback, times(1)).definitionUpdated(any(ReactionDefinition.class));
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+  @Test
+  public void testDeleteReactionDefinition() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Response response = client.target(apiRoot)
+        .path("reactions")
+        .path("definitions")
+        .path("payment-notifier")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .delete();
+
+    verify(reactionApiCallback, times(1)).definitionDeleted("payment-notifier");
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+  @Test
+  public void testGetReactionDefinition() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Map<String, Object> reactionDefinition = ImmutableMap.of(
+        "reactionName", "payment-processed-email-reaction",
+        "feedName", "payment",
+        "reactOnEventType", "PaymentProcessed",
+        "action", ImmutableMap.of(
+            "actionType", "HTTP_POST",
+            "targetUri", "https://your-email-service"
+        )
+    );
+
+    when(reactionApiCallback.definitionFetched()).thenReturn(reactionDefinition);
+
+    Map response = client.target(apiRoot)
+        .path("reactions")
+        .path("definitions")
+        .path("payment-notifier")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+
+    assertThat(response.get("reactionName"), is("payment-processed-email-reaction"));
   }
 
 
