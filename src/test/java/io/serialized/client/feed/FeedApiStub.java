@@ -23,6 +23,13 @@ public class FeedApiStub {
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 
+  @HEAD
+  @Path("_all")
+  public Response getCurrentGlobalSequenceNumber() {
+    int sequenceNumber = callback.currentGlobalSequenceNumberRequested();
+    return Response.ok(APPLICATION_JSON_TYPE).header("Serialized-SequenceNumber-Current", sequenceNumber).build();
+  }
+
   @GET
   @Path("{feedName}")
   public Response feedEntries(@PathParam("feedName") String feedName) {
@@ -35,6 +42,8 @@ public class FeedApiStub {
     Object feedOverviewLoaded();
 
     Object feedEntriesLoaded(String feedName);
+
+    int currentGlobalSequenceNumberRequested();
   }
 
 

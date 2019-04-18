@@ -17,6 +17,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
@@ -223,6 +224,28 @@ public class JerseyClientIT {
 
     List entries = (List) response.get("entries");
     assertThat(entries.size(), is(48));
+  }
+
+  @Test
+  public void testCurrentGlobalSequenceNumber() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    int currentGlobalSequnceNumber = 20;
+    when(feedApiCallback.currentGlobalSequenceNumberRequested()).thenReturn(currentGlobalSequnceNumber);
+
+    Response response = client.target(apiRoot)
+        .path("feeds")
+        .path("_all")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .head();
+
+    MultivaluedMap<String, Object> headers = response.getHeaders();
+    int sequenceNumber = Integer.parseInt((String) headers.getFirst("Serialized-SequenceNumber-Current"));
+    assertThat(sequenceNumber, is(currentGlobalSequnceNumber));
   }
 
 
