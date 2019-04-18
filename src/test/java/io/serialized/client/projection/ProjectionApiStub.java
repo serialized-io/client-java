@@ -53,10 +53,38 @@ public class ProjectionApiStub {
   }
 
   @GET
+  @Path("aggregated")
+  public Response listAggregatedProjection() {
+    Object response = callback.aggregatedProjectionsFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(response).build();
+  }
+
+  @GET
   @Path("aggregated/{projectionName}")
   public Response getAggregatedProjection(@PathParam("projectionName") String projectionName) {
     Object response = callback.aggregatedProjectionFetched(projectionName);
     return Response.ok(APPLICATION_JSON_TYPE).entity(response).build();
+  }
+
+  @DELETE
+  @Path("aggregated/{projectionName}")
+  public Response deleteAggregatedProjections(@PathParam("projectionName") String projectionName) {
+    callback.aggregatedProjectionsDeleted(projectionName);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
+  @GET
+  @Path("single/{projectionName}")
+  public Response listSingleProjections(@PathParam("projectionName") String projectionName) {
+    Object responseBody = callback.singleProjectionsFetched(projectionName);
+    return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+  }
+
+  @DELETE
+  @Path("single/{projectionName}")
+  public Response deleteSingleProjections(@PathParam("projectionName") String projectionName) {
+    callback.singleProjectionsDeleted(projectionName);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
   @GET
@@ -88,7 +116,15 @@ public class ProjectionApiStub {
 
     Object aggregatedProjectionFetched(String projectionName);
 
+    Object singleProjectionsFetched(String projectionName);
+
     Object singleProjectionFetched(String projectionName, String id);
+
+    void singleProjectionsDeleted(String projectionName);
+
+    void aggregatedProjectionsDeleted(String projectionName);
+
+    Object aggregatedProjectionsFetched();
   }
 
 }

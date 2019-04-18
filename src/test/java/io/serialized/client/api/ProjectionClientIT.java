@@ -234,8 +234,8 @@ public class ProjectionClientIT {
   public void testSingleProjection() throws IOException {
 
     String projectionName = "orders";
-    String projectionId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
-    when(apiCallback.singleProjectionFetched(projectionName, projectionId)).thenReturn(getResource("/projection/single_projection.json"));
+    String projectionId = "84e3565e-cd61-44e7-9769-c4663588c4dd";
+    when(apiCallback.singleProjectionFetched(projectionName, projectionId)).thenReturn(getResource("/projection/getSingleProjection.json"));
 
     ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(
         single("orders")
@@ -250,7 +250,7 @@ public class ProjectionClientIT {
   @Test
   public void testAggregatedProjection() throws IOException {
 
-    when(apiCallback.aggregatedProjectionFetched("order-totals")).thenReturn(getResource("/projection/aggregated_projection.json"));
+    when(apiCallback.aggregatedProjectionFetched("order-totals")).thenReturn(getResource("/projection/getAggregatedProjection.json"));
 
     ProjectionResponse<OrderTotalsProjection> projection = projectionClient.query(
         ProjectionQueries.aggregated("order-totals")

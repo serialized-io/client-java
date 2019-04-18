@@ -544,7 +544,6 @@ public class JerseyClientIT {
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 
-
   @Test
   public void testDeleteProjectionDefinition() {
 
@@ -563,6 +562,128 @@ public class JerseyClientIT {
     verify(projectionApiCallback, times(1)).definitionDeleted("orders");
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
+
+  @Test
+  public void testListSingleProjections() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(projectionApiCallback.singleProjectionsFetched("orders")).thenReturn(getResource("/projection/listSingleProjections.json"));
+
+    Map response = client.target(apiRoot)
+        .path("projections")
+        .path("single")
+        .path("orders")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+    assertThat(response.get("totalCount"), is(1));
+  }
+
+  @Test
+  public void testDeleteSingleProjections() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Response response = client.target(apiRoot)
+        .path("projections")
+        .path("single")
+        .path("orders")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .delete();
+
+    verify(projectionApiCallback, times(1)).singleProjectionsDeleted("orders");
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+  @Test
+  public void testGetSingleProjection() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(projectionApiCallback.singleProjectionFetched("orders", "84e3565e-cd61-44e7-9769-c4663588c4dd")).thenReturn(getResource("/projection/getSingleProjection.json"));
+
+    Map response = client.target(apiRoot)
+        .path("projections")
+        .path("single")
+        .path("orders")
+        .path("84e3565e-cd61-44e7-9769-c4663588c4dd")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+    verify(projectionApiCallback, times(1)).singleProjectionFetched("orders", "84e3565e-cd61-44e7-9769-c4663588c4dd");
+    assertThat(response.get("projectionId"), is("84e3565e-cd61-44e7-9769-c4663588c4dd"));
+  }
+
+  @Test
+  public void testListAggregatedProjections() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(projectionApiCallback.aggregatedProjectionsFetched()).thenReturn(getResource("/projection/listAggregatedProjections.json"));
+
+    Map response = client.target(apiRoot)
+        .path("projections")
+        .path("aggregated")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+    assertThat(response.get("totalCount"), is(1));
+  }
+
+
+  @Test
+  public void testGetAggregatedProjection() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(projectionApiCallback.aggregatedProjectionFetched("order-totals")).thenReturn(getResource("/projection/getAggregatedProjection.json"));
+
+    Map response = client.target(apiRoot)
+        .path("projections")
+        .path("aggregated")
+        .path("order-totals")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+    verify(projectionApiCallback, times(1)).aggregatedProjectionFetched("order-totals");
+    assertThat(response.get("projectionId"), is("order-totals"));
+  }
+
+  @Test
+  public void testDeleteAggregatedProjections() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Response response = client.target(apiRoot)
+        .path("projections")
+        .path("aggregated")
+        .path("order-totals")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .delete();
+
+    verify(projectionApiCallback, times(1)).aggregatedProjectionsDeleted("order-totals");
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
 
   private String getResource(String resource) throws IOException {
     return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
