@@ -7,6 +7,8 @@ import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.aggregate.AggregateApiStub;
 import io.serialized.client.aggregate.EventBatch;
+import io.serialized.client.feed.FeedApiStub;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,6 +19,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,10 +30,13 @@ import static org.mockito.Mockito.*;
 
 public class JerseyClientIT {
 
-  private AggregateApiStub.Callback apiCallback = mock(AggregateApiStub.Callback.class);
+  private AggregateApiStub.AggregateApiCallback aggregateApiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
+  private FeedApiStub.FeedApiCallback feedApiCallback = mock(FeedApiStub.FeedApiCallback.class);
 
   @Rule
-  public final DropwizardClientRule dropwizardRule = new DropwizardClientRule(new AggregateApiStub(apiCallback));
+  public final DropwizardClientRule dropwizardRule = new DropwizardClientRule(
+      new AggregateApiStub(aggregateApiCallback),
+      new FeedApiStub(feedApiCallback));
 
   @Before
   public void setUp() {
@@ -40,7 +46,7 @@ public class JerseyClientIT {
   @Test
   public void testLoadAggregate() {
 
-    when(apiCallback.aggregateLoaded("order", "99415be8-6819-4470-860c-c2933558d8d3")).thenReturn(ImmutableMap.of("apa", "banan"));
+    when(aggregateApiCallback.aggregateLoaded("order", "99415be8-6819-4470-860c-c2933558d8d3")).thenReturn(ImmutableMap.of("apa", "banan"));
 
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
     Client client = ClientBuilder.newClient();
@@ -72,7 +78,7 @@ public class JerseyClientIT {
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .head();
 
-    verify(apiCallback, times(1)).aggregateChecked("order", "99415be8-6819-4470-860c-c2933558d8d3");
+    verify(aggregateApiCallback, times(1)).aggregateChecked("order", "99415be8-6819-4470-860c-c2933558d8d3");
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 
@@ -83,7 +89,7 @@ public class JerseyClientIT {
     Client client = ClientBuilder.newClient();
 
     String expectedToken = UUID.randomUUID().toString();
-    when(apiCallback.aggregateDeleteRequested("order", "99415be8-6819-4470-860c-c2933558d8d3")).thenReturn(ImmutableMap.of("deleteToken", expectedToken));
+    when(aggregateApiCallback.aggregateDeleteRequested("order", "99415be8-6819-4470-860c-c2933558d8d3")).thenReturn(ImmutableMap.of("deleteToken", expectedToken));
 
     Map deleteTokenResponse = client.target(apiRoot)
         .path("aggregates")
@@ -106,7 +112,7 @@ public class JerseyClientIT {
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .delete();
 
-    verify(apiCallback, times(1)).aggregateDeletePerformed("order", "99415be8-6819-4470-860c-c2933558d8d3", expectedToken);
+    verify(aggregateApiCallback, times(1)).aggregateDeletePerformed("order", "99415be8-6819-4470-860c-c2933558d8d3", expectedToken);
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 
@@ -117,7 +123,7 @@ public class JerseyClientIT {
     Client client = ClientBuilder.newClient();
 
     String expectedToken = UUID.randomUUID().toString();
-    when(apiCallback.aggregateTypeDeleteRequested("order")).thenReturn(ImmutableMap.of("deleteToken", expectedToken));
+    when(aggregateApiCallback.aggregateTypeDeleteRequested("order")).thenReturn(ImmutableMap.of("deleteToken", expectedToken));
 
     Map deleteTokenResponse = client.target(apiRoot)
         .path("aggregates")
@@ -138,7 +144,7 @@ public class JerseyClientIT {
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .delete();
 
-    verify(apiCallback, times(1)).aggregateTypeDeletePerformed("order", expectedToken);
+    verify(aggregateApiCallback, times(1)).aggregateTypeDeletePerformed("order", expectedToken);
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 
@@ -173,10 +179,52 @@ public class JerseyClientIT {
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .post(Entity.json(eventBatch));
 
-    verify(apiCallback, times(1)).eventsStored(any(EventBatch.class));
+    verify(aggregateApiCallback, times(1)).eventsStored(any(EventBatch.class));
 
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 
+  @Test
+  public void testGetFeedOverview() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(feedApiCallback.feedOverviewLoaded()).thenReturn(getResource("/feed/feeds.json"));
+
+    Response response = client.target(apiRoot)
+        .path("feeds")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .head();
+
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+  @Test
+  public void testGetFeedEntries() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+    String feedName = "orders";
+
+    when(feedApiCallback.feedEntriesLoaded(feedName)).thenReturn(getResource("/feed/feedentries.json"));
+
+    Response response = client.target(apiRoot)
+        .path("feeds")
+        .path(feedName)
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .head();
+
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+
+  private String getResource(String resource) throws IOException {
+    return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
+  }
 
 }

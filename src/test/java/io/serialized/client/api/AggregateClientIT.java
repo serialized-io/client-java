@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 
 public class AggregateClientIT {
 
-  private static AggregateApiStub.Callback apiCallback = mock(AggregateApiStub.Callback.class);
+  private static AggregateApiStub.AggregateApiCallback apiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
 
   @ClassRule
   public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new AggregateApiStub(apiCallback));
@@ -59,7 +59,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, aggregateId)).thenReturn(getResource("load_aggregate.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, aggregateId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
 
     State<OrderState> orderState = orderClient.loadState(aggregateId);
 
@@ -72,7 +72,7 @@ public class AggregateClientIT {
     String aggregateId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
     String aggregateType = "order";
 
-    when(apiCallback.aggregateLoaded(aggregateType, aggregateId)).thenReturn(getResource("load_aggregate_not_classname.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, aggregateId)).thenReturn(getResource("/aggregate/load_aggregate_not_classname.json"));
 
     LoadAggregateResponse aggregateResponse = orderClient.loadEvents(aggregateId);
 
@@ -116,7 +116,7 @@ public class AggregateClientIT {
         .registerHandler("order-placed", OrderPlaced.class, OrderState::orderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(order, aggregateId)).thenReturn(getResource("load_aggregate_not_classname.json"));
+    when(apiCallback.aggregateLoaded(order, aggregateId)).thenReturn(getResource("/aggregate/load_aggregate_not_classname.json"));
 
     LoadAggregateResponse aggregateResponse = orderClient.loadEvents(aggregateId);
 

@@ -15,10 +15,10 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 @Consumes(APPLICATION_JSON)
 public class AggregateApiStub {
 
-  private final Callback callback;
+  private final AggregateApiCallback callback;
 
-  public AggregateApiStub(Callback callback) {
-    this.callback = callback;
+  public AggregateApiStub(AggregateApiCallback aggregateApiCallback) {
+    this.callback = aggregateApiCallback;
   }
 
   @POST
@@ -66,7 +66,7 @@ public class AggregateApiStub {
     }
   }
 
-  public interface Callback {
+  public interface AggregateApiCallback {
 
     void eventsStored(EventBatch eventBatch);
 
