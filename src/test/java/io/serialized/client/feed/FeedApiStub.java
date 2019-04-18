@@ -31,6 +31,13 @@ public class FeedApiStub {
   }
 
   @GET
+  @Path("_all")
+  public Response getAllFeed() {
+    Object feed = callback.allFeedLoaded();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(feed).build();
+  }
+
+  @GET
   @Path("{feedName}")
   public Response feedEntries(@PathParam("feedName") String feedName) {
     Object responseBody = callback.feedEntriesLoaded(feedName);
@@ -44,6 +51,8 @@ public class FeedApiStub {
     Object feedEntriesLoaded(String feedName);
 
     int currentGlobalSequenceNumberRequested();
+
+    Object allFeedLoaded();
   }
 
 
