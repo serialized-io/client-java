@@ -12,6 +12,7 @@ import io.serialized.client.projection.ProjectionApiStub;
 import io.serialized.client.projection.ProjectionDefinition;
 import io.serialized.client.reaction.ReactionApiStub;
 import io.serialized.client.reaction.ReactionDefinition;
+import io.serialized.client.tenant.TenantApiStub;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,13 +40,16 @@ public class JerseyClientIT {
   private FeedApiStub.FeedApiCallback feedApiCallback = mock(FeedApiStub.FeedApiCallback.class);
   private ReactionApiStub.ReactionApiCallback reactionApiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
   private ProjectionApiStub.ProjectionApiCallback projectionApiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
+  private TenantApiStub.TenantApiCallback tenantApiCallback = mock(TenantApiStub.TenantApiCallback.class);
 
   @Rule
   public final DropwizardClientRule dropwizardRule = new DropwizardClientRule(
       new AggregateApiStub(aggregateApiCallback),
       new FeedApiStub(feedApiCallback),
       new ReactionApiStub(reactionApiCallback),
-      new ProjectionApiStub(projectionApiCallback));
+      new ProjectionApiStub(projectionApiCallback),
+      new TenantApiStub(tenantApiCallback)
+  );
 
   @Before
   public void setUp() {
@@ -684,6 +688,45 @@ public class JerseyClientIT {
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 
+  @Test
+  public void testCreateTenant() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Map<String, Object> tenant = ImmutableMap.of(
+        "tenantId", "e9ef574f-4563-4d56-ad9e-0a2d5ce42004",
+        "reference", "Acme Inc"
+    );
+
+    Response response = client.target(apiRoot)
+        .path("tenants")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .post(Entity.json(tenant));
+
+    verify(tenantApiCallback, times(1)).tenantCreated(anyMap());
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+  @Test
+  public void testDeleteTenant() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Response response = client.target(apiRoot)
+        .path("tenants")
+        .path("e9ef574f-4563-4d56-ad9e-0a2d5ce42004")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .delete();
+
+    verify(tenantApiCallback, times(1)).tenantDeleted("e9ef574f-4563-4d56-ad9e-0a2d5ce42004");
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
 
   private String getResource(String resource) throws IOException {
     return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
