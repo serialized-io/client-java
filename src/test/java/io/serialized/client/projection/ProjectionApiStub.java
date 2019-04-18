@@ -1,13 +1,8 @@
 package io.serialized.client.projection;
 
-import org.apache.commons.io.IOUtils;
-
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.List;
 
-import static io.serialized.client.projection.ProjectionDefinitions.newDefinitionList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
@@ -16,23 +11,23 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 @Consumes(APPLICATION_JSON)
 public class ProjectionApiStub {
 
-  private final Callback callback;
+  private final ProjectionApiCallback callback;
 
-  public ProjectionApiStub(Callback callback) {
+  public ProjectionApiStub(ProjectionApiCallback callback) {
     this.callback = callback;
   }
 
   @GET
   @Path("definitions")
   public Response listDefinitions() {
-    List<ProjectionDefinition> definitions = callback.definitionsFetched();
-    return Response.ok(APPLICATION_JSON_TYPE).entity(newDefinitionList(definitions)).build();
+    Object response = callback.definitionsFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(response).build();
   }
 
   @GET
   @Path("definitions/{projectionName}")
   public Response getDefinition(@PathParam("projectionName") String projectionName) {
-    ProjectionDefinition definition = callback.definitionFetched();
+    Object definition = callback.definitionFetched();
     return Response.ok(APPLICATION_JSON_TYPE).entity(definition).build();
   }
 
@@ -59,33 +54,41 @@ public class ProjectionApiStub {
 
   @GET
   @Path("aggregated/{projectionName}")
-  public Response getAggregatedProjection(@PathParam("projectionName") String projectionName) throws IOException {
-    String responseBody = getResource("aggregated_projection.json");
-    return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+  public Response getAggregatedProjection(@PathParam("projectionName") String projectionName) {
+    Object response = callback.aggregatedProjectionFetched(projectionName);
+    return Response.ok(APPLICATION_JSON_TYPE).entity(response).build();
   }
 
   @GET
   @Path("single/{projectionName}/{id}")
-  public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id) throws IOException {
-    String responseBody = getResource("single_projection.json");
+  public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id) {
+    Object responseBody = callback.singleProjectionFetched(projectionName, id);
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 
-  private String getResource(String s) throws IOException {
-    return IOUtils.toString(getClass().getResourceAsStream(s), "UTF-8");
+  @GET
+  public Response getProjectionsOverview() {
+    Object responseBody = callback.overviewFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 
-  public interface Callback {
+  public interface ProjectionApiCallback {
 
     void definitionCreated(ProjectionDefinition definition);
 
-    void definitionUpdated(ProjectionDefinition request);
+    void definitionUpdated(ProjectionDefinition definition);
 
     void definitionDeleted(String projectionName);
 
-    ProjectionDefinition definitionFetched();
+    Object definitionFetched();
 
-    List<ProjectionDefinition> definitionsFetched();
+    Object definitionsFetched();
+
+    Object overviewFetched();
+
+    Object aggregatedProjectionFetched(String projectionName);
+
+    Object singleProjectionFetched(String projectionName, String id);
   }
 
 }

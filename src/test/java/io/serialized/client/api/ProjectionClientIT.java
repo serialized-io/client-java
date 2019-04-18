@@ -4,15 +4,17 @@ import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.projection.*;
 import io.serialized.client.projection.query.ProjectionQueries;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.List;
+import java.io.IOException;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.Function.*;
+import static io.serialized.client.projection.ProjectionDefinitions.newDefinitionList;
 import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.Selector.eventSelector;
 import static io.serialized.client.projection.Selector.targetSelector;
@@ -34,7 +36,7 @@ public class ProjectionClientIT {
     public long orderCount;
   }
 
-  private static ProjectionApiStub.Callback apiCallback = mock(ProjectionApiStub.Callback.class);
+  private static ProjectionApiStub.ProjectionApiCallback apiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
 
   @ClassRule
   public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ProjectionApiStub(apiCallback));
@@ -214,10 +216,10 @@ public class ProjectionClientIT {
 
     String projectionName = "game-count";
     String feedName = "games";
-    List<ProjectionDefinition> expected =
-        asList(ProjectionDefinition.aggregatedProjection(projectionName)
-            .feed(feedName)
-            .addHandler(handler("GameFinished", inc("count"))).build());
+
+    ProjectionDefinitions expected = newDefinitionList(asList(ProjectionDefinition.aggregatedProjection(projectionName)
+        .feed(feedName)
+        .addHandler(handler("GameFinished", inc("count"))).build()));
 
     when(apiCallback.definitionsFetched()).thenReturn(expected);
 
@@ -229,19 +231,27 @@ public class ProjectionClientIT {
   }
 
   @Test
-  public void testSingleProjection() {
+  public void testSingleProjection() throws IOException {
+
+    String projectionName = "orders";
+    String projectionId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
+    when(apiCallback.singleProjectionFetched(projectionName, projectionId)).thenReturn(getResource("/projection/single_projection.json"));
+
     ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(
         single("orders")
-            .id("723ecfce-14e9-4889-98d5-a3d0ad54912f")
+            .id(projectionId)
             .build(OrderBalanceProjection.class));
 
-    assertThat(projection.projectionId, is("723ecfce-14e9-4889-98d5-a3d0ad54912f"));
+    assertThat(projection.projectionId, is(projectionId));
     assertThat(projection.updatedAt, is(1505754083976L));
     assertThat(projection.data.orderAmount, is(12345L));
   }
 
   @Test
-  public void testAggregatedProjection() {
+  public void testAggregatedProjection() throws IOException {
+
+    when(apiCallback.aggregatedProjectionFetched("order-totals")).thenReturn(getResource("/projection/aggregated_projection.json"));
+
     ProjectionResponse<OrderTotalsProjection> projection = projectionClient.query(
         ProjectionQueries.aggregated("order-totals")
             .build(OrderTotalsProjection.class));
@@ -250,6 +260,11 @@ public class ProjectionClientIT {
     assertThat(projection.updatedAt, is(1505850788368L));
     assertThat(projection.data.orderAmount, is(1000L));
     assertThat(projection.data.orderCount, is(2L));
+  }
+
+
+  private String getResource(String resource) throws IOException {
+    return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
   }
 
 }

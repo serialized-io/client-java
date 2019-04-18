@@ -50,9 +50,9 @@ public class FeedClientIT {
   public void feedEntries() throws IOException {
     String feedName = "games";
 
-    FeedResponse feedResponse = feedClient.feed(feedName);
-
     when(apiCallback.feedEntriesLoaded(feedName)).thenReturn(getResource("/feed/feedentries.json"));
+
+    FeedResponse feedResponse = feedClient.feed(feedName);
 
     assertThat(feedResponse.entries().size(), is(48));
     assertThat(feedResponse.events().size(), is(96));

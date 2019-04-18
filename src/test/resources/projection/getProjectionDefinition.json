@@ -1,0 +1,19 @@
+{
+  "projectionName": "orders",
+  "feedName": "order",
+  "handlers": [
+    {
+      "eventType": "OrderCancelledEvent",
+      "functionUri": "https://your-server.com/lambda",
+      "functions": [
+        {
+          "function": "inc",
+          "targetSelector": "$.projection.orders[?]",
+          "eventSelector": "$.event[?]",
+          "targetFilter": "@.orderId == $.event.orderId",
+          "eventFilter": "@.orderAmount > 4000"
+        }
+      ]
+    }
+  ]
+}

@@ -8,6 +8,8 @@ import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.aggregate.AggregateApiStub;
 import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.feed.FeedApiStub;
+import io.serialized.client.projection.ProjectionApiStub;
+import io.serialized.client.projection.ProjectionDefinition;
 import io.serialized.client.reaction.ReactionApiStub;
 import io.serialized.client.reaction.ReactionDefinition;
 import org.apache.commons.io.IOUtils;
@@ -36,12 +38,14 @@ public class JerseyClientIT {
   private AggregateApiStub.AggregateApiCallback aggregateApiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
   private FeedApiStub.FeedApiCallback feedApiCallback = mock(FeedApiStub.FeedApiCallback.class);
   private ReactionApiStub.ReactionApiCallback reactionApiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
+  private ProjectionApiStub.ProjectionApiCallback projectionApiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
 
   @Rule
   public final DropwizardClientRule dropwizardRule = new DropwizardClientRule(
       new AggregateApiStub(aggregateApiCallback),
       new FeedApiStub(feedApiCallback),
-      new ReactionApiStub(reactionApiCallback));
+      new ReactionApiStub(reactionApiCallback),
+      new ProjectionApiStub(projectionApiCallback));
 
   @Before
   public void setUp() {
@@ -398,6 +402,167 @@ public class JerseyClientIT {
     assertThat(response.get("reactionName"), is("payment-processed-email-reaction"));
   }
 
+  @Test
+  public void testGetProjectionsOverview() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(projectionApiCallback.overviewFetched()).thenReturn(getResource("/projection/projectionsOverview.json"));
+
+    Map response = client.target(apiRoot)
+        .path("projections")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+    List<Map> projections = (List<Map>) response.get("projections");
+    assertThat(projections.size(), is(1));
+  }
+
+  @Test
+  public void testListProjectionDefinitions() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(projectionApiCallback.definitionsFetched()).thenReturn(getResource("/projection/listProjectionDefinitions.json"));
+
+    Map response = client.target(apiRoot)
+        .path("projections")
+        .path("definitions")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+    List<Map> projections = (List<Map>) response.get("definitions");
+    assertThat(projections.size(), is(1));
+  }
+
+  @Test
+  public void testGetProjectionDefinition() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(projectionApiCallback.definitionFetched()).thenReturn(getResource("/projection/getProjectionDefinition.json"));
+
+    Map response = client.target(apiRoot)
+        .path("projections")
+        .path("definitions")
+        .path("orders")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+    assertThat(response.get("projectionName"), is("orders"));
+  }
+
+
+  @Test
+  public void testCreateProjectionDefinition() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Map<String, Object> projectionDefinition = ImmutableMap.of(
+        "projectionName", "orders",
+        "feedName", "order",
+        "handlers", ImmutableList.of(
+            ImmutableMap.of(
+                "eventType", "OrderPlacedEvent",
+                "functions", ImmutableList.of(
+                    ImmutableMap.of(
+                        "function", "set",
+                        "targetSelector", "$.projection.status",
+                        "rawData", "PLACED"
+                    ),
+                    ImmutableMap.of(
+                        "function", "set",
+                        "targetSelector", "$.projection.orderAmount",
+                        "eventSelector", "$.event.orderAmount"
+                    )
+                )
+
+            )
+        )
+    );
+
+    Response response = client.target(apiRoot)
+        .path("projections")
+        .path("definitions")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .post(Entity.json(projectionDefinition));
+
+    verify(projectionApiCallback, times(1)).definitionCreated(any(ProjectionDefinition.class));
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+  @Test
+  public void testCreateOrUpdateProjectionDefinition() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+    Map<String, Object> projectionDefinition = ImmutableMap.of(
+        "projectionName", "orders",
+        "feedName", "order",
+        "handlers", ImmutableList.of(
+            ImmutableMap.of(
+                "eventType", "OrderPlacedEvent",
+                "functions", ImmutableList.of(
+                    ImmutableMap.of(
+                        "function", "set",
+                        "targetSelector", "$.projection.status",
+                        "rawData", "PLACED"
+                    ),
+                    ImmutableMap.of(
+                        "function", "set",
+                        "targetSelector", "$.projection.orderAmount",
+                        "eventSelector", "$.event.orderAmount"
+                    )
+                )
+
+            )
+        )
+    );
+
+    Response response = client.target(apiRoot)
+        .path("projections")
+        .path("definitions")
+        .path("orders")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .put(Entity.json(projectionDefinition));
+
+    verify(projectionApiCallback, times(1)).definitionUpdated(any(ProjectionDefinition.class));
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+
+  @Test
+  public void testDeleteProjectionDefinition() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Response response = client.target(apiRoot)
+        .path("projections")
+        .path("definitions")
+        .path("orders")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .delete();
+
+    verify(projectionApiCallback, times(1)).definitionDeleted("orders");
+    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
 
   private String getResource(String resource) throws IOException {
     return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");

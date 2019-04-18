@@ -1,0 +1,10 @@
+{
+  "projections": [
+    {
+      "projectionName": "shipping-stats",
+      "feedName": "shipment",
+      "aggregated": false,
+      "projectionsCount": 1977
+    }
+  ]
+}
