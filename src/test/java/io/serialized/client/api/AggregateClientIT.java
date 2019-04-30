@@ -11,7 +11,7 @@ import io.serialized.client.aggregate.order.OrderState;
 import io.serialized.client.aggregate.order.OrderStatus;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -29,24 +29,14 @@ import static org.mockito.Mockito.*;
 
 public class AggregateClientIT {
 
-  private static AggregateApiStub.AggregateApiCallback apiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
+  private final AggregateApiStub.AggregateApiCallback apiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
 
-  @ClassRule
-  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new AggregateApiStub(apiCallback));
-
-  private final SerializedClientConfig serializedConfig = SerializedClientConfig.serializedConfig()
-      .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
-      .accessKey("aaaaa")
-      .secretAccessKey("bbbbb").build();
-
-  private AggregateClient<OrderState> orderClient = aggregateClient("order", OrderState.class, serializedConfig)
-      .registerHandler("order-placed", OrderPlaced.class, OrderState::orderPlaced)
-      .build();
+  @Rule
+  public final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new AggregateApiStub(apiCallback));
 
   @Before
   public void setUp() {
     DROPWIZARD.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-    reset(apiCallback);
   }
 
   @Test
@@ -55,7 +45,7 @@ public class AggregateClientIT {
     String aggregateId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
     String aggregateType = "order";
 
-    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, serializedConfig)
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
         .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
         .build();
 
@@ -68,6 +58,8 @@ public class AggregateClientIT {
 
   @Test
   public void loadAggregate() throws IOException {
+
+    AggregateClient<OrderState> orderClient = getOrderClient("order");
 
     String aggregateId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
     String aggregateType = "order";
@@ -87,6 +79,8 @@ public class AggregateClientIT {
 
   @Test
   public void testStoreEvents() {
+
+    AggregateClient<OrderState> orderClient = getOrderClient("order");
 
     UUID aggregateId = UUID.randomUUID();
     orderClient.storeEvents(
@@ -112,9 +106,7 @@ public class AggregateClientIT {
     String order = "order";
     String aggregateId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
 
-    AggregateClient<OrderState> orderClient = aggregateClient(order, OrderState.class, serializedConfig)
-        .registerHandler("order-placed", OrderPlaced.class, OrderState::orderPlaced)
-        .build();
+    AggregateClient<OrderState> orderClient = getOrderClient(order);
 
     when(apiCallback.aggregateLoaded(order, aggregateId)).thenReturn(getResource("/aggregate/load_aggregate_not_classname.json"));
 
@@ -129,6 +121,9 @@ public class AggregateClientIT {
 
   @Test
   public void storeEventsInBatch() {
+
+    AggregateClient<OrderState> orderClient = getOrderClient("order");
+
     List<Event> events = ImmutableList.of(orderPlaced("some-test-id-1", 12345));
 
     EventBatch eventBatch = newBatch("723ecfce-14e9-4889-98d5-a3d0ad54912f", events);
@@ -139,9 +134,24 @@ public class AggregateClientIT {
   @Test
   public void storeSingleEvent() {
 
+    AggregateClient<OrderState> orderClient = getOrderClient("order");
+
     Event orderPlacedEvent = orderPlaced("ACME Inc.", 12345);
 
     orderClient.storeEvent("723ecfce-14e9-4889-98d5-a3d0ad54912f", orderPlacedEvent);
+  }
+
+  private AggregateClient<OrderState> getOrderClient(String order) {
+    return aggregateClient(order, OrderState.class, getConfig())
+        .registerHandler("order-placed", OrderPlaced.class, OrderState::orderPlaced)
+        .build();
+  }
+
+  private SerializedClientConfig getConfig() {
+    return SerializedClientConfig.serializedConfig()
+        .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
+        .accessKey("aaaaa")
+        .secretAccessKey("bbbbb").build();
   }
 
   private String getResource(String resource) throws IOException {

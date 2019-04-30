@@ -7,7 +7,7 @@ import io.serialized.client.reaction.ReactionClient;
 import io.serialized.client.reaction.ReactionDefinition;
 import io.serialized.client.reaction.ReactionDefinitions;
 import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -24,27 +24,20 @@ import static org.mockito.Mockito.*;
 
 public class ReactionClientIT {
 
-  private static ReactionApiStub.ReactionApiCallback apiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
+  private final ReactionApiStub.ReactionApiCallback apiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
 
-  @ClassRule
-  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ReactionApiStub(apiCallback));
-
-  private SerializedClientConfig config = serializedConfig()
-      .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
-      .accessKey("aaaaa")
-      .secretAccessKey("bbbbb")
-      .build();
-
-  private ReactionClient reactionClient = ReactionClient.reactionClient(config).build();
+  @Rule
+  public final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ReactionApiStub(apiCallback));
 
   @Before
   public void setUp() {
     DROPWIZARD.getObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-    reset(apiCallback);
   }
 
   @Test
   public void testCreateReactionDefinition() {
+
+    ReactionClient reactionClient = getReactionClient();
 
     URI targetUri = URI.create("https://example.com");
     String reactionName = "order-notifier";
@@ -73,6 +66,8 @@ public class ReactionClientIT {
   @Test
   public void testUpdateReactionDefinition() {
 
+    ReactionClient reactionClient = getReactionClient();
+
     URI targetUri = URI.create("https://example.com");
     String reactionName = "order-notifier";
     String eventType = "OrderPlacedEvent";
@@ -99,6 +94,9 @@ public class ReactionClientIT {
 
   @Test
   public void testDeleteReactionDefinition() {
+
+    ReactionClient reactionClient = getReactionClient();
+
     String reactionName = "order-notifier";
     reactionClient.deleteDefinition(reactionName);
     verify(apiCallback, times(1)).definitionDeleted(reactionName);
@@ -106,6 +104,8 @@ public class ReactionClientIT {
 
   @Test
   public void testGetReactionDefinition() {
+
+    ReactionClient reactionClient = getReactionClient();
 
     URI targetUri = URI.create("https://example.com");
     String reactionName = "order-notifier";
@@ -130,6 +130,8 @@ public class ReactionClientIT {
   @Test
   public void testListReactionDefinitions() {
 
+    ReactionClient reactionClient = getReactionClient();
+
     URI targetUri = URI.create("https://example.com");
     String reactionName = "order-notifier";
     String feedName = "orders";
@@ -150,5 +152,17 @@ public class ReactionClientIT {
     assertThat(definition.getFeedName(), is(feedName));
     assertThat(definition.getReactOnEventType(), is(eventType));
     assertThat(definition.getAction().getTargetUri(), is(targetUri));
+  }
+
+  private ReactionClient getReactionClient() {
+    return ReactionClient.reactionClient(getConfig()).build();
+  }
+
+  private SerializedClientConfig getConfig() {
+    return serializedConfig()
+        .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
+        .accessKey("aaaaa")
+        .secretAccessKey("bbbbb")
+        .build();
   }
 }

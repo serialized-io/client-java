@@ -5,8 +5,7 @@ import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.projection.*;
 import io.serialized.client.projection.query.ProjectionQueries;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -36,26 +35,15 @@ public class ProjectionClientIT {
     public long orderCount;
   }
 
-  private static ProjectionApiStub.ProjectionApiCallback apiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
+  private ProjectionApiStub.ProjectionApiCallback apiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
 
-  @ClassRule
-  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ProjectionApiStub(apiCallback));
-
-  private SerializedClientConfig config = serializedConfig()
-      .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
-      .accessKey("aaaaa")
-      .secretAccessKey("bbbbb")
-      .build();
-
-  private ProjectionClient projectionClient = ProjectionClient.projectionClient(config).build();
-
-  @Before
-  public void setUp() {
-    reset(apiCallback);
-  }
+  @Rule
+  public final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ProjectionApiStub(apiCallback));
 
   @Test
   public void testCreateProjectionDefinition() {
+
+    ProjectionClient projectionClient = getProjectionClient();
 
     ProjectionDefinition highScoreProjection =
         ProjectionDefinition.singleProjection("high-score")
@@ -93,6 +81,8 @@ public class ProjectionClientIT {
   @Test
   public void testUpdateProjectionDefinition() {
 
+    ProjectionClient projectionClient = getProjectionClient();
+
     ProjectionDefinition highScoreProjection =
         ProjectionDefinition.singleProjection("high-score")
             .feed("game")
@@ -128,6 +118,9 @@ public class ProjectionClientIT {
 
   @Test
   public void testCreateProjectionWithSingleHandler() {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
     ProjectionDefinition projectionDefinition =
         ProjectionDefinition.singleProjection("high-score")
             .feed("games")
@@ -159,6 +152,9 @@ public class ProjectionClientIT {
 
   @Test
   public void testCreateAggregatedProjectionDefinition() {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
     ProjectionDefinition projectionDefinition =
         ProjectionDefinition.aggregatedProjection("game-count")
             .feed("games")
@@ -189,6 +185,8 @@ public class ProjectionClientIT {
 
   @Test
   public void testDeleteDefinition() {
+    ProjectionClient projectionClient = getProjectionClient();
+
     String projectionName = "orders";
     projectionClient.deleteDefinition(projectionName);
     verify(apiCallback, times(1)).definitionDeleted(projectionName);
@@ -196,6 +194,8 @@ public class ProjectionClientIT {
 
   @Test
   public void testGetDefinition() {
+    ProjectionClient projectionClient = getProjectionClient();
+
     String projectionName = "game-count";
     String feedName = "games";
     ProjectionDefinition expected =
@@ -213,6 +213,8 @@ public class ProjectionClientIT {
 
   @Test
   public void testListDefinitions() {
+
+    ProjectionClient projectionClient = getProjectionClient();
 
     String projectionName = "game-count";
     String feedName = "games";
@@ -233,6 +235,8 @@ public class ProjectionClientIT {
   @Test
   public void testSingleProjection() throws IOException {
 
+    ProjectionClient projectionClient = getProjectionClient();
+
     String projectionName = "orders";
     String projectionId = "84e3565e-cd61-44e7-9769-c4663588c4dd";
     when(apiCallback.singleProjectionFetched(projectionName, projectionId)).thenReturn(getResource("/projection/getSingleProjection.json"));
@@ -250,6 +254,8 @@ public class ProjectionClientIT {
   @Test
   public void testAggregatedProjection() throws IOException {
 
+    ProjectionClient projectionClient = getProjectionClient();
+
     when(apiCallback.aggregatedProjectionFetched("order-totals")).thenReturn(getResource("/projection/getAggregatedProjection.json"));
 
     ProjectionResponse<OrderTotalsProjection> projection = projectionClient.query(
@@ -262,6 +268,18 @@ public class ProjectionClientIT {
     assertThat(projection.data.orderCount, is(2L));
   }
 
+
+  private ProjectionClient getProjectionClient() {
+    return ProjectionClient.projectionClient(getConfig()).build();
+  }
+
+  private SerializedClientConfig getConfig() {
+    return serializedConfig()
+        .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
+        .accessKey("aaaaa")
+        .secretAccessKey("bbbbb")
+        .build();
+  }
 
   private String getResource(String resource) throws IOException {
     return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");

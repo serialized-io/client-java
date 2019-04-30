@@ -7,7 +7,7 @@ import io.serialized.client.feed.FeedApiStub;
 import io.serialized.client.feed.FeedClient;
 import io.serialized.client.feed.FeedResponse;
 import org.apache.commons.io.IOUtils;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -20,21 +20,15 @@ import static org.mockito.Mockito.when;
 
 public class FeedClientIT {
 
-  private static FeedApiStub.FeedApiCallback apiCallback = mock(FeedApiStub.FeedApiCallback.class);
+  private FeedApiStub.FeedApiCallback apiCallback = mock(FeedApiStub.FeedApiCallback.class);
 
-  @ClassRule
-  public static final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new FeedApiStub(apiCallback));
-
-  private FeedClient feedClient = FeedClient.feedClient(
-      SerializedClientConfig.serializedConfig()
-          .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
-          .accessKey("aaaaa")
-          .secretAccessKey("bbbbb")
-          .build())
-      .build();
+  @Rule
+  public final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new FeedApiStub(apiCallback));
 
   @Test
   public void listFeeds() throws IOException {
+
+    FeedClient feedClient = getFeedClient();
 
     when(apiCallback.feedOverviewLoaded()).thenReturn(getResource("/feed/feeds.json"));
 
@@ -48,6 +42,8 @@ public class FeedClientIT {
 
   @Test
   public void feedEntries() throws IOException {
+
+    FeedClient feedClient = getFeedClient();
     String feedName = "games";
 
     when(apiCallback.feedEntriesLoaded(feedName)).thenReturn(getResource("/feed/feedentries.json"));
@@ -58,6 +54,15 @@ public class FeedClientIT {
     assertThat(feedResponse.events().size(), is(96));
   }
 
+  private FeedClient getFeedClient() {
+    return FeedClient.feedClient(
+        SerializedClientConfig.serializedConfig()
+            .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
+            .accessKey("aaaaa")
+            .secretAccessKey("bbbbb")
+            .build())
+        .build();
+  }
 
   private String getResource(String resource) throws IOException {
     return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
