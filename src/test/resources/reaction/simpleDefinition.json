@@ -1,0 +1,9 @@
+{
+  "reactionName": "payment-processed-email-reaction",
+  "feedName": "payment",
+  "reactOnEventType": "PaymentProcessed",
+  "action": {
+    "actionType": "HTTP_POST",
+    "targetUri": "https://your-email-service"
+  }
+}

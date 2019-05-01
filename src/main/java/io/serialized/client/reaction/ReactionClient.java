@@ -6,12 +6,16 @@ import io.serialized.client.SerializedOkHttpClient;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
-public class ReactionClient {
+import java.io.IOException;
 
+public class ReactionClient {
   private final SerializedOkHttpClient client;
+
   private final HttpUrl apiRoot;
+  private final ObjectMapper objectMapper;
 
   private ReactionClient(ReactionClient.Builder builder) {
+    this.objectMapper = builder.objectMapper;
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
     this.apiRoot = builder.apiRoot;
   }
@@ -21,10 +25,32 @@ public class ReactionClient {
     client.post(url, reactionDefinition);
   }
 
+  /**
+   * Creates a Reaction definition from a JSON String value.
+   *
+   * @param jsonString a JSON String with a valid Reaction definition
+   * @throws IOException if the given String is not a valid Reaction definition
+   */
+  public void createDefinition(String jsonString) throws IOException {
+    ReactionDefinition reactionDefinition = objectMapper.readValue(jsonString, ReactionDefinition.class);
+    createDefinition(reactionDefinition);
+  }
+
   public void createOrUpdate(ReactionDefinition reactionDefinition) {
     String reactionName = reactionDefinition.getReactionName();
     HttpUrl url = pathForDefinition().addPathSegment(reactionName).build();
     client.put(url, reactionDefinition);
+  }
+
+  /**
+   * Creates/updates a Reaction definition from a JSON String value.
+   *
+   * @param jsonString a JSON String with a valid Reaction definition
+   * @throws IOException if the given String is not a valid Reaction definition
+   */
+  public void createOrUpdate(String jsonString) throws IOException {
+    ReactionDefinition reactionDefinition = objectMapper.readValue(jsonString, ReactionDefinition.class);
+    createOrUpdate(reactionDefinition);
   }
 
   public ReactionDefinition getDefinition(String reactionName) {

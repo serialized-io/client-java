@@ -6,11 +6,13 @@ import io.serialized.client.reaction.ReactionApiStub;
 import io.serialized.client.reaction.ReactionClient;
 import io.serialized.client.reaction.ReactionDefinition;
 import io.serialized.client.reaction.ReactionDefinitions;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.io.IOException;
 import java.net.URI;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -32,6 +34,34 @@ public class ReactionClientIT {
   @Before
   public void setUp() {
     DROPWIZARD.getObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
+
+  @Test
+  public void testCreateDefinitionFromJson() throws IOException {
+
+    ReactionClient reactionClient = getReactionClient();
+
+    String definition = getResource("/reaction/simpleDefinition.json");
+
+    reactionClient.createDefinition(definition);
+
+    ArgumentCaptor<ReactionDefinition> captor = ArgumentCaptor.forClass(ReactionDefinition.class);
+    verify(apiCallback, times(1)).definitionCreated(captor.capture());
+
+  }
+
+  @Test
+  public void testUpdateDefinitionFromJson() throws IOException {
+
+    ReactionClient reactionClient = getReactionClient();
+
+    String definition = getResource("/reaction/simpleDefinition.json");
+
+    reactionClient.createOrUpdate(definition);
+
+    ArgumentCaptor<ReactionDefinition> captor = ArgumentCaptor.forClass(ReactionDefinition.class);
+    verify(apiCallback, times(1)).definitionUpdated(captor.capture());
+
   }
 
   @Test
@@ -165,4 +195,9 @@ public class ReactionClientIT {
         .secretAccessKey("bbbbb")
         .build();
   }
+
+  private String getResource(String resource) throws IOException {
+    return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
+  }
+
 }

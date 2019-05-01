@@ -9,6 +9,7 @@ import io.serialized.client.projection.query.ProjectionQuery;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class ProjectionClient {
@@ -28,9 +29,31 @@ public class ProjectionClient {
     client.post(url, projectionDefinition);
   }
 
+  /**
+   * Creates a Projection definition from a JSON String value.
+   *
+   * @param jsonString a JSON String with a valid Projection definition
+   * @throws IOException if the given String is not a valid Projection definition
+   */
+  public void createDefinition(String jsonString) throws IOException {
+    ProjectionDefinition projectionDefinition = objectMapper.readValue(jsonString, ProjectionDefinition.class);
+    createDefinition(projectionDefinition);
+  }
+
   public void createOrUpdate(ProjectionDefinition projectionDefinition) {
     HttpUrl url = pathForDefinitions().addPathSegment(projectionDefinition.getProjectionName()).build();
     client.put(url, projectionDefinition);
+  }
+
+  /**
+   * Creates/updates a Projection definition from a JSON String value.
+   *
+   * @param jsonString a JSON String with a valid Projection definition
+   * @throws IOException if the given String is not a valid Projection definition
+   */
+  public void createOrUpdate(String jsonString) throws IOException {
+    ProjectionDefinition projectionDefinition = objectMapper.readValue(jsonString, ProjectionDefinition.class);
+    createOrUpdate(projectionDefinition);
   }
 
   public void deleteDefinition(String projectionName) {

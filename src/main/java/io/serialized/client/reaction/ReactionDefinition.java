@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 
 public class ReactionDefinition {
@@ -51,7 +52,7 @@ public class ReactionDefinition {
   }
 
   public Set<String> getCancelOnEventTypes() {
-    return unmodifiableSet(cancelOnEventTypes);
+    return cancelOnEventTypes == null ? emptySet() : unmodifiableSet(cancelOnEventTypes);
   }
 
   public Action getAction() {

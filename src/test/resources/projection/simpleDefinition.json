@@ -1,0 +1,21 @@
+{
+  "projectionName": "orders",
+  "feedName": "order",
+  "handlers": [
+    {
+      "eventType": "OrderPlacedEvent",
+      "functions": [
+        {
+          "function": "set",
+          "targetSelector": "$.projection.status",
+          "rawData": "PLACED"
+        },
+        {
+          "function": "set",
+          "targetSelector": "$.projection.orderAmount",
+          "eventSelector": "$.event.orderAmount"
+        }
+      ]
+    }
+  ]
+}

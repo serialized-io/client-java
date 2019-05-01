@@ -41,6 +41,32 @@ public class ProjectionClientIT {
   public final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ProjectionApiStub(apiCallback));
 
   @Test
+  public void testCreateDefinitionFromJson() throws IOException {
+
+    String projection = getResource("/projection/simpleDefinition.json");
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    projectionClient.createDefinition(projection);
+
+    ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
+    verify(apiCallback, times(1)).definitionCreated(captor.capture());
+  }
+
+  @Test
+  public void testUpdateDefinitionFromJson() throws IOException {
+
+    String projection = getResource("/projection/simpleDefinition.json");
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    projectionClient.createOrUpdate(projection);
+
+    ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
+    verify(apiCallback, times(1)).definitionUpdated(captor.capture());
+  }
+
+  @Test
   public void testCreateProjectionDefinition() {
 
     ProjectionClient projectionClient = getProjectionClient();
