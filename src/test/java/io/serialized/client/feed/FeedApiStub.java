@@ -1,5 +1,10 @@
 package io.serialized.client.feed;
 
+import io.dropwizard.jersey.params.IntParam;
+import io.dropwizard.jersey.params.LongParam;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
@@ -39,16 +44,45 @@ public class FeedApiStub {
 
   @GET
   @Path("{feedName}")
-  public Response feedEntries(@PathParam("feedName") String feedName) {
-    Object responseBody = callback.feedEntriesLoaded(feedName);
+  public Response feedEntries(@PathParam("feedName") String feedName,
+                              @QueryParam("before") @DefaultValue("0") LongParam before,
+                              @QueryParam("since") @DefaultValue("0") LongParam since,
+                              @QueryParam("limit") @DefaultValue("1000") @Min(1) @Max(1000) IntParam limit) {
+    QueryParams queryParams = new QueryParams(limit.get(), since.get(), before.get());
+    Object responseBody = callback.feedEntriesLoaded(feedName, queryParams);
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+  }
+
+  public class QueryParams {
+
+    private final Integer limit;
+    private final Long since;
+    private final Long before;
+
+    public QueryParams(Integer limit, Long since, Long before) {
+      this.limit = limit;
+      this.since = since;
+      this.before = before;
+    }
+
+    public Integer getLimit() {
+      return limit;
+    }
+
+    public Long getSince() {
+      return since;
+    }
+
+    public Long getBefore() {
+      return before;
+    }
   }
 
   public interface FeedApiCallback {
 
     Object feedOverviewLoaded();
 
-    Object feedEntriesLoaded(String feedName);
+    Object feedEntriesLoaded(String feedName, QueryParams queryParams);
 
     int currentGlobalSequenceNumberRequested();
 

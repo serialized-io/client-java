@@ -9,12 +9,14 @@ import io.serialized.client.feed.FeedResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.util.List;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -46,12 +48,49 @@ public class FeedClientIT {
     FeedClient feedClient = getFeedClient();
     String feedName = "games";
 
-    when(apiCallback.feedEntriesLoaded(feedName)).thenReturn(getResource("/feed/feedentries.json"));
+    ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
+    when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries.json"));
 
-    FeedResponse feedResponse = feedClient.feed(feedName);
+    FeedResponse feedResponse = feedClient.feed(feedName).execute();
 
+    assertThat(queryParams.getValue().getLimit(), is(1000));
     assertThat(feedResponse.entries().size(), is(48));
     assertThat(feedResponse.events().size(), is(96));
+  }
+
+  @Test
+  public void feedEntriesWithLimit() throws IOException {
+
+    FeedClient feedClient = getFeedClient();
+    String feedName = "games";
+
+    int limit = 10;
+    ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
+    when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries-limit.json"));
+
+    FeedResponse feedResponse = feedClient.feed(feedName).limit(limit).execute();
+
+    assertThat(queryParams.getValue().getLimit(), is(10));
+    assertThat(feedResponse.entries().size(), is(10));
+    assertThat(feedResponse.events().size(), is(20));
+  }
+
+  @Test
+  public void feedEntriesWithLimitAndSince() throws IOException {
+
+    FeedClient feedClient = getFeedClient();
+    String feedName = "games";
+
+    int limit = 10;
+    ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
+    when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries-limit.json"));
+
+    FeedResponse feedResponse = feedClient.feed(feedName).limit(limit).since(3).execute();
+
+    assertThat(queryParams.getValue().getLimit(), is(10));
+    assertThat(queryParams.getValue().getSince(), is(3L));
+    assertThat(feedResponse.entries().size(), is(10));
+    assertThat(feedResponse.events().size(), is(20));
   }
 
   private FeedClient getFeedClient() {

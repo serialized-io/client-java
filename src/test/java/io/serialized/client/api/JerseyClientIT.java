@@ -17,6 +17,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -223,7 +224,8 @@ public class JerseyClientIT {
     Client client = ClientBuilder.newClient();
     String feedName = "orders";
 
-    when(feedApiCallback.feedEntriesLoaded(feedName)).thenReturn(getResource("/feed/feedentries.json"));
+    ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
+    when(feedApiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries.json"));
 
     Map response = client.target(apiRoot)
         .path("feeds")

@@ -1,0 +1,214 @@
+{
+  "entries": [
+    {
+      "sequenceNumber": 4,
+      "aggregateId": "171ad3fe-519b-4bea-8ad2-cb2c069ed52a",
+      "timestamp": 1535548337761,
+      "events": [
+        {
+          "eventId": "f9fcf16b-619f-4462-acee-fc3d104f5743",
+          "eventType": "GameStarted",
+          "data": {
+            "player1": "Lisa",
+            "player2": "Bob"
+          }
+        },
+        {
+          "eventId": "47fa8d31-ccb4-4f51-afb7-57bd9d6dcaf6",
+          "eventType": "RoundStarted",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "sequenceNumber": 5,
+      "aggregateId": "5773d788-3515-4b81-b878-64ad97069ccc",
+      "timestamp": 1535632502303,
+      "events": [
+        {
+          "eventId": "92015fd9-635a-4628-a85d-bed95d031bb4",
+          "eventType": "GameStarted",
+          "data": {
+            "player1": "Bob",
+            "player2": "Lisa"
+          }
+        },
+        {
+          "eventId": "078b2390-fac1-49d3-bbbc-47bec609788b",
+          "eventType": "RoundStarted",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "sequenceNumber": 6,
+      "aggregateId": "3d6c915d-0d5d-4750-b9d3-f3321e17e7eb",
+      "timestamp": 1535632534636,
+      "events": [
+        {
+          "eventId": "b2960172-83e3-4134-b568-79f1411a08cf",
+          "eventType": "GameStarted",
+          "data": {
+            "player1": "Bob",
+            "player2": "Lisa"
+          }
+        },
+        {
+          "eventId": "f40a5e90-bc64-4a6c-8d94-94645f15db9a",
+          "eventType": "RoundStarted",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "sequenceNumber": 7,
+      "aggregateId": "36776aba-8a9a-45c2-b06e-c072bf9d71a0",
+      "timestamp": 1535632594564,
+      "events": [
+        {
+          "eventId": "bd592b98-1ba9-4098-9bb4-5d27e8844fb8",
+          "eventType": "GameStarted",
+          "data": {
+            "player1": "Bob",
+            "player2": "Lisa"
+          }
+        },
+        {
+          "eventId": "8cf6c3ee-596c-4cde-b622-096d894ec2ca",
+          "eventType": "RoundStarted",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "sequenceNumber": 8,
+      "aggregateId": "36776aba-8a9a-45c2-b06e-c072bf9d71a0",
+      "timestamp": 1535632594789,
+      "events": [
+        {
+          "eventId": "d37cead9-7756-463b-8496-5185710a00ec",
+          "eventType": "PlayerAnswered",
+          "data": {
+            "player": "Lisa",
+            "answer": "ROCK"
+          }
+        }
+      ]
+    },
+    {
+      "sequenceNumber": 9,
+      "aggregateId": "36776aba-8a9a-45c2-b06e-c072bf9d71a0",
+      "timestamp": 1535632594973,
+      "events": [
+        {
+          "eventId": "4f63a5d4-ae4b-4e1c-bfbe-11e27a3ae404",
+          "eventType": "PlayerAnswered",
+          "data": {
+            "player": "Bob",
+            "answer": "PAPER"
+          }
+        },
+        {
+          "eventId": "08d68e03-5e67-4305-8ab4-ad7819382af0",
+          "eventType": "RoundFinished",
+          "data": {
+            "winner": "Bob"
+          }
+        },
+        {
+          "eventId": "3064413e-c504-445a-af8f-49b07c3f210b",
+          "eventType": "RoundStarted",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "sequenceNumber": 10,
+      "aggregateId": "36776aba-8a9a-45c2-b06e-c072bf9d71a0",
+      "timestamp": 1535632595126,
+      "events": [
+        {
+          "eventId": "00669706-024a-4858-856a-10b83abd1e1f",
+          "eventType": "PlayerAnswered",
+          "data": {
+            "player": "Lisa",
+            "answer": "PAPER"
+          }
+        }
+      ]
+    },
+    {
+      "sequenceNumber": 11,
+      "aggregateId": "36776aba-8a9a-45c2-b06e-c072bf9d71a0",
+      "timestamp": 1535632595275,
+      "events": [
+        {
+          "eventId": "81258e43-38cd-4cc3-8799-4c3d60c280ef",
+          "eventType": "PlayerAnswered",
+          "data": {
+            "player": "Bob",
+            "answer": "ROCK"
+          }
+        },
+        {
+          "eventId": "17be7e48-2e8e-4f62-91f3-b1f3a172dcba",
+          "eventType": "RoundFinished",
+          "data": {
+            "winner": "Lisa"
+          }
+        },
+        {
+          "eventId": "638448ba-4d8a-48e0-992d-a7483ffbdfeb",
+          "eventType": "RoundStarted",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "sequenceNumber": 12,
+      "aggregateId": "36776aba-8a9a-45c2-b06e-c072bf9d71a0",
+      "timestamp": 1535632595418,
+      "events": [
+        {
+          "eventId": "ef04f155-104a-4bb6-99e1-d2328c114070",
+          "eventType": "PlayerAnswered",
+          "data": {
+            "player": "Lisa",
+            "answer": "PAPER"
+          }
+        }
+      ]
+    },
+    {
+      "sequenceNumber": 13,
+      "aggregateId": "36776aba-8a9a-45c2-b06e-c072bf9d71a0",
+      "timestamp": 1535632595589,
+      "events": [
+        {
+          "eventId": "670a0c80-226b-4f0e-b489-e523b9df0667",
+          "eventType": "PlayerAnswered",
+          "data": {
+            "player": "Bob",
+            "answer": "SCISSORS"
+          }
+        },
+        {
+          "eventId": "29aa452e-e964-4a44-8046-98da0c374473",
+          "eventType": "RoundFinished",
+          "data": {
+            "winner": "Bob"
+          }
+        },
+        {
+          "eventId": "a2b4b293-07c8-48cf-94af-1e36b5bf1fab",
+          "eventType": "GameFinished",
+          "data": {
+            "winner": "Bob"
+          }
+        }
+      ]
+    }
+  ],
+  "hasMore": false,
+  "currentSequenceNumber": 51
+}
