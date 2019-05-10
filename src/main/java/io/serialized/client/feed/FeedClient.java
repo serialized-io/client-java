@@ -35,7 +35,6 @@ public class FeedClient {
   public class FeedRequest {
 
     private Integer limit;
-    private Long since;
     private String feedName;
 
     private FeedRequest(String feedName) {
@@ -47,11 +46,6 @@ public class FeedClient {
       return this;
     }
 
-    public FeedRequest since(long since) {
-      this.since = since;
-      return this;
-    }
-
     private HttpUrl.Builder url() {
       HttpUrl.Builder url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment(feedName);
 
@@ -59,11 +53,11 @@ public class FeedClient {
           url.addQueryParameter("limit", String.valueOf(l))
       );
 
-      Optional.ofNullable(since).ifPresent(s ->
-          url.addQueryParameter("since", String.valueOf(s))
-      );
-
       return url;
+    }
+
+    public FeedResponse execute(long since) {
+      return client.get(url().addQueryParameter("since", String.valueOf(since)).build(), FeedResponse.class);
     }
 
     public FeedResponse execute() {
