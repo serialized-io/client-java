@@ -25,9 +25,9 @@ public class SerializedOkHttpClient {
   }
 
   public void put(HttpUrl url, Object payload) {
-    try (Response response = httpClient.newCall(putRequest(url, payload)).execute()) {
-      if (!response.isSuccessful()) {
-        throw new ClientException("PUT failed");
+    try (Response res = httpClient.newCall(putRequest(url, payload)).execute()) {
+      if (!res.isSuccessful()) {
+        throw new ClientException("PUT failed: " + (res.body() != null ? res.body().string() : res.message()));
       }
     } catch (IOException e) {
       throw new ClientException("PUT failed", e);
@@ -35,9 +35,9 @@ public class SerializedOkHttpClient {
   }
 
   public void post(HttpUrl url, Object payload) {
-    try (Response response = httpClient.newCall(postRequest(url, payload)).execute()) {
-      if (!response.isSuccessful()) {
-        throw new ClientException("POST failed ");
+    try (Response res = httpClient.newCall(postRequest(url, payload)).execute()) {
+      if (!res.isSuccessful()) {
+        throw new ClientException("POST failed: " + (res.body() != null ? res.body().string() : res.message()));
       }
     } catch (Exception e) {
       throw new ClientException("POST failed", e);
@@ -45,12 +45,24 @@ public class SerializedOkHttpClient {
   }
 
   public void delete(HttpUrl url) {
-    try (Response response = httpClient.newCall(deleteRequest(url)).execute()) {
-      if (!response.isSuccessful()) {
-        throw new ClientException("DELETE failed ");
+    try (Response res = httpClient.newCall(deleteRequest(url)).execute()) {
+      if (!res.isSuccessful()) {
+        throw new ClientException("DELETE failed: " + (res.body() != null ? res.body().string() : res.message()));
       }
     } catch (Exception e) {
       throw new ClientException("DELETE failed", e);
+    }
+  }
+
+  private <T> T get(HttpUrl url, Function<String, T> contentParser) {
+    try (Response res = httpClient.newCall(getRequest(url)).execute()) {
+      if (!res.isSuccessful()) {
+        throw new ClientException("GET failed: " + (res.body() != null ? res.body().string() : res.message()));
+      }
+      String responseContents = res.body().string();
+      return contentParser.apply(responseContents);
+    } catch (Exception e) {
+      throw new ClientException("GET failed", e);
     }
   }
 
@@ -60,18 +72,6 @@ public class SerializedOkHttpClient {
 
   public <T> T get(HttpUrl url, JavaType type) {
     return get(url, contents -> parseJsonAs(contents, type));
-  }
-
-  private <T> T get(HttpUrl url, Function<String, T> contentParser) {
-    try (Response response = httpClient.newCall(getRequest(url)).execute()) {
-      if (!response.isSuccessful()) {
-        throw new ClientException("GET failed");
-      }
-      String responseContents = response.body().string();
-      return contentParser.apply(responseContents);
-    } catch (Exception e) {
-      throw new ClientException("GET failed", e);
-    }
   }
 
   private <T> T parseJsonAs(String contents, Class<T> responseClass) {
