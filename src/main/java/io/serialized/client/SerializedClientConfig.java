@@ -7,6 +7,7 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
+import org.apache.commons.lang.Validate;
 
 import java.net.URI;
 import java.util.function.Supplier;
@@ -48,7 +49,7 @@ public class SerializedClientConfig {
 
   public static class Builder {
 
-    private URI rootUrl = URI.create(HTTPS_API_SERIALIZED_IO);
+    private URI rootApiUrl = URI.create(HTTPS_API_SERIALIZED_IO);
     private String accessKey;
     private String secretAccessKey;
 
@@ -59,7 +60,7 @@ public class SerializedClientConfig {
         .setSerializationInclusion(NON_NULL);
 
     public Builder rootApiUrl(String rootApiUrl) {
-      rootUrl = URI.create(rootApiUrl);
+      this.rootApiUrl = URI.create(rootApiUrl);
       return this;
     }
 
@@ -74,7 +75,11 @@ public class SerializedClientConfig {
     }
 
     public SerializedClientConfig build() {
-      HttpUrl apiRoot = HttpUrl.get(rootUrl);
+      Validate.notNull(rootApiUrl, "'rootApiUrl' must be set");
+      Validate.notEmpty(accessKey, "'accessKey' must be set");
+      Validate.notEmpty(secretAccessKey, "'secretAccessKey' must be set");
+
+      HttpUrl apiRoot = HttpUrl.get(rootApiUrl);
       OkHttpClient client = new OkHttpClient.Builder()
           .addInterceptor(chain -> chain.proceed(chain.request().newBuilder()
               .headers(new Headers.Builder()
