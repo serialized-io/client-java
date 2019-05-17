@@ -125,6 +125,7 @@ public class ProjectionApiStub {
     void aggregatedProjectionsDeleted(String projectionName);
 
     Object aggregatedProjectionsFetched();
+
   }
 
 }

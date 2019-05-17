@@ -9,15 +9,19 @@ import okhttp3.OkHttpClient;
 import java.io.IOException;
 
 public class ReactionClient {
-  private final SerializedOkHttpClient client;
 
+  private final SerializedOkHttpClient client;
   private final HttpUrl apiRoot;
   private final ObjectMapper objectMapper;
 
   private ReactionClient(ReactionClient.Builder builder) {
-    this.objectMapper = builder.objectMapper;
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
     this.apiRoot = builder.apiRoot;
+    this.objectMapper = builder.objectMapper;
+  }
+
+  public static ReactionClient.Builder reactionClient(SerializedClientConfig config) {
+    return new ReactionClient.Builder(config);
   }
 
   public void createDefinition(ReactionDefinition reactionDefinition) {
@@ -74,10 +78,6 @@ public class ReactionClient {
         .addPathSegment("definitions");
   }
 
-  public static ReactionClient.Builder reactionClient(SerializedClientConfig config) {
-    return new ReactionClient.Builder(config);
-  }
-
   public static class Builder {
 
     private final OkHttpClient httpClient;
@@ -94,6 +94,5 @@ public class ReactionClient {
       return new ReactionClient(this);
     }
   }
-
 
 }

@@ -31,9 +31,7 @@ class EventDeserializer extends StdDeserializer<Event> {
 
   @Override
   public Event deserialize(JsonParser jp, DeserializationContext context) throws IOException {
-
     JsonNode node = jp.getCodec().readTree(jp);
-
     String eventId = node.get("eventId").asText();
     String eventType = node.get("eventType").asText();
 

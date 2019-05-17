@@ -87,6 +87,7 @@ public class FeedApiStub {
     int currentGlobalSequenceNumberRequested();
 
     Object allFeedLoaded();
+
   }
 
 

@@ -19,6 +19,10 @@ public class FeedClient {
     this.apiRoot = builder.apiRoot;
   }
 
+  public static Builder feedClient(SerializedClientConfig config) {
+    return new Builder(config);
+  }
+
   public List<Feed> listFeeds() {
     HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").build();
     return client.get(url, FeedsResponse.class).feeds();
@@ -26,10 +30,6 @@ public class FeedClient {
 
   public FeedRequest feed(String feedName) {
     return new FeedRequest(feedName);
-  }
-
-  public static Builder feedClient(SerializedClientConfig config) {
-    return new Builder(config);
   }
 
   public class FeedRequest {
@@ -48,11 +48,7 @@ public class FeedClient {
 
     private HttpUrl.Builder url() {
       HttpUrl.Builder url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment(feedName);
-
-      Optional.ofNullable(limit).ifPresent(l ->
-          url.addQueryParameter("limit", String.valueOf(l))
-      );
-
+      Optional.ofNullable(limit).ifPresent(limit -> url.addQueryParameter("limit", String.valueOf(limit)));
       return url;
     }
 

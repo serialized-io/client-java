@@ -81,6 +81,7 @@ public class AggregateApiStub {
     Map aggregateTypeDeleteRequested(String aggregateType);
 
     void aggregateTypeDeletePerformed(String aggregateType, String deleteToken);
+
   }
 
 }

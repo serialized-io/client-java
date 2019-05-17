@@ -5,6 +5,7 @@ import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.SerializedOkHttpClient;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import org.apache.commons.lang.Validate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class AggregateClient<T> {
     private final String aggregateType;
     private final Map<String, Class> eventTypes = new HashMap<>();
 
-    public Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
+    Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
       this.aggregateType = aggregateType;
       this.apiRoot = config.apiRoot();
       this.httpClient = config.httpClient();
@@ -88,6 +89,7 @@ public class AggregateClient<T> {
     }
 
     public AggregateClient<T> build() {
+      Validate.notNull(aggregateType, "'aggregateType' must be set");
       objectMapper.registerModule(EventDeserializer.module(eventTypes));
       return new AggregateClient<>(this);
     }

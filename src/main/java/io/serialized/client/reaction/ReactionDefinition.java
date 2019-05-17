@@ -19,18 +19,6 @@ public class ReactionDefinition {
   private Set<String> cancelOnEventTypes;
   private Action action;
 
-  private static ReactionDefinition newDefinition(String reactionName, String feedName, String reactOnEventType, String triggerTimeField, String offset, Set<String> cancelOnEventTypes, Action action) {
-    ReactionDefinition definition = new ReactionDefinition();
-    definition.reactionName = reactionName;
-    definition.feedName = feedName;
-    definition.reactOnEventType = reactOnEventType;
-    definition.triggerTimeField = triggerTimeField;
-    definition.offset = offset;
-    definition.cancelOnEventTypes = cancelOnEventTypes;
-    definition.action = action;
-    return definition;
-  }
-
   public String getReactionName() {
     return reactionName;
   }
@@ -108,7 +96,15 @@ public class ReactionDefinition {
     }
 
     public ReactionDefinition build() {
-      return newDefinition(reactionName, feedName, reactOnEventType, triggerTimeField, offset, cancelOnEventTypes, action);
+      ReactionDefinition definition = new ReactionDefinition();
+      definition.reactionName = reactionName;
+      definition.feedName = feedName;
+      definition.reactOnEventType = reactOnEventType;
+      definition.triggerTimeField = triggerTimeField;
+      definition.offset = offset;
+      definition.cancelOnEventTypes = cancelOnEventTypes;
+      definition.action = action;
+      return definition;
     }
 
   }

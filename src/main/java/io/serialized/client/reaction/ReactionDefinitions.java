@@ -19,4 +19,5 @@ public class ReactionDefinitions {
   public List<ReactionDefinition> getDefinitions() {
     return unmodifiableList(definitions);
   }
+
 }

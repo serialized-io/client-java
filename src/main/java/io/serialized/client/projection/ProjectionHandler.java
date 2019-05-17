@@ -1,5 +1,7 @@
 package io.serialized.client.projection;
 
+import org.apache.commons.lang.Validate;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,12 +66,16 @@ public class ProjectionHandler {
     }
 
     public ProjectionHandler build() {
+      Validate.notEmpty(eventType, "'eventType' must be set");
+      Validate.isTrue(!functions.isEmpty(), "'functions' must not be empty");
+
       ProjectionHandler projectionHandler = new ProjectionHandler();
       projectionHandler.eventType = this.eventType;
       projectionHandler.functions = this.functions;
       projectionHandler.idField = this.idField;
       return projectionHandler;
     }
+
   }
 
 }

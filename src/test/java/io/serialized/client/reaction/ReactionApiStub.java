@@ -63,6 +63,7 @@ public class ReactionApiStub {
     Object definitionsFetched();
 
     void definitionDeleted(String reactionName);
+
   }
 
 }

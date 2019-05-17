@@ -86,17 +86,13 @@ public class Event<T> {
       this.eventType = eventType;
     }
 
-    public Event build() {
-      Event event = new Event<>();
-      event.eventId = eventId.toString();
-      event.eventType = eventType;
-      event.data = data;
-      return event;
-    }
-
     public RawBuilder eventId(UUID eventId) {
       this.eventId = eventId;
       return this;
+    }
+
+    public RawBuilder eventId(String eventId) {
+      return eventId(UUID.fromString(eventId));
     }
 
     public RawBuilder data(Map<String, Object> data) {
@@ -151,9 +147,14 @@ public class Event<T> {
       return this;
     }
 
-    public RawBuilder eventId(String eventId) {
-      return eventId(UUID.fromString(eventId));
+    public Event build() {
+      Event event = new Event<>();
+      event.eventId = eventId.toString();
+      event.eventType = eventType;
+      event.data = data;
+      return event;
     }
+
   }
 
 }

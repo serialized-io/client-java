@@ -1,5 +1,7 @@
 package io.serialized.client.projection;
 
+import org.apache.commons.lang.Validate;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,16 +15,6 @@ public class ProjectionDefinition {
   private boolean aggregated;
   private String idField;
   private List<ProjectionHandler> handlers;
-
-  private static ProjectionDefinition newProjectionDefinition(String projectionName, String feedName, boolean aggregated, String idField, List<ProjectionHandler> handlers) {
-    ProjectionDefinition definition = new ProjectionDefinition();
-    definition.projectionName = projectionName;
-    definition.feedName = feedName;
-    definition.aggregated = aggregated;
-    definition.idField = idField;
-    definition.handlers = handlers;
-    return definition;
-  }
 
   public static SingleProjectionBuilder singleProjection(String projectionName) {
     return new SingleProjectionBuilder(projectionName);
@@ -79,8 +71,18 @@ public class ProjectionDefinition {
     }
 
     public ProjectionDefinition build() {
-      return newProjectionDefinition(projectionName, feedName, true, null, handlers);
+      Validate.isTrue(!handlers.isEmpty(), "'handlers' must not be empty");
+      Validate.notEmpty(projectionName, "'projectionName' must be set");
+      Validate.notEmpty(feedName, "'feedName' must be set");
+
+      ProjectionDefinition definition = new ProjectionDefinition();
+      definition.projectionName = projectionName;
+      definition.feedName = feedName;
+      definition.aggregated = true;
+      definition.handlers = handlers;
+      return definition;
     }
+
   }
 
   public static class SingleProjectionBuilder {
@@ -116,8 +118,19 @@ public class ProjectionDefinition {
     }
 
     public ProjectionDefinition build() {
-      return newProjectionDefinition(projectionName, feedName, false, idField, handlers);
+      Validate.isTrue(!handlers.isEmpty(), "'handlers' must not be empty");
+      Validate.notEmpty(projectionName, "'projectionName' must be set");
+      Validate.notEmpty(feedName, "'feedName' must be set");
+
+      ProjectionDefinition definition = new ProjectionDefinition();
+      definition.projectionName = projectionName;
+      definition.feedName = feedName;
+      definition.aggregated = false;
+      definition.idField = idField;
+      definition.handlers = handlers;
+      return definition;
     }
+
   }
 
 }

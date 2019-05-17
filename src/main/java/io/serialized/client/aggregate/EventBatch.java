@@ -1,5 +1,7 @@
 package io.serialized.client.aggregate;
 
+import org.apache.commons.lang.Validate;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -61,13 +63,13 @@ public class EventBatch {
       return this;
     }
 
+    public Builder aggregateId(String aggregateId) {
+      return aggregateId(UUID.fromString(aggregateId));
+    }
+
     public Builder withExpectedVersion(long expectedVersion) {
       this.expectedVersion = expectedVersion;
       return this;
-    }
-
-    public Builder aggregateId(String aggregateId) {
-      return aggregateId(UUID.fromString(aggregateId));
     }
 
     public Builder addEvent(Event event) {
@@ -86,8 +88,11 @@ public class EventBatch {
     }
 
     public EventBatch build() {
+      Validate.notNull(aggregateId, "'aggregateId' must be set");
+      Validate.isTrue(!events.isEmpty(), "'events' must not be empty");
       return newBatch(aggregateId.toString(), events, expectedVersion);
     }
+
   }
 
 }

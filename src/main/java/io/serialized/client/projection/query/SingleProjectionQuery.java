@@ -1,6 +1,7 @@
 package io.serialized.client.projection.query;
 
 import okhttp3.HttpUrl;
+import org.apache.commons.lang.Validate;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -51,6 +52,8 @@ public class SingleProjectionQuery implements ProjectionQuery {
     }
 
     public SingleProjectionQuery build(Class responseClass) {
+      Validate.notEmpty(projectionName, "'projectionName' must be set");
+      Validate.notEmpty(projectionId, "'projectionId' must be set");
       return new SingleProjectionQuery(this::urlBuilder, responseClass);
     }
 
