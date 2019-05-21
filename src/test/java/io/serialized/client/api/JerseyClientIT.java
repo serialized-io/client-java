@@ -631,26 +631,6 @@ public class JerseyClientIT {
   }
 
   @Test
-  public void testListAggregatedProjections() throws IOException {
-
-    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
-    Client client = ClientBuilder.newClient();
-
-    when(projectionApiCallback.aggregatedProjectionsFetched()).thenReturn(getResource("/projection/listAggregatedProjections.json"));
-
-    Map response = client.target(apiRoot)
-        .path("projections")
-        .path("aggregated")
-        .request()
-        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
-        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
-        .get(Map.class);
-
-    assertThat(response.get("totalCount"), is(1));
-  }
-
-
-  @Test
   public void testGetAggregatedProjection() throws IOException {
 
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");

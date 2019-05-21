@@ -24,18 +24,18 @@ public class ProjectionApiStub {
     return Response.ok(APPLICATION_JSON_TYPE).entity(response).build();
   }
 
-  @GET
-  @Path("definitions/{projectionName}")
-  public Response getDefinition(@PathParam("projectionName") String projectionName) {
-    Object definition = callback.definitionFetched();
-    return Response.ok(APPLICATION_JSON_TYPE).entity(definition).build();
-  }
-
   @POST
   @Path("definitions")
   public Response createDefinition(ProjectionDefinition definition) {
     callback.definitionCreated(definition);
     return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
+  @GET
+  @Path("definitions/{projectionName}")
+  public Response getDefinition(@PathParam("projectionName") String projectionName) {
+    Object definition = callback.definitionFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(definition).build();
   }
 
   @PUT
@@ -50,13 +50,6 @@ public class ProjectionApiStub {
   public Response deleteDefinition(@PathParam("projectionName") String projectionName) {
     callback.definitionDeleted(projectionName);
     return Response.ok(APPLICATION_JSON_TYPE).build();
-  }
-
-  @GET
-  @Path("aggregated")
-  public Response listAggregatedProjection() {
-    Object response = callback.aggregatedProjectionsFetched();
-    return Response.ok(APPLICATION_JSON_TYPE).entity(response).build();
   }
 
   @GET
@@ -123,8 +116,6 @@ public class ProjectionApiStub {
     void singleProjectionsDeleted(String projectionName);
 
     void aggregatedProjectionsDeleted(String projectionName);
-
-    Object aggregatedProjectionsFetched();
 
   }
 
