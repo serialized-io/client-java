@@ -8,7 +8,7 @@ public class FeedResponse {
   private List<FeedEntry> entries;
 
   public List<Event> events() {
-    return entries.stream().flatMap(e -> e.events.stream()).collect(Collectors.toList());
+    return entries.stream().flatMap(e -> e.events().stream()).collect(Collectors.toList());
   }
 
   public List<FeedEntry> entries() {

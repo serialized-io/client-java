@@ -4,9 +4,25 @@ import java.util.List;
 
 public class FeedEntry {
 
-  public long sequenceNumber;
-  public long timestamp;
-  public String aggregateId;
-  public List<Event> events;
+  private long sequenceNumber;
+  private long timestamp;
+  private String aggregateId;
+  private List<Event> events;
+
+  public long sequenceNumber() {
+    return sequenceNumber;
+  }
+
+  public long timestamp() {
+    return timestamp;
+  }
+
+  public String aggregateId() {
+    return aggregateId;
+  }
+
+  public List<Event> events() {
+    return events;
+  }
 
 }
