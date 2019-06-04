@@ -34,6 +34,7 @@ class EventDeserializer extends StdDeserializer<Event> {
     JsonNode node = jp.getCodec().readTree(jp);
     String eventId = node.get("eventId").asText();
     String eventType = node.get("eventType").asText();
+    Optional<JsonNode> encryptedData = Optional.ofNullable(node.get("encryptedData"));
 
     Optional<Class> matchingClass = eventTypes
         .entrySet()
@@ -46,12 +47,15 @@ class EventDeserializer extends StdDeserializer<Event> {
     if (matchingClass.isPresent()) {
       Event.TypedBuilder eventBuilder = newEvent(matchingClass.get()).eventId(UUID.fromString(eventId));
       eventBuilder.data(jp.getCodec().treeToValue(data, matchingClass.get()));
+      encryptedData.ifPresent(encData -> eventBuilder.encryptedData(encData.asText()));
       return eventBuilder.build();
     } else {
       Event.RawBuilder eventBuilder = newEvent(eventType).eventId(UUID.fromString(eventId));
       eventBuilder.data(jp.getCodec().treeToValue(data, Map.class));
+      encryptedData.ifPresent(encData -> eventBuilder.encryptedData(encData.asText()));
       return eventBuilder.build();
     }
+
   }
 
 }

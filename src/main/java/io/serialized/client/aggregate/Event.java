@@ -11,6 +11,7 @@ public class Event<T> {
   private String eventId;
   private String eventType;
   private T data;
+  private String encryptedData;
 
   public String getEventId() {
     return eventId;
@@ -22,6 +23,10 @@ public class Event<T> {
 
   public T getData() {
     return data;
+  }
+
+  public String getEncryptedData() {
+    return encryptedData;
   }
 
   public static Event.RawBuilder newEvent(String eventType) {
@@ -42,6 +47,7 @@ public class Event<T> {
     private UUID eventId;
     private String eventType;
     private T data;
+    private String encryptedData;
 
     public TypedBuilder(String eventType) {
       this.eventId = UUID.randomUUID();
@@ -50,14 +56,6 @@ public class Event<T> {
 
     public TypedBuilder(Class<T> eventType) {
       this(eventType.getSimpleName());
-    }
-
-    public Event<T> build() {
-      Event<T> event = new Event<>();
-      event.eventId = eventId.toString();
-      event.eventType = eventType;
-      event.data = data;
-      return event;
     }
 
     public TypedBuilder<T> eventId(UUID eventId) {
@@ -73,6 +71,21 @@ public class Event<T> {
     public TypedBuilder<T> eventId(String eventId) {
       return eventId(UUID.fromString(eventId));
     }
+
+    public TypedBuilder<T> encryptedData(String data) {
+      this.encryptedData = data;
+      return this;
+    }
+
+    public Event<T> build() {
+      Event<T> event = new Event<>();
+      event.eventId = eventId.toString();
+      event.eventType = eventType;
+      event.data = data;
+      event.encryptedData = encryptedData;
+      return event;
+    }
+
   }
 
   public static class RawBuilder {
@@ -80,6 +93,7 @@ public class Event<T> {
     private UUID eventId;
     private String eventType;
     private Object data = new LinkedHashMap<>();
+    private String encryptedData;
 
     public RawBuilder(String eventType) {
       this.eventId = UUID.randomUUID();
@@ -147,11 +161,17 @@ public class Event<T> {
       return this;
     }
 
+    public RawBuilder encryptedData(String data) {
+      this.encryptedData = data;
+      return this;
+    }
+
     public Event build() {
       Event event = new Event<>();
       event.eventId = eventId.toString();
       event.eventType = eventType;
       event.data = data;
+      event.encryptedData = encryptedData;
       return event;
     }
 
