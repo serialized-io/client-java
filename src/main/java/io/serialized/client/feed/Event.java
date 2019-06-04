@@ -10,7 +10,8 @@ public class Event {
 
   private String eventId;
   private String eventType;
-  private Object data;
+  private Map<String, Object> data;
+  private String encryptedData;
 
   public String eventId() {
     return eventId;
@@ -20,8 +21,12 @@ public class Event {
     return eventType;
   }
 
-  public Object data() {
+  public Map<String, Object> data() {
     return data;
+  }
+
+  public String encryptedData() {
+    return encryptedData;
   }
 
   @Override
