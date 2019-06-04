@@ -5,7 +5,7 @@ import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.SerializedOkHttpClient;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import java.util.HashMap;
 import java.util.Map;

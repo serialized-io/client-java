@@ -1,7 +1,7 @@
 package io.serialized.client.projection.query;
 
 import okhttp3.HttpUrl;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import java.util.Optional;
 import java.util.function.Function;
