@@ -101,7 +101,7 @@ public class AggregateClientIT {
   }
 
   @Test
-  public void loadAggregateWithSpecificedEventType() throws IOException {
+  public void loadAggregateWithSpecifiedEventType() throws IOException {
 
     String order = "order";
     String aggregateId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
