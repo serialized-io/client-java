@@ -5,8 +5,8 @@ import java.util.List;
 public class FeedEntry {
 
   private long sequenceNumber;
-  private long timestamp;
   private String aggregateId;
+  private long timestamp;
   private List<Event> events;
 
   public long sequenceNumber() {
