@@ -25,6 +25,10 @@ public class Event {
     return data;
   }
 
+  public <T> T dataValueAs(String key, Class<T> clazz) {
+    return clazz.cast(data.get(key));
+  }
+
   public String encryptedData() {
     return encryptedData;
   }
