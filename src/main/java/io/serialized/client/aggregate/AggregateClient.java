@@ -31,9 +31,9 @@ public class AggregateClient<T> {
     return new Builder<>(aggregateType, stateClass, config);
   }
 
-  public State<T> loadState(String aggregateId) {
+  public T loadState(String aggregateId) {
     LoadAggregateResponse loadAggregateResponse = loadEvents(aggregateId);
-    return stateBuilder.buildState(loadAggregateResponse.events(), loadAggregateResponse.aggregateVersion());
+    return stateBuilder.buildState(loadAggregateResponse.events());
   }
 
   public void storeEvent(String aggregateId, Event event) {

@@ -19,13 +19,13 @@ public class AggregateFactory<A, T> {
   public A fromCommands(List<Command<A>> commands) {
     List<Event> events = new ArrayList<>();
     for (Command<A> command : commands) {
-      State<T> aggregateState = stateBuilder.buildState(events, 0);
-      A a = initializer.apply(aggregateState.data());
+      T aggregateState = stateBuilder.buildState(events);
+      A a = initializer.apply(aggregateState);
       List<Event> apply = command.apply(a);
       events.addAll(apply);
     }
-    State<T> lastState = stateBuilder.buildState(events, 0);
-    return initializer.apply(lastState.data());
+    T lastState = stateBuilder.buildState(events);
+    return initializer.apply(lastState);
   }
 
   /**

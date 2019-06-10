@@ -28,7 +28,7 @@ public class StateBuilder<T> {
     return this;
   }
 
-  public State<T> buildState(List<? extends Event> events, long aggregateVersion) {
+  public T buildState(List<? extends Event> events) {
     try {
       AtomicReference<T> data = new AtomicReference<>(stateClass.newInstance());
       events.forEach(e -> {
@@ -43,7 +43,7 @@ public class StateBuilder<T> {
         data.set(handle);
           }
       );
-      return new State<>(aggregateVersion, data.get());
+      return data.get();
     } catch (InstantiationException | IllegalAccessException e) {
       throw new RuntimeException("Failed to build State", e);
     }

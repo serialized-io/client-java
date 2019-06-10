@@ -25,9 +25,9 @@ public class StateBuilderTest {
         OrderPlaced.orderPlaced(UUID.randomUUID().toString(), 1000)
     );
 
-    State<OrderState> orderStateState = orderStateBuilder.buildState(events, 2);
+    OrderState orderState = orderStateBuilder.buildState(events);
 
-    assertThat(orderStateState.data().status(), Is.is(OrderStatus.PLACED));
+    assertThat(orderState.status(), Is.is(OrderStatus.PLACED));
   }
 
 }

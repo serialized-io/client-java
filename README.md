@@ -81,7 +81,7 @@ AggregateClient<OrderState> orderClient = AggregateClient.aggregateClient("order
     .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
     .build();
     
-State<OrderState> orderState = orderClient.loadState("<ORDER-AGGREGATE-ID>");
+OrderState orderState = orderClient.loadState("<ORDER-AGGREGATE-ID>");
 
 ```
 

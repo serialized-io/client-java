@@ -51,9 +51,9 @@ public class AggregateClientIT {
 
     when(apiCallback.aggregateLoaded(aggregateType, aggregateId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
 
-    State<OrderState> orderState = orderClient.loadState(aggregateId);
+    OrderState orderState = orderClient.loadState(aggregateId);
 
-    assertThat(orderState.data().status(), is(OrderStatus.PLACED));
+    assertThat(orderState.status(), is(OrderStatus.PLACED));
   }
 
   @Test
