@@ -47,24 +47,22 @@ public class Function {
     return new Builder("dec").targetSelector(targetSelector(fieldName)).build();
   }
 
-  public static Function prepend(Selector targetSelector, Selector eventSelector) {
-    return prependBuilder().targetSelector(targetSelector).eventSelector(eventSelector).build();
+  public static Function prepend(Selector targetSelector) {
+    return prependBuilder().targetSelector(targetSelector).build();
   }
 
-  public static Function prepend(Selector targetSelector, Selector eventSelector, Filter targetFilter) {
+  public static Function prepend(Selector targetSelector, Selector eventSelector) {
     return prependBuilder().targetSelector(targetSelector)
         .eventSelector(eventSelector)
-        .targetFilter(targetFilter)
         .build();
   }
 
-  public static Function remove(Selector targetSelector, Selector eventSelector) {
-    return removeBuilder().targetSelector(targetSelector).eventSelector(eventSelector).build();
+  public static Function remove(Selector targetSelector) {
+    return removeBuilder().targetSelector(targetSelector).build();
   }
 
-  public static Function remove(Selector targetSelector, Selector eventSelector, Filter targetFilter) {
+  public static Function remove(Selector targetSelector, Filter targetFilter) {
     return removeBuilder().targetSelector(targetSelector)
-        .eventSelector(eventSelector)
         .targetFilter(targetFilter)
         .build();
   }
