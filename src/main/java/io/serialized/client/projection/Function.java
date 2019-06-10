@@ -47,6 +47,28 @@ public class Function {
     return new Builder("dec").targetSelector(targetSelector(fieldName)).build();
   }
 
+  public static Function prepend(Selector targetSelector, Selector eventSelector) {
+    return prependBuilder().targetSelector(targetSelector).eventSelector(eventSelector).build();
+  }
+
+  public static Function prepend(Selector targetSelector, Selector eventSelector, Filter targetFilter) {
+    return prependBuilder().targetSelector(targetSelector)
+        .eventSelector(eventSelector)
+        .targetFilter(targetFilter)
+        .build();
+  }
+
+  public static Function remove(Selector targetSelector, Selector eventSelector) {
+    return removeBuilder().targetSelector(targetSelector).eventSelector(eventSelector).build();
+  }
+
+  public static Function remove(Selector targetSelector, Selector eventSelector, Filter targetFilter) {
+    return removeBuilder().targetSelector(targetSelector)
+        .eventSelector(eventSelector)
+        .targetFilter(targetFilter)
+        .build();
+  }
+
   public static Function push(Selector targetSelector, RawData rawData) {
     return pushBuilder().targetSelector(targetSelector).rawData(rawData).build();
   }
@@ -164,6 +186,18 @@ public class Function {
     return mergeBuilder().targetSelector(targetSelector).targetFilter(targetFilter).eventSelector(eventSelector).eventFilter(eventFilter).build();
   }
 
+  public static Function clearref() {
+    return new Builder("clearref").build();
+  }
+
+  public static Function delete() {
+    return new Builder("delete").build();
+  }
+
+  public static Function clear() {
+    return new Builder("clear").build();
+  }
+
   private static Builder pushBuilder() {
     return new Builder("push");
   }
@@ -184,12 +218,16 @@ public class Function {
     return new Builder("merge");
   }
 
-  public static Function setref(String fieldName) {
-    return new Builder("setref").targetSelector(targetSelector(fieldName)).build();
+  public static Builder removeBuilder() {
+    return new Builder("remove");
   }
 
-  public static Function clearref() {
-    return new Builder("clearref").build();
+  public static Builder prependBuilder() {
+    return new Builder("prepend");
+  }
+
+  public static Function setref(String fieldName) {
+    return new Builder("setref").targetSelector(targetSelector(fieldName)).build();
   }
 
   public static class Builder {
