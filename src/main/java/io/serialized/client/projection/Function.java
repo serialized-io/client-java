@@ -273,7 +273,7 @@ public class Function {
 
     public Builder rawData(RawData rawData) {
       this.rawData = rawData.value();
-      return null;
+      return this;
     }
   }
 
