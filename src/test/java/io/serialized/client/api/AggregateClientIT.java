@@ -2,10 +2,13 @@ package io.serialized.client.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.google.common.collect.ImmutableList;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.aggregate.*;
+import io.serialized.client.aggregate.AggregateApiStub;
+import io.serialized.client.aggregate.AggregateClient;
+import io.serialized.client.aggregate.Event;
+import io.serialized.client.aggregate.EventBatch;
+import io.serialized.client.aggregate.order.Order;
 import io.serialized.client.aggregate.order.OrderPlaced;
 import io.serialized.client.aggregate.order.OrderState;
 import io.serialized.client.aggregate.order.OrderStatus;
@@ -20,8 +23,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
-import static io.serialized.client.aggregate.EventBatch.newBatch;
 import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -32,49 +36,59 @@ public class AggregateClientIT {
   private final AggregateApiStub.AggregateApiCallback apiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
 
   @Rule
-  public final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new AggregateApiStub(apiCallback));
+  public final DropwizardClientRule dropwizard = new DropwizardClientRule(new AggregateApiStub(apiCallback));
 
   @Before
   public void setUp() {
-    DROPWIZARD.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+    dropwizard.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+  }
+
+  @Test
+  public void testSave() {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .build();
+
+    OrderState orderState = new OrderState();
+    Order order = new Order(orderState);
+    List<Event> events = order.placeOrder(orderId, 123L);
+
+    orderClient.save(orderId, events);
+  }
+
+  @Test
+  public void testUpdate() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId.toString())).thenReturn(getResource("/aggregate/load_aggregate.json"));
+
+    orderClient.update(orderId, orderState -> new Order(orderState).cancel());
   }
 
   @Test
   public void testLoadAggregateState() throws IOException {
-
-    String aggregateId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
     String aggregateType = "order";
 
     AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
-        .registerHandler(OrderPlaced.class, OrderState::orderPlaced)
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, aggregateId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId.toString())).thenReturn(getResource("/aggregate/load_aggregate.json"));
 
-    OrderState orderState = orderClient.loadState(aggregateId);
+    orderClient.update(orderId, orderState -> {
+      assertThat(orderState.status(), is(OrderStatus.PLACED));
+      return emptyList();
+    });
 
-    assertThat(orderState.status(), is(OrderStatus.PLACED));
-  }
-
-  @Test
-  public void loadAggregate() throws IOException {
-
-    AggregateClient<OrderState> orderClient = getOrderClient("order");
-
-    String aggregateId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
-    String aggregateType = "order";
-
-    when(apiCallback.aggregateLoaded(aggregateType, aggregateId)).thenReturn(getResource("/aggregate/load_aggregate_not_classname.json"));
-
-    LoadAggregateResponse aggregateResponse = orderClient.loadEvents(aggregateId);
-
-    assertThat(aggregateResponse.aggregateId(), is(aggregateId));
-    assertThat(aggregateResponse.aggregateType(), is(aggregateType));
-    assertThat(aggregateResponse.aggregateVersion(), is(1L));
-    assertThat(aggregateResponse.events().size(), is(1));
-    Event event = aggregateResponse.events().get(0);
-    assertNotNull(event.getData());
-    assertThat(event.getData().getClass().getSimpleName(), is(OrderPlaced.class.getSimpleName()));
   }
 
   @Test
@@ -83,10 +97,8 @@ public class AggregateClientIT {
     AggregateClient<OrderState> orderClient = getOrderClient("order");
 
     UUID aggregateId = UUID.randomUUID();
-    orderClient.storeEvents(
-        newBatch(aggregateId)
-            .addEvent(orderPlaced("order-123", 1234L))
-            .build());
+
+    orderClient.save(aggregateId, singletonList(orderPlaced("order-123", 1234L)));
 
     ArgumentCaptor<EventBatch> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatch.class);
     verify(apiCallback).eventsStored(eventsStoredCaptor.capture());
@@ -100,56 +112,16 @@ public class AggregateClientIT {
     assertNotNull(event.getData());
   }
 
-  @Test
-  public void loadAggregateWithSpecifiedEventType() throws IOException {
-
-    String order = "order";
-    String aggregateId = "723ecfce-14e9-4889-98d5-a3d0ad54912f";
-
-    AggregateClient<OrderState> orderClient = getOrderClient(order);
-
-    when(apiCallback.aggregateLoaded(order, aggregateId)).thenReturn(getResource("/aggregate/load_aggregate_not_classname.json"));
-
-    LoadAggregateResponse aggregateResponse = orderClient.loadEvents(aggregateId);
-
-    assertThat(aggregateResponse.aggregateId(), is(aggregateId));
-    assertThat(aggregateResponse.aggregateType(), is(order));
-    assertThat(aggregateResponse.aggregateVersion(), is(1L));
-    assertThat(aggregateResponse.events().size(), is(1));
-    assertThat(aggregateResponse.events().get(0).getData().getClass().getSimpleName(), is("OrderPlaced"));
-  }
-
-  @Test
-  public void storeEventsInBatch() {
-
-    AggregateClient<OrderState> orderClient = getOrderClient("order");
-
-    List<Event> events = ImmutableList.of(orderPlaced("some-test-id-1", 12345));
-
-    EventBatch eventBatch = newBatch("723ecfce-14e9-4889-98d5-a3d0ad54912f", events);
-
-    orderClient.storeEvents(eventBatch);
-  }
-
-  @Test
-  public void storeSingleEvent() {
-
-    AggregateClient<OrderState> orderClient = getOrderClient("order");
-
-    Event orderPlacedEvent = orderPlaced("ACME Inc.", 12345);
-
-    orderClient.storeEvent("723ecfce-14e9-4889-98d5-a3d0ad54912f", orderPlacedEvent);
-  }
-
   private AggregateClient<OrderState> getOrderClient(String order) {
-    return aggregateClient(order, OrderState.class, getConfig())
-        .registerHandler("order-placed", OrderPlaced.class, OrderState::orderPlaced)
+    AggregateClient<OrderState> build = aggregateClient(order, OrderState.class, getConfig())
+        .registerHandler("order-placed", OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
+    return build;
   }
 
   private SerializedClientConfig getConfig() {
     return SerializedClientConfig.serializedConfig()
-        .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
+        .rootApiUrl(dropwizard.baseUri() + "/api-stub/")
         .accessKey("aaaaa")
         .secretAccessKey("bbbbb").build();
   }

@@ -18,7 +18,7 @@ public class StateBuilderTest {
   public void testBuildStateFromEvents() {
 
     StateBuilder<OrderState> orderStateBuilder = StateBuilder.stateBuilder(OrderState.class)
-        .withHandler(OrderPlaced.class, OrderState::orderPlaced);
+        .withHandler(OrderPlaced.class, OrderState::handleOrderPlaced);
 
     List<Event<OrderPlaced>> events = asList(
         OrderPlaced.orderPlaced(UUID.randomUUID().toString(), 1000),
