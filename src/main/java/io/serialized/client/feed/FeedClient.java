@@ -52,12 +52,23 @@ public class FeedClient {
       return url;
     }
 
+    public FeedResponse execute() {
+      return execute(0);
+    }
+
     public FeedResponse execute(long since) {
       return client.get(url().addQueryParameter("since", String.valueOf(since)).build(), FeedResponse.class);
     }
 
-    public FeedResponse execute() {
-      return client.get(url().build(), FeedResponse.class);
+    public void execute(long since, FeedEntryProcessor feedEntryHandler) {
+      FeedResponse response;
+      do {
+        response = execute(since);
+        for (FeedEntry feedEntry : response.entries()) {
+          feedEntryHandler.process(feedEntry);
+          feedEntryHandler.onSuccess(feedEntry.sequenceNumber());
+        }
+      } while (response.hasMore());
     }
 
   }
@@ -77,6 +88,7 @@ public class FeedClient {
     public FeedClient build() {
       return new FeedClient(this);
     }
+
   }
 
 }

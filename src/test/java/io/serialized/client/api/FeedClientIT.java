@@ -2,10 +2,7 @@ package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.feed.Feed;
-import io.serialized.client.feed.FeedApiStub;
-import io.serialized.client.feed.FeedClient;
-import io.serialized.client.feed.FeedResponse;
+import io.serialized.client.feed.*;
 import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -13,6 +10,8 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -91,6 +90,41 @@ public class FeedClientIT {
     assertThat(queryParams.getValue().getSince(), is(3L));
     assertThat(feedResponse.entries().size(), is(10));
     assertThat(feedResponse.events().size(), is(20));
+  }
+
+  @Test
+  public void feedEntriesWithCallback() throws IOException {
+
+    FeedClient feedClient = getFeedClient();
+    String feedName = "games";
+
+    ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
+    when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries-limit.json"));
+
+    AtomicInteger entries = new AtomicInteger();
+    AtomicInteger events = new AtomicInteger();
+    AtomicLong lastProcessedEntry = new AtomicLong();
+
+    feedClient.feed(feedName).limit(10).execute(3, new FeedEntryProcessor() {
+      @Override
+      public void process(FeedEntry feedEntry) {
+        entries.incrementAndGet();
+        events.addAndGet(feedEntry.events().size());
+      }
+
+      @Override
+      public void onSuccess(Long sequenceNumber) {
+        lastProcessedEntry.set(sequenceNumber);
+      }
+    });
+
+    assertThat(queryParams.getValue().getLimit(), is(10));
+    assertThat(queryParams.getValue().getSince(), is(3L));
+
+    assertThat(entries.get(), is(10));
+    assertThat(events.get(), is(20));
+
+    assertThat(lastProcessedEntry.get(), is(13L));
   }
 
   private FeedClient getFeedClient() {
