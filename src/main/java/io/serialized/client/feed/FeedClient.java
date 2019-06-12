@@ -62,11 +62,14 @@ public class FeedClient {
 
     public void execute(long since, FeedEntryProcessor feedEntryHandler) {
       FeedResponse response;
+      long offset = since;
+
       do {
-        response = execute(since);
+        response = execute(offset);
         for (FeedEntry feedEntry : response.entries()) {
           feedEntryHandler.process(feedEntry);
           feedEntryHandler.onSuccess(feedEntry.sequenceNumber());
+          offset = feedEntry.sequenceNumber();
         }
       } while (response.hasMore());
     }
