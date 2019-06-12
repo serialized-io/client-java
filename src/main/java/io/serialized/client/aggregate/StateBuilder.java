@@ -1,6 +1,6 @@
 package io.serialized.client.aggregate;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -8,15 +8,15 @@ import java.util.concurrent.atomic.AtomicReference;
 public class StateBuilder<T> {
 
   private final Class<T> stateClass;
-  private final Map<String, EventHandler<T, ?>> handlers;
+  private final Map<String, EventHandler<T, ?>> handlers = new LinkedHashMap<>();
 
   private StateBuilder(Class<T> stateClass, Map<String, EventHandler<T, ?>> handlers) {
     this.stateClass = stateClass;
-    this.handlers = handlers;
+    this.handlers.putAll(handlers);
   }
 
   public static <T> StateBuilder<T> stateBuilder(Class<T> stateClass) {
-    return new StateBuilder<>(stateClass, new HashMap<>());
+    return new StateBuilder<>(stateClass, new LinkedHashMap<>());
   }
 
   public static <T> StateBuilder<T> stateBuilder(Class<T> stateClass, Map<String, EventHandler<T, ?>> handlers) {
