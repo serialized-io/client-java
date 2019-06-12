@@ -1,15 +1,15 @@
 package io.serialized.client.projection;
 
-public class Filter {
+public class TargetFilter {
 
   private String filter;
 
-  public Filter(String filter) {
+  public TargetFilter(String filter) {
     this.filter = filter;
   }
 
-  public static Filter filter(String filter) {
-    return new Filter(filter);
+  public static TargetFilter targetFilter(String filter) {
+    return new TargetFilter(filter);
   }
 
   public String filterString() {

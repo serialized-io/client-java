@@ -1,7 +1,5 @@
 package io.serialized.client.projection;
 
-import static io.serialized.client.projection.Selector.targetSelector;
-
 public class Function {
 
   private String function;
@@ -9,7 +7,7 @@ public class Function {
   private String targetFilter;
   private String eventSelector;
   private String eventFilter;
-  private String rawData;
+  private Object rawData;
 
   public String getFunction() {
     return function;
@@ -31,157 +29,8 @@ public class Function {
     return eventFilter;
   }
 
-  public String getRawData() {
+  public Object getRawData() {
     return rawData;
-  }
-
-  public static Builder handlerFunction(String function) {
-    return new Builder(function);
-  }
-
-  public static Function inc(String fieldName) {
-    return new Builder("inc").targetSelector(targetSelector(fieldName)).build();
-  }
-
-  public static Function dec(String fieldName) {
-    return new Builder("dec").targetSelector(targetSelector(fieldName)).build();
-  }
-
-  public static Function prepend(Selector targetSelector) {
-    return prependBuilder().targetSelector(targetSelector).build();
-  }
-
-  public static Function prepend(Selector targetSelector, Selector eventSelector) {
-    return prependBuilder().targetSelector(targetSelector)
-        .eventSelector(eventSelector)
-        .build();
-  }
-
-  public static Function remove(Selector targetSelector) {
-    return removeBuilder().targetSelector(targetSelector).build();
-  }
-
-  public static Function remove(Selector targetSelector, Filter targetFilter) {
-    return removeBuilder().targetSelector(targetSelector)
-        .targetFilter(targetFilter)
-        .build();
-  }
-
-  public static Function push(Selector targetSelector, RawData rawData) {
-    return pushBuilder().targetSelector(targetSelector).rawData(rawData).build();
-  }
-
-  public static Function push(Selector targetSelector, Selector eventSelector) {
-    return pushBuilder().targetSelector(targetSelector).eventSelector(eventSelector).build();
-  }
-
-  public static Function push(Selector targetSelector, Selector eventSelector, Filter targetFilter) {
-    return pushBuilder().targetSelector(targetSelector)
-        .eventSelector(eventSelector)
-        .targetFilter(targetFilter)
-        .build();
-  }
-
-  public static Function push(Selector targetSelector, Selector eventSelector, Filter targetFilter, Filter eventFilter) {
-    return pushBuilder().targetSelector(targetSelector)
-        .eventSelector(eventSelector)
-        .targetFilter(targetFilter)
-        .eventFilter(eventFilter)
-        .build();
-  }
-
-  public static Function add(Selector targetSelector, RawData rawData) {
-    return addBuilder().targetSelector(targetSelector).rawData(rawData).build();
-  }
-
-  public static Function add(Selector targetSelector, Filter targetFilter, RawData rawData) {
-    return addBuilder().targetSelector(targetSelector).targetFilter(targetFilter).rawData(rawData).build();
-  }
-
-  public static Function add(Selector targetSelector, Selector eventSelector) {
-    return addBuilder().targetSelector(targetSelector).eventSelector(eventSelector).build();
-  }
-
-  public static Function add(Selector targetSelector, Filter targetFilter, Selector eventSelector) {
-    return addBuilder().targetSelector(targetSelector)
-        .eventSelector(eventSelector)
-        .targetFilter(targetFilter)
-        .build();
-  }
-
-  public static Function add(Selector targetSelector, Filter targetFilter, Selector eventSelector, Filter eventFilter) {
-    return addBuilder().targetSelector(targetSelector)
-        .eventSelector(eventSelector)
-        .targetFilter(targetFilter)
-        .eventFilter(eventFilter)
-        .build();
-  }
-
-  public static Function subtract(Selector targetSelector, RawData rawData) {
-    return subtractBuilder().targetSelector(targetSelector).rawData(rawData).build();
-  }
-
-  public static Function subtract(Selector targetSelector, Filter targetFilter, RawData rawData) {
-    return subtractBuilder().targetSelector(targetSelector).targetFilter(targetFilter).rawData(rawData).build();
-  }
-
-  public static Function subtract(Selector targetSelector, Selector eventSelector) {
-    return subtractBuilder().targetSelector(targetSelector).eventSelector(eventSelector).build();
-  }
-
-  public static Function subtract(Selector targetSelector, Filter targetFilter, Selector eventSelector) {
-    return subtractBuilder().targetSelector(targetSelector)
-        .eventSelector(eventSelector)
-        .targetFilter(targetFilter)
-        .build();
-  }
-
-  public static Function subtract(Selector targetSelector, Filter targetFilter, Selector eventSelector, Filter eventFilter) {
-    return subtractBuilder().targetSelector(targetSelector)
-        .eventSelector(eventSelector)
-        .targetFilter(targetFilter)
-        .eventFilter(eventFilter)
-        .build();
-  }
-
-  public static Function set(Selector targetSelector, RawData rawData) {
-    return setBuilder().targetSelector(targetSelector).rawData(rawData).build();
-  }
-
-  public static Function set(Selector targetSelector, Filter targetFilter, RawData rawData) {
-    return setBuilder().targetSelector(targetSelector).targetFilter(targetFilter).rawData(rawData).build();
-  }
-
-  public static Function set(Selector targetSelector, Selector eventSelector) {
-    return setBuilder().targetSelector(targetSelector).eventSelector(eventSelector).build();
-  }
-
-  public static Function set(Selector targetSelector, Filter targetFilter, Selector eventSelector) {
-    return setBuilder().targetSelector(targetSelector).targetFilter(targetFilter).eventSelector(eventSelector).build();
-  }
-
-  public static Function set(Selector targetSelector, Filter targetFilter, Selector eventSelector, Filter eventFilter) {
-    return setBuilder().targetSelector(targetSelector).targetFilter(targetFilter).eventSelector(eventSelector).eventFilter(eventFilter).build();
-  }
-
-  public static Function merge(Selector targetSelector, RawData rawData) {
-    return mergeBuilder().targetSelector(targetSelector).rawData(rawData).build();
-  }
-
-  public static Function merge(Selector targetSelector, Filter targetFilter, RawData rawData) {
-    return mergeBuilder().targetSelector(targetSelector).targetFilter(targetFilter).rawData(rawData).build();
-  }
-
-  public static Function merge(Selector targetSelector, Selector eventSelector) {
-    return mergeBuilder().targetSelector(targetSelector).eventSelector(eventSelector).build();
-  }
-
-  public static Function merge(Selector targetSelector, Filter targetFilter, Selector eventSelector) {
-    return mergeBuilder().targetSelector(targetSelector).targetFilter(targetFilter).eventSelector(eventSelector).build();
-  }
-
-  public static Function merge(Selector targetSelector, Filter targetFilter, Selector eventSelector, Filter eventFilter) {
-    return mergeBuilder().targetSelector(targetSelector).targetFilter(targetFilter).eventSelector(eventSelector).eventFilter(eventFilter).build();
   }
 
   public static Function clearref() {
@@ -196,36 +45,48 @@ public class Function {
     return new Builder("clear").build();
   }
 
-  private static Builder pushBuilder() {
+  public static Builder handlerFunction(String function) {
+    return new Builder(function);
+  }
+
+  public static Builder setref() {
+    return new Builder("setref");
+  }
+
+  public static Builder inc() {
+    return new Builder("inc");
+  }
+
+  public static Builder dec() {
+    return new Builder("dec");
+  }
+
+  public static Builder push() {
     return new Builder("push");
   }
 
-  private static Builder addBuilder() {
+  public static Builder add() {
     return new Builder("add");
   }
 
-  private static Builder subtractBuilder() {
+  public static Builder subtract() {
     return new Builder("subtract");
   }
 
-  private static Builder setBuilder() {
+  public static Builder set() {
     return new Builder("set");
   }
 
-  private static Builder mergeBuilder() {
+  public static Builder merge() {
     return new Builder("merge");
   }
 
-  public static Builder removeBuilder() {
+  public static Builder remove() {
     return new Builder("remove");
   }
 
-  public static Builder prependBuilder() {
+  public static Builder prepend() {
     return new Builder("prepend");
-  }
-
-  public static Function setref(String fieldName) {
-    return new Builder("setref").targetSelector(targetSelector(fieldName)).build();
   }
 
   public static class Builder {
@@ -241,13 +102,28 @@ public class Function {
       this.function = function;
     }
 
-    public Builder eventSelector(Selector eventSelector) {
+    public Builder with(EventSelector eventSelector) {
       this.eventSelector = eventSelector.selector();
       return this;
     }
 
-    public Builder targetSelector(Selector targetSelector) {
+    public Builder with(TargetSelector targetSelector) {
       this.targetSelector = targetSelector.selector();
+      return this;
+    }
+
+    public Builder with(TargetFilter targetFilter) {
+      this.targetFilter = targetFilter.filterString();
+      return this;
+    }
+
+    public Builder with(EventFilter eventFilter) {
+      this.eventFilter = eventFilter.filterString();
+      return this;
+    }
+
+    public Builder with(RawData rawData) {
+      this.rawData = rawData.value();
       return this;
     }
 
@@ -258,22 +134,8 @@ public class Function {
       function.targetSelector = this.targetSelector;
       function.eventFilter = this.eventFilter;
       function.eventSelector = this.eventSelector;
+      function.rawData = this.rawData;
       return function;
-    }
-
-    public Builder targetFilter(Filter targetFilter) {
-      this.targetFilter = targetFilter.filterString();
-      return this;
-    }
-
-    public Builder eventFilter(Filter eventFilter) {
-      this.eventFilter = eventFilter.filterString();
-      return this;
-    }
-
-    public Builder rawData(RawData rawData) {
-      this.rawData = rawData.value();
-      return this;
     }
   }
 

@@ -12,11 +12,11 @@ import org.mockito.ArgumentCaptor;
 import java.io.IOException;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
+import static io.serialized.client.projection.EventSelector.eventSelector;
 import static io.serialized.client.projection.Function.*;
 import static io.serialized.client.projection.ProjectionDefinitions.newDefinitionList;
 import static io.serialized.client.projection.ProjectionHandler.handler;
-import static io.serialized.client.projection.Selector.eventSelector;
-import static io.serialized.client.projection.Selector.targetSelector;
+import static io.serialized.client.projection.TargetSelector.targetSelector;
 import static io.serialized.client.projection.query.ProjectionQueries.single;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
@@ -76,9 +76,9 @@ public class ProjectionClientIT {
             .feed("game")
             .withIdField("winner")
             .addHandler("GameFinished",
-                set(targetSelector("playerName"), eventSelector("winner")),
-                inc("wins"),
-                setref("wins"))
+                set().with(targetSelector("playerName")).with(eventSelector("winner")).build(),
+                inc().with(targetSelector("wins")).build(),
+                setref().with(targetSelector("wins")).build())
             .build();
 
     projectionClient.createDefinition(highScoreProjection);
@@ -114,9 +114,9 @@ public class ProjectionClientIT {
             .feed("game")
             .withIdField("winner")
             .addHandler("GameFinished",
-                set(targetSelector("playerName"), eventSelector("winner")),
-                inc("wins"),
-                setref("wins"))
+                set().with(targetSelector("playerName")).with(eventSelector("winner")).build(),
+                inc().with(targetSelector("wins")).build(),
+                setref().with(targetSelector("wins")).build())
             .build();
 
     projectionClient.createOrUpdate(highScoreProjection);
@@ -151,7 +151,7 @@ public class ProjectionClientIT {
         ProjectionDefinition.singleProjection("high-score")
             .feed("games")
             .withIdField("winner")
-            .addHandler(handler("GameFinished", inc("wins"))).build();
+            .addHandler(handler("GameFinished", inc().with(targetSelector("wins")).build())).build();
 
     projectionClient.createOrUpdate(projectionDefinition);
 
@@ -184,7 +184,7 @@ public class ProjectionClientIT {
     ProjectionDefinition projectionDefinition =
         ProjectionDefinition.aggregatedProjection("game-count")
             .feed("games")
-            .addHandler(handler("GameFinished", inc("count"))).build();
+            .addHandler(handler("GameFinished", inc().with(targetSelector("count")).build())).build();
 
     projectionClient.createOrUpdate(projectionDefinition);
 
@@ -227,7 +227,7 @@ public class ProjectionClientIT {
     ProjectionDefinition expected =
         ProjectionDefinition.aggregatedProjection(projectionName)
             .feed(feedName)
-            .addHandler(handler("GameFinished", inc("count"))).build();
+            .addHandler(handler("GameFinished", inc().with(targetSelector("count")).build())).build();
 
     when(apiCallback.definitionFetched()).thenReturn(expected);
 
@@ -247,7 +247,7 @@ public class ProjectionClientIT {
 
     ProjectionDefinitions expected = newDefinitionList(asList(ProjectionDefinition.aggregatedProjection(projectionName)
         .feed(feedName)
-        .addHandler(handler("GameFinished", inc("count"))).build()));
+        .addHandler(handler("GameFinished", inc().with(targetSelector("count")).build())).build()));
 
     when(apiCallback.definitionsFetched()).thenReturn(expected);
 
