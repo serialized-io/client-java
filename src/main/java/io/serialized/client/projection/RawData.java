@@ -10,11 +10,11 @@ public class RawData {
     this.data = data;
   }
 
-  public static RawData fromString(String data) {
+  public static RawData rawData(String data) {
     return new RawData(data);
   }
 
-  public static RawData fromMap(Map<String, Object> data) {
+  public static RawData rawData(Map<String, Object> data) {
     return new RawData(data);
   }
 
