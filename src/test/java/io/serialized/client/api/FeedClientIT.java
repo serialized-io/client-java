@@ -2,7 +2,10 @@ package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.feed.*;
+import io.serialized.client.feed.Feed;
+import io.serialized.client.feed.FeedApiStub;
+import io.serialized.client.feed.FeedClient;
+import io.serialized.client.feed.FeedResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -105,17 +108,10 @@ public class FeedClientIT {
     AtomicInteger events = new AtomicInteger();
     AtomicLong lastProcessedEntry = new AtomicLong();
 
-    feedClient.feed(feedName).limit(10).execute(3, new FeedEntryProcessor() {
-      @Override
-      public void process(FeedEntry feedEntry) {
-        entries.incrementAndGet();
-        events.addAndGet(feedEntry.events().size());
-      }
-
-      @Override
-      public void onSuccess(Long sequenceNumber) {
-        lastProcessedEntry.set(sequenceNumber);
-      }
+    feedClient.feed(feedName).limit(10).execute(3, feedEntry -> {
+      entries.incrementAndGet();
+      events.addAndGet(feedEntry.events().size());
+      lastProcessedEntry.set(feedEntry.sequenceNumber());
     });
 
     assertThat(queryParams.getValue().getLimit(), is(10));

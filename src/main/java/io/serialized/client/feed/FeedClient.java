@@ -60,15 +60,14 @@ public class FeedClient {
       return client.get(url().addQueryParameter("since", String.valueOf(since)).build(), FeedResponse.class);
     }
 
-    public void execute(long since, FeedEntryProcessor feedEntryHandler) {
+    public void execute(long since, FeedEntryHandler feedEntryHandler) {
       FeedResponse response;
       long offset = since;
 
       do {
         response = execute(offset);
         for (FeedEntry feedEntry : response.entries()) {
-          feedEntryHandler.process(feedEntry);
-          feedEntryHandler.onSuccess(feedEntry.sequenceNumber());
+          feedEntryHandler.handle(feedEntry);
           offset = feedEntry.sequenceNumber();
         }
       } while (response.hasMore());
