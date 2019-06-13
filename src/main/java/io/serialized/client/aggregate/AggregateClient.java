@@ -41,7 +41,7 @@ public class AggregateClient<T> {
   }
 
   public void save(UUID aggregateId, List<Event> events) {
-    storeBatch(new EventBatch(aggregateId, events, requireUniqueIdOnSave ? 0L : null));
+    storeBatch(aggregateId, new EventBatch(events, requireUniqueIdOnSave ? 0L : null));
   }
 
   public void save(String aggregateId, List<Event> events, Long expectedVersion) {
@@ -49,7 +49,7 @@ public class AggregateClient<T> {
   }
 
   public void save(UUID aggregateId, List<Event> events, Long expectedVersion) {
-    storeBatch(new EventBatch(aggregateId, events, expectedVersion));
+    storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
 
   public void update(String aggregateId, AggregateUpdate<T> update) {
@@ -57,28 +57,29 @@ public class AggregateClient<T> {
   }
 
   public void update(UUID aggregateId, AggregateUpdate<T> update) {
-    LoadAggregateResponse aggregateResponse = loadState(aggregateId.toString());
+    LoadAggregateResponse aggregateResponse = loadState(aggregateId);
     T state = stateBuilder.buildState(aggregateResponse.events);
     Long expectedVersion = useOptimisticConcurrencyOnUpdate ? aggregateResponse.aggregateVersion : null;
     List<Event> events = update.apply(state);
-    storeBatch(new EventBatch(aggregateId, events, expectedVersion));
+    storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
 
-  private LoadAggregateResponse loadState(String aggregateId) {
+  private LoadAggregateResponse loadState(UUID aggregateId) {
     HttpUrl url = apiRoot.newBuilder()
         .addPathSegment("aggregates")
         .addPathSegment(aggregateType)
-        .addPathSegment(aggregateId).build();
+        .addPathSegment(aggregateId.toString()).build();
 
     return client.get(url, LoadAggregateResponse.class);
   }
 
-  private void storeBatch(EventBatch eventBatch) {
+  private void storeBatch(UUID aggregateId, EventBatch eventBatch) {
     if (eventBatch.getEvents().isEmpty()) return;
 
     HttpUrl url = apiRoot.newBuilder()
         .addPathSegment("aggregates")
         .addPathSegment(aggregateType)
+        .addPathSegment(aggregateId.toString())
         .addPathSegment("events")
         .build();
 

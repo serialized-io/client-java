@@ -5,6 +5,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.Map;
+import java.util.UUID;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -22,9 +23,11 @@ public class AggregateApiStub {
   }
 
   @POST
-  @Path("{aggregateType}/events")
-  public Response saveEvents(@PathParam("aggregateType") String aggregateType, @NotNull @Valid EventBatch eventBatch) {
-    callback.eventsStored(eventBatch);
+  @Path("{aggregateType}/{aggregateId}/events")
+  public Response saveEvents(@PathParam("aggregateType") String aggregateType,
+                             @PathParam("aggregateId") String aggregateId,
+                             @NotNull @Valid EventBatch eventBatch) {
+    callback.eventsStored(UUID.fromString(aggregateId), eventBatch);
     return Response.ok().build();
   }
 
@@ -68,7 +71,7 @@ public class AggregateApiStub {
 
   public interface AggregateApiCallback {
 
-    void eventsStored(EventBatch eventBatch);
+    void eventsStored(UUID aggregateId, EventBatch eventBatch);
 
     Object aggregateLoaded(String aggregateType, String aggregateId);
 

@@ -101,10 +101,9 @@ public class AggregateClientIT {
     orderClient.save(aggregateId, singletonList(orderPlaced("order-123", 1234L)));
 
     ArgumentCaptor<EventBatch> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatch.class);
-    verify(apiCallback).eventsStored(eventsStoredCaptor.capture());
+    verify(apiCallback).eventsStored(eq(aggregateId), eventsStoredCaptor.capture());
 
     EventBatch eventsStored = eventsStoredCaptor.getValue();
-    assertThat(eventsStored.getAggregateId(), is(aggregateId.toString()));
     List<Event> events = eventsStored.getEvents();
     assertThat(events.size(), is(1));
     Event event = events.get(0);

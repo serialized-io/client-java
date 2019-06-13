@@ -168,8 +168,8 @@ public class JerseyClientIT {
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
     Client client = ClientBuilder.newClient();
 
+    UUID aggregateId = UUID.fromString("3070b6fb-f31b-4a8e-bc03-e22d38f4076e");
     Map eventBatch = ImmutableMap.of(
-        "aggregateId", "3070b6fb-f31b-4a8e-bc03-e22d38f4076e",
         "events", ImmutableList.of(
             ImmutableMap.of(
                 "eventId", "",
@@ -187,13 +187,14 @@ public class JerseyClientIT {
     Response response = client.target(apiRoot)
         .path("aggregates")
         .path("order")
+        .path(aggregateId.toString())
         .path("events")
         .request(MediaType.APPLICATION_JSON_TYPE)
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .post(Entity.json(eventBatch));
 
-    verify(aggregateApiCallback, times(1)).eventsStored(any(EventBatch.class));
+    verify(aggregateApiCallback, times(1)).eventsStored(eq(aggregateId), any(EventBatch.class));
 
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
