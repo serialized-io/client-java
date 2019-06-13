@@ -33,6 +33,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     private final String projectionName;
     private Integer limit;
     private String sort;
+    private String reference;
 
     public Builder(String projectionName) {
       this.projectionName = projectionName;
@@ -53,6 +54,16 @@ public class ListProjectionQuery implements ProjectionQuery {
       return this;
     }
 
+    public Builder sort(String string) {
+      this.sort = string;
+      return this;
+    }
+
+    public Builder reference(String reference) {
+      this.reference = reference;
+      return this;
+    }
+
     private HttpUrl urlBuilder(HttpUrl rootUrl) {
       HttpUrl.Builder projections = rootUrl.newBuilder()
           .addPathSegment("projections")
@@ -61,6 +72,7 @@ public class ListProjectionQuery implements ProjectionQuery {
 
       Optional.ofNullable(limit).ifPresent(limit -> projections.addQueryParameter("limit", String.valueOf(limit)));
       Optional.ofNullable(sort).ifPresent(limit -> projections.addQueryParameter("sort", sort));
+      Optional.ofNullable(reference).ifPresent(reference -> projections.addQueryParameter("reference", reference));
 
       return projections.build();
     }

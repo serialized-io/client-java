@@ -1,5 +1,9 @@
 package io.serialized.client.projection;
 
+import io.dropwizard.jersey.params.IntParam;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
@@ -68,7 +72,12 @@ public class ProjectionApiStub {
 
   @GET
   @Path("single/{projectionName}")
-  public Response listSingleProjections(@PathParam("projectionName") String projectionName) {
+  public Response listSingleProjections(@PathParam("projectionName") String projectionName,
+                                        @QueryParam("reference") String reference,
+                                        @QueryParam("sort") @DefaultValue("createdAt") String sort,
+                                        @QueryParam("skip") @DefaultValue("0") IntParam skip,
+                                        @QueryParam("limit") @DefaultValue("100") @Min(1) @Max(1000) IntParam limit) {
+
     Object responseBody = callback.singleProjectionsFetched(projectionName);
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
