@@ -44,6 +44,14 @@ public class AggregateClient<T> {
     storeBatch(new EventBatch(aggregateId, events, requireUniqueIdOnSave ? 0L : null));
   }
 
+  public void save(String aggregateId, List<Event> events, Long expectedVersion) {
+    save(UUID.fromString(aggregateId), events, expectedVersion);
+  }
+
+  public void save(UUID aggregateId, List<Event> events, Long expectedVersion) {
+    storeBatch(new EventBatch(aggregateId, events, expectedVersion));
+  }
+
   public void update(String aggregateId, AggregateUpdate<T> update) {
     update(UUID.fromString(aggregateId), update);
   }
