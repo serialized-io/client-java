@@ -86,6 +86,15 @@ public class AggregateClient<T> {
     client.post(url, eventBatch);
   }
 
+  public boolean exists(UUID aggregateId) {
+    HttpUrl url = apiRoot.newBuilder()
+        .addPathSegment("aggregates")
+        .addPathSegment(aggregateType)
+        .addPathSegment(aggregateId.toString()).build();
+
+    return client.head(url) == 200;
+  }
+
   public static class Builder<T> {
 
     private final HttpUrl apiRoot;

@@ -80,19 +80,22 @@ public class JerseyClientIT {
   @Test
   public void testCheckAggregate() {
 
+    String aggregateId = "99415be8-6819-4470-860c-c2933558d8d3";
+    when(aggregateApiCallback.aggregateChecked("order", aggregateId)).thenReturn(true);
+
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
     Client client = ClientBuilder.newClient();
 
     Response response = client.target(apiRoot)
         .path("aggregates")
         .path("order")
-        .path("99415be8-6819-4470-860c-c2933558d8d3")
+        .path(aggregateId)
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .head();
 
-    verify(aggregateApiCallback, times(1)).aggregateChecked("order", "99415be8-6819-4470-860c-c2933558d8d3");
+    verify(aggregateApiCallback, times(1)).aggregateChecked("order", aggregateId);
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 

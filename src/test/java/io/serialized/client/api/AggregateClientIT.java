@@ -27,8 +27,7 @@ import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class AggregateClientIT {
@@ -89,6 +88,21 @@ public class AggregateClientIT {
       return emptyList();
     });
 
+  }
+
+  @Test
+  public void testAggregateExist() {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .build();
+
+    when(apiCallback.aggregateChecked(aggregateType, orderId.toString())).thenReturn(true);
+
+    assertTrue(orderClient.exists(orderId));
+    assertFalse(orderClient.exists(UUID.randomUUID()));
   }
 
   @Test

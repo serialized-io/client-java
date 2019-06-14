@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Path("/api-stub/aggregates")
@@ -41,8 +42,8 @@ public class AggregateApiStub {
   @HEAD
   @Path("{aggregateType}/{aggregateId}")
   public Response checkAggregate(@PathParam("aggregateType") String aggregateType, @PathParam("aggregateId") String aggregateId) {
-    callback.aggregateChecked(aggregateType, aggregateId);
-    return Response.ok(APPLICATION_JSON_TYPE).build();
+    boolean exists = callback.aggregateChecked(aggregateType, aggregateId);
+    return exists ? Response.ok(APPLICATION_JSON_TYPE).build() : Response.status(NOT_FOUND).build();
   }
 
   @DELETE
@@ -75,7 +76,7 @@ public class AggregateApiStub {
 
     Object aggregateLoaded(String aggregateType, String aggregateId);
 
-    void aggregateChecked(String aggregateType, String aggregateId);
+    boolean aggregateChecked(String aggregateType, String aggregateId);
 
     Map aggregateDeleteRequested(String aggregateType, String aggregateId);
 

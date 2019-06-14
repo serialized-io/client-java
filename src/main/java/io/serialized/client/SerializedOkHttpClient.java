@@ -54,6 +54,14 @@ public class SerializedOkHttpClient {
     }
   }
 
+  public int head(HttpUrl url) {
+    try (Response res = httpClient.newCall(headRequest(url)).execute()) {
+      return res.code();
+    } catch (Exception e) {
+      throw new ClientException("HEAD failed", e);
+    }
+  }
+
   private <T> T get(HttpUrl url, Function<String, T> contentParser) {
     try (Response res = httpClient.newCall(getRequest(url)).execute()) {
       if (!res.isSuccessful()) {
@@ -104,6 +112,10 @@ public class SerializedOkHttpClient {
 
   private Request getRequest(HttpUrl url) {
     return new Request.Builder().url(url).get().build();
+  }
+
+  private Request headRequest(HttpUrl url) {
+    return new Request.Builder().url(url).head().build();
   }
 
   private String toJson(Object payload) throws JsonProcessingException {
