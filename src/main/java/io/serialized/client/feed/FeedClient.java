@@ -6,13 +6,29 @@ import io.serialized.client.SerializedOkHttpClient;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
+import java.io.Closeable;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.ValueRange;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class FeedClient {
+import static java.lang.String.format;
+
+public class FeedClient implements Closeable {
+
+  private static final ValueRange SUBSCRIPTION_POLL_DELAY_VALUE_RANGE = ValueRange.of(1, 60);
 
   private final SerializedOkHttpClient client;
   private final HttpUrl apiRoot;
+  private final Set<ExecutorService> executors = new HashSet<>();
 
   private FeedClient(Builder builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
@@ -32,18 +48,43 @@ public class FeedClient {
     return new FeedRequest(feedName);
   }
 
+  @Override
+  public void close() {
+    executors.forEach(ExecutorService::shutdown);
+  }
+
   public class FeedRequest {
 
     private Integer limit;
     private String feedName;
+    private Duration pollDelay = Duration.ofSeconds(1);
+    private boolean eagerFetching = true;
 
     private FeedRequest(String feedName) {
       this.feedName = feedName;
     }
 
+    /**
+     * @param limit Maximum number of returned feed entries per server response.
+     */
     public FeedRequest limit(int limit) {
       this.limit = limit;
       return this;
+    }
+
+    public FeedRequest eagerFetching(boolean eagerFetching) {
+      this.eagerFetching = eagerFetching;
+      return this;
+    }
+
+    public FeedRequest subscriptionPollDelay(Duration pollDelay) {
+      if (SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.isValidValue(pollDelay.get(ChronoUnit.SECONDS))) {
+        this.pollDelay = pollDelay;
+        return this;
+      } else {
+        throw new IllegalArgumentException(format("Poll delay must be within %d and %d seconds",
+            SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.getMinimum(), SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.getMaximum()));
+      }
     }
 
     private HttpUrl.Builder url() {
@@ -70,9 +111,31 @@ public class FeedClient {
           feedEntryHandler.handle(feedEntry);
           offset = feedEntry.sequenceNumber();
         }
-      } while (response.hasMore());
+      } while (eagerFetching && response.hasMore());
     }
 
+    public void subscribe(long since, FeedEntryHandler feedEntryHandler) {
+      ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+
+      final AtomicLong offset = new AtomicLong(since);
+      executor.scheduleWithFixedDelay(() -> {
+        FeedResponse response;
+
+        do {
+          response = execute(offset.get());
+          for (FeedEntry feedEntry : response.entries()) {
+            try {
+              feedEntryHandler.handle(feedEntry);
+              offset.set(feedEntry.sequenceNumber());
+            } catch (RetryException e) {
+              // Retry requested
+            }
+          }
+        } while (eagerFetching && response.hasMore());
+
+      }, pollDelay.getSeconds(), pollDelay.getSeconds(), TimeUnit.SECONDS);
+      executors.add(executor);
+    }
   }
 
   public static class Builder {
