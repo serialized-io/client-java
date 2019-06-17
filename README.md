@@ -131,7 +131,7 @@ orderClient.update(orderId, orderState -> {
 ```
 
 The `update` method will automatically handle *optimistic concurrency* and make sure the aggregate is only 
-updated in the event store if no other change has been performed on it.
+updated if no other change has been performed to it.
 Under the hood this is achieved by including the field *expectedVersion* set to the same version number that was
 received when the aggregate was first loaded from Serialized.   
 
