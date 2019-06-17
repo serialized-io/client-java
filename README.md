@@ -2,9 +2,11 @@
 
 This is the official Java client for Serialized.
 
+## Getting started
+
 Start by registering at [https://serialized.io](https://serialized.io) to get your access key and secret key. You will need them to configure the client.
 
-You will create a separate client instances for the different APIs (aggregates, feeds, projections and reactions).
+You will create separate client instances for the different APIs (aggregates, feeds, projections and reactions).
 
 ## Adding dependency
 
