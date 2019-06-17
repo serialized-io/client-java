@@ -100,7 +100,6 @@ AggregateClient<OrderState> orderClient = AggregateClient.aggregateClient("order
     .build();
 ```
 
-
 ### Saving events for an aggregate
 
 When we want to save events for a new aggregate we start by initializing our aggregate root `Order` using a

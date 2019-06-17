@@ -1,6 +1,8 @@
 package io.serialized.client.aggregate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.serialized.client.ApiException;
+import io.serialized.client.ConcurrencyException;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.SerializedOkHttpClient;
 import okhttp3.HttpUrl;
@@ -20,7 +22,9 @@ public class AggregateClient<T> {
   private final HttpUrl apiRoot;
   private final StateBuilder<T> stateBuilder;
   private final String aggregateType;
-  private final boolean requireUniqueIdOnSave;
+  /**
+   * Enables optimistic concurrency for aggregate updates.
+   */
   private final boolean useOptimisticConcurrencyOnUpdate;
 
   private AggregateClient(Builder<T> builder) {
@@ -28,7 +32,6 @@ public class AggregateClient<T> {
     this.apiRoot = builder.apiRoot;
     this.aggregateType = builder.aggregateType;
     this.stateBuilder = builder.stateBuilder;
-    this.requireUniqueIdOnSave = builder.requireUniqueIdOnSave;
     this.useOptimisticConcurrencyOnUpdate = builder.useOptimisticConcurrencyOnUpdate;
   }
 
@@ -36,32 +39,124 @@ public class AggregateClient<T> {
     return new Builder<>(aggregateType, stateClass, config);
   }
 
+  /**
+   * Save events as a new aggregate.
+   * <p>
+   * The ID of the aggregate must be unique for the aggregate type.
+   *
+   * @param aggregateId The ID of the new aggregate.
+   * @param events      List of events to save.
+   * @throws ConcurrencyException if aggregate with the same ID already exists.
+   */
   public void save(String aggregateId, List<Event> events) {
     save(UUID.fromString(aggregateId), events);
   }
 
+  /**
+   * Save events as a new aggregate.
+   * <p>
+   * The ID of the aggregate must be unique for the aggregate type.
+   *
+   * @param aggregateId The ID of the new aggregate.
+   * @param events      List of events to save.
+   * @throws ConcurrencyException if aggregate with the same ID already exists.
+   */
   public void save(UUID aggregateId, List<Event> events) {
-    storeBatch(aggregateId, new EventBatch(events, requireUniqueIdOnSave ? 0L : null));
+    storeBatch(aggregateId, new EventBatch(events, 0L));
   }
 
-  public void save(String aggregateId, List<Event> events, Long expectedVersion) {
-    save(UUID.fromString(aggregateId), events, expectedVersion);
+  /**
+   * Unconditionally append events to an aggregate.
+   *
+   * @param aggregateId The ID of the aggregate.
+   * @param events      List of events to save.
+   */
+  public void append(String aggregateId, List<Event> events) {
+    append(UUID.fromString(aggregateId), events);
   }
 
-  public void save(UUID aggregateId, List<Event> events, Long expectedVersion) {
+  /**
+   * Unconditionally append events to an aggregate.
+   *
+   * @param aggregateId The ID of the aggregate.
+   * @param events      List of events to save.
+   */
+  public void append(UUID aggregateId, List<Event> events) {
+    storeBatch(aggregateId, new EventBatch(events, null));
+  }
+
+  /**
+   * Append events to an aggregate using optimistic concurrency.
+   *
+   * @param aggregateId     The ID of the aggregate.
+   * @param events          List of events to save.
+   * @param expectedVersion Expected existing aggregate version for the aggregate.
+   */
+  public void append(String aggregateId, List<Event> events, long expectedVersion) {
+    append(UUID.fromString(aggregateId), events, expectedVersion);
+  }
+
+  /**
+   * Append events to an aggregate using optimistic concurrency.
+   *
+   * @param aggregateId     The ID of the aggregate.
+   * @param events          List of events to save.
+   * @param expectedVersion Expected existing aggregate version for the aggregate.
+   */
+  public void append(UUID aggregateId, List<Event> events, long expectedVersion) {
     storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
 
+  /**
+   * Update the aggregate.
+   * <p>
+   * The update will be performed using optimistic concurrency check depending on the
+   * {@link #useOptimisticConcurrencyOnUpdate} configuration flag.
+   *
+   * @param aggregateId The ID of the aggregate.
+   * @param update      Function that executes business logic and returns the resulting domain events.
+   */
   public void update(String aggregateId, AggregateUpdate<T> update) {
     update(UUID.fromString(aggregateId), update);
   }
 
+  /**
+   * Update the aggregate.
+   * <p>
+   * The update will be performed using optimistic concurrency check depending on the
+   * {@link #useOptimisticConcurrencyOnUpdate} configuration flag.
+   *
+   * @param aggregateId The ID of the aggregate.
+   * @param update      Function that executes business logic and returns the resulting domain events.
+   */
   public void update(UUID aggregateId, AggregateUpdate<T> update) {
     LoadAggregateResponse aggregateResponse = loadState(aggregateId);
     T state = stateBuilder.buildState(aggregateResponse.events);
     Long expectedVersion = useOptimisticConcurrencyOnUpdate ? aggregateResponse.aggregateVersion : null;
     List<Event> events = update.apply(state);
     storeBatch(aggregateId, new EventBatch(events, expectedVersion));
+  }
+
+  /**
+   * Check if an aggregate exists.
+   *
+   * @return True if aggregate with ID exists, false if not.
+   */
+  public boolean exists(UUID aggregateId) {
+    HttpUrl url = apiRoot.newBuilder()
+        .addPathSegment("aggregates")
+        .addPathSegment(aggregateType)
+        .addPathSegment(aggregateId.toString()).build();
+
+    try {
+      return client.head(url) == 200;
+    } catch (ApiException e) {
+      if (e.getStatusCode() == 404) {
+        return false;
+      } else {
+        throw e;
+      }
+    }
   }
 
   private LoadAggregateResponse loadState(UUID aggregateId) {
@@ -83,16 +178,15 @@ public class AggregateClient<T> {
         .addPathSegment("events")
         .build();
 
-    client.post(url, eventBatch);
-  }
-
-  public boolean exists(UUID aggregateId) {
-    HttpUrl url = apiRoot.newBuilder()
-        .addPathSegment("aggregates")
-        .addPathSegment(aggregateType)
-        .addPathSegment(aggregateId.toString()).build();
-
-    return client.head(url) == 200;
+    try {
+      client.post(url, eventBatch);
+    } catch (ApiException e) {
+      if (e.getStatusCode() == 409) {
+        throw new ConcurrencyException(409, e.getMessage());
+      } else {
+        throw e;
+      }
+    }
   }
 
   public static class Builder<T> {
@@ -105,7 +199,6 @@ public class AggregateClient<T> {
     private final String aggregateType;
     private final Map<String, Class> eventTypes = new HashMap<>();
 
-    private boolean requireUniqueIdOnSave = true;
     private boolean useOptimisticConcurrencyOnUpdate = true;
 
     Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
@@ -123,11 +216,6 @@ public class AggregateClient<T> {
     public <E> Builder<T> registerHandler(String eventType, Class<E> eventClass, EventHandler<T, E> handler) {
       this.eventTypes.put(eventType, eventClass);
       stateBuilder.withHandler(eventClass, handler);
-      return this;
-    }
-
-    public Builder<T> requireUniqueIdOnSave(boolean requireUniqueIdOnSave) {
-      this.requireUniqueIdOnSave = requireUniqueIdOnSave;
       return this;
     }
 
