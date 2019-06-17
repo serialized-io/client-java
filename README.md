@@ -2,6 +2,8 @@
 
 This is the official Java client for Serialized.
 
+[![Build Status](https://travis-ci.org/serialized-io/client-java.svg?branch=master)](https://travis-ci.org/serialized-io/client-java)
+
 ## Getting started
 
 Start by registering at [https://serialized.io](https://serialized.io) to get your access key and secret key. You will need them to configure the client.
