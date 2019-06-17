@@ -1,4 +1,4 @@
-# README #
+# Serialized Java Client #
 
 This is the official Java client for Serialized.
 
