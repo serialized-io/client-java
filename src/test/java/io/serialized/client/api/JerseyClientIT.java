@@ -187,6 +187,8 @@ public class JerseyClientIT {
         "expectedVersion", "0"
     );
 
+    when(aggregateApiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(200);
+
     Response response = client.target(apiRoot)
         .path("aggregates")
         .path("order")
@@ -249,8 +251,8 @@ public class JerseyClientIT {
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
     Client client = ClientBuilder.newClient();
 
-    String currentGlobalSequnceNumber = "20";
-    when(feedApiCallback.currentGlobalSequenceNumberRequested()).thenReturn(Integer.parseInt(currentGlobalSequnceNumber));
+    Long sequenceNumber = 20L;
+    when(feedApiCallback.currentGlobalSequenceNumberRequested()).thenReturn(sequenceNumber);
 
     Response response = client.target(apiRoot)
         .path("feeds")
@@ -260,8 +262,29 @@ public class JerseyClientIT {
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .head();
 
-    String globalSequenceNumber = (String) response.getHeaders().getFirst("Serialized-SequenceNumber-Current");
-    assertThat(globalSequenceNumber, is(currentGlobalSequnceNumber));
+    Long globalSequenceNumber = Long.parseLong((String) response.getHeaders().getFirst("Serialized-SequenceNumber-Current"));
+    assertThat(globalSequenceNumber, is(sequenceNumber));
+  }
+
+  @Test
+  public void testCurrentSequenceNumber() {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    Long sequenceNumber = 20L;
+    when(feedApiCallback.currentSequenceNumberRequested()).thenReturn(sequenceNumber);
+
+    Response response = client.target(apiRoot)
+        .path("feeds")
+        .path("payment")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .head();
+
+    Long globalSequenceNumber = Long.parseLong((String) response.getHeaders().getFirst("Serialized-SequenceNumber-Current"));
+    assertThat(globalSequenceNumber, is(sequenceNumber));
   }
 
   @Test

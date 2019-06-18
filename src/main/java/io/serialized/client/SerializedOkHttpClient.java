@@ -36,8 +36,8 @@ public class SerializedOkHttpClient {
     execute(new Request.Builder().url(url).delete().build(), res -> null);
   }
 
-  public int head(HttpUrl url) {
-    return execute(new Request.Builder().url(url).head().build(), Response::code);
+  public <T> T head(HttpUrl url, Function<Response, T> handler) {
+    return execute(new Request.Builder().url(url).head().build(), handler);
   }
 
   public <T> T get(HttpUrl url, Class<T> responseClass) {

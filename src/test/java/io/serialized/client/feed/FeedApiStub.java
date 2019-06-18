@@ -31,7 +31,7 @@ public class FeedApiStub {
   @HEAD
   @Path("_all")
   public Response getCurrentGlobalSequenceNumber() {
-    int sequenceNumber = callback.currentGlobalSequenceNumberRequested();
+    long sequenceNumber = callback.currentGlobalSequenceNumberRequested();
     return Response.ok(APPLICATION_JSON_TYPE).header("Serialized-SequenceNumber-Current", sequenceNumber).build();
   }
 
@@ -51,6 +51,13 @@ public class FeedApiStub {
     QueryParams queryParams = new QueryParams(limit.get(), since.get(), before.get());
     Object responseBody = callback.feedEntriesLoaded(feedName, queryParams);
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+  }
+
+  @HEAD
+  @Path("{feedName}")
+  public Response getCurrentSequenceNumber(@PathParam("feedName") String feedName) {
+    long sequenceNumber = callback.currentSequenceNumberRequested();
+    return Response.ok(APPLICATION_JSON_TYPE).header("Serialized-SequenceNumber-Current", sequenceNumber).build();
   }
 
   public class QueryParams {
@@ -84,7 +91,9 @@ public class FeedApiStub {
 
     Object feedEntriesLoaded(String feedName, QueryParams queryParams);
 
-    int currentGlobalSequenceNumberRequested();
+    long currentSequenceNumberRequested();
+
+    long currentGlobalSequenceNumberRequested();
 
     Object allFeedLoaded();
 

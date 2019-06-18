@@ -21,9 +21,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 public class FeedClient implements Closeable {
 
+  private static final String SEQUENCE_NUMBER_HEADER = "Serialized-SequenceNumber-Current";
   private static final ValueRange SUBSCRIPTION_POLL_DELAY_VALUE_RANGE = ValueRange.of(1, 60);
 
   private final SerializedOkHttpClient client;
@@ -47,8 +49,33 @@ public class FeedClient implements Closeable {
     return client.get(url, FeedsResponse.class).feeds();
   }
 
+  /**
+   * Gets the current project global sequence number.
+   *
+   * @return The current sequence number, i.e the sequence number of the most recently stored event batch, regardless of feed.
+   */
+  public long getCurrentGlobalSequenceNumber() {
+    HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment("_all").build();
+    return client.head(url, response -> Long.parseLong(requireNonNull(response.header(SEQUENCE_NUMBER_HEADER))));
+  }
+
+  /**
+   * Gets the current sequence number given a feed.
+   *
+   * @param feedName Name of feed
+   * @return The current sequence number, i.e the sequence number of the most recently stored event batch.
+   */
+  public long getCurrentSequenceNumber(String feedName) {
+    HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment(feedName).build();
+    return client.head(url, response -> Long.parseLong(requireNonNull(response.header(SEQUENCE_NUMBER_HEADER))));
+  }
+
   public FeedRequest feed(String feedName) {
     return new FeedRequest(feedName);
+  }
+
+  public FeedRequest all() {
+    return new FeedRequest("_all");
   }
 
   @Override

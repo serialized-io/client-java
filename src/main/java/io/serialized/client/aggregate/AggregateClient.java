@@ -7,6 +7,7 @@ import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.SerializedOkHttpClient;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
 import org.apache.commons.lang3.Validate;
 
 import java.util.HashMap;
@@ -149,7 +150,7 @@ public class AggregateClient<T> {
         .addPathSegment(aggregateId.toString()).build();
 
     try {
-      return client.head(url) == 200;
+      return client.head(url, Response::code) == 200;
     } catch (ApiException e) {
       if (e.getStatusCode() == 404) {
         return false;

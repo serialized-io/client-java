@@ -3,6 +3,7 @@ package io.serialized.client.api;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import io.dropwizard.testing.junit.DropwizardClientRule;
+import io.serialized.client.ConcurrencyException;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.aggregate.AggregateApiStub;
 import io.serialized.client.aggregate.AggregateClient;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
+import static io.serialized.client.aggregate.Event.newEvent;
 import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -51,6 +53,40 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(200);
+
+    OrderState orderState = new OrderState();
+    Order order = new Order(orderState);
+    List<Event> events = order.placeOrder(orderId, 123L);
+
+    orderClient.save(orderId, events);
+  }
+
+  @Test
+  public void testSaveRawEventType() {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<Object> orderClient = aggregateClient(aggregateType, Object.class, getConfig()).build();
+
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(200);
+
+    Event event = newEvent("order-placed").data("orderId", orderId, "customerId", UUID.randomUUID()).build();
+
+    orderClient.save(orderId, singletonList(event));
+  }
+
+  @Test(expected = ConcurrencyException.class)
+  public void testConcurrencyExceptionDuringSave() {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .build();
+
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(409);
+
     OrderState orderState = new OrderState();
     Order order = new Order(orderState);
     List<Event> events = order.placeOrder(orderId, 123L);
@@ -68,6 +104,22 @@ public class AggregateClientIT {
         .build();
 
     when(apiCallback.aggregateLoaded(aggregateType, orderId.toString())).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(200);
+
+    orderClient.update(orderId, orderState -> new Order(orderState).cancel());
+  }
+
+  @Test(expected = ConcurrencyException.class)
+  public void testConcurrencyExceptionDuringUpdate() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId.toString())).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(409);
 
     orderClient.update(orderId, orderState -> new Order(orderState).cancel());
   }
@@ -111,6 +163,7 @@ public class AggregateClientIT {
     AggregateClient<OrderState> orderClient = getOrderClient("order");
 
     UUID aggregateId = UUID.randomUUID();
+    when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(200);
 
     orderClient.save(aggregateId, singletonList(orderPlaced("order-123", 1234L)));
 
@@ -126,10 +179,9 @@ public class AggregateClientIT {
   }
 
   private AggregateClient<OrderState> getOrderClient(String order) {
-    AggregateClient<OrderState> build = aggregateClient(order, OrderState.class, getConfig())
+    return aggregateClient(order, OrderState.class, getConfig())
         .registerHandler("order-placed", OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
-    return build;
   }
 
   private SerializedClientConfig getConfig() {

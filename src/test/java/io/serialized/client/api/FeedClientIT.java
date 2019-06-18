@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,6 +42,39 @@ public class FeedClientIT {
     assertThat(feeds.get(0).aggregateCount(), is(10L));
     assertThat(feeds.get(0).batchCount(), is(48L));
     assertThat(feeds.get(0).eventCount(), is(96L));
+  }
+
+  @Test
+  public void getCurrentSequenceNumber() {
+
+    FeedClient feedClient = getFeedClient();
+
+    when(apiCallback.currentSequenceNumberRequested()).thenReturn(7L);
+
+    assertThat(feedClient.getCurrentSequenceNumber("games"), is(7L));
+  }
+
+  @Test
+  public void getCurrentGlobalSequenceNumber() {
+
+    FeedClient feedClient = getFeedClient();
+
+    when(apiCallback.currentGlobalSequenceNumberRequested()).thenReturn(777L);
+
+    assertThat(feedClient.getCurrentGlobalSequenceNumber(), is(777L));
+  }
+
+  @Test
+  public void allFeedEntries() throws IOException {
+
+    FeedClient feedClient = getFeedClient();
+
+    when(apiCallback.allFeedLoaded()).thenReturn(getResource("/feed/allFeed.json"));
+
+    FeedResponse feedResponse = feedClient.all().execute(0);
+
+    assertThat(feedResponse.entries().size(), is(1));
+    assertThat(feedResponse.events().size(), is(1));
   }
 
   @Test
@@ -111,6 +144,8 @@ public class FeedClientIT {
     feedClient.feed(feedName).limit(10).execute(3, feedEntry -> {
       entries.incrementAndGet();
       events.addAndGet(feedEntry.events().size());
+      assertNotNull(feedEntry.aggregateId());
+      assertTrue(feedEntry.timestamp() > 0L);
       lastProcessedEntry.set(feedEntry.sequenceNumber());
     });
 

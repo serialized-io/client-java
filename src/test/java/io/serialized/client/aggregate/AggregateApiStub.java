@@ -28,8 +28,9 @@ public class AggregateApiStub {
   public Response saveEvents(@PathParam("aggregateType") String aggregateType,
                              @PathParam("aggregateId") String aggregateId,
                              @NotNull @Valid EventBatch eventBatch) {
-    callback.eventsStored(UUID.fromString(aggregateId), eventBatch);
-    return Response.ok().build();
+
+    int status = callback.eventsStored(UUID.fromString(aggregateId), eventBatch);
+    return Response.status(status).build();
   }
 
   @GET
@@ -72,7 +73,7 @@ public class AggregateApiStub {
 
   public interface AggregateApiCallback {
 
-    void eventsStored(UUID aggregateId, EventBatch eventBatch);
+    int eventsStored(UUID aggregateId, EventBatch eventBatch);
 
     Object aggregateLoaded(String aggregateType, String aggregateId);
 
