@@ -97,16 +97,11 @@ public class FeedClient implements Closeable {
       }
     }
 
-    private HttpUrl.Builder url() {
-      HttpUrl.Builder url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment(feedName);
-      Optional.ofNullable(limit).ifPresent(limit -> url.addQueryParameter("limit", String.valueOf(limit)));
-      return url;
-    }
-
-    public FeedResponse execute() {
-      return execute(0);
-    }
-
+    /**
+     * Executes a poll starting at given sequence number.
+     *
+     * @param since Sequence number to start feeding from. Zero (0) starts from the beginning.
+     */
     public FeedResponse execute(long since) {
       return client.get(url().addQueryParameter("since", String.valueOf(since)).build(), FeedResponse.class);
     }
@@ -130,6 +125,20 @@ public class FeedClient implements Closeable {
       } while (eagerFetching && response.hasMore());
     }
 
+    /**
+     * Starts subscribing to the feed starting at the beginning.
+     *
+     * @param feedEntryHandler Handler invoked for each received entry
+     */
+    public void subscribe(FeedEntryHandler feedEntryHandler) {
+      subscribe(0, feedEntryHandler);
+    }
+
+    /**
+     * Starts subscribing to the feed starting at given sequence number.
+     *
+     * @param feedEntryHandler Handler invoked for each received entry
+     */
     public void subscribe(long since, FeedEntryHandler feedEntryHandler) {
       ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -151,6 +160,12 @@ public class FeedClient implements Closeable {
 
       }, pollDelay.getSeconds(), pollDelay.getSeconds(), TimeUnit.SECONDS);
       executors.add(executor);
+    }
+
+    private HttpUrl.Builder url() {
+      HttpUrl.Builder url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment(feedName);
+      Optional.ofNullable(limit).ifPresent(limit -> url.addQueryParameter("limit", String.valueOf(limit)));
+      return url;
     }
   }
 

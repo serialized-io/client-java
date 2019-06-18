@@ -179,3 +179,20 @@ Querying our aggregated projection is now as simple as this:
 Projection<OrderCount> projectionResponse = projectionApiClient.query(aggregated("order-count").build(OrderCount.class));
 OrderCount theCount = projectionResponse.data;
 ```
+
+## Subscribing to event feeds
+
+Start by creating a `FeedClient` like this
+```
+FeedClient feedClient = FeedClient.feedClient(getConfig()).build();
+```
+
+Point out which feed you want to subscribe to and start receiving events for all orders since the beginning of time.
+
+```
+FeedClient.FeedRequest request = feedClient.feed("order");
+request.subscribe(feedEntry -> {
+  // Process events in entry...
+});
+```
+

@@ -53,7 +53,7 @@ public class FeedClientIT {
     ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
     when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries.json"));
 
-    FeedResponse feedResponse = feedClient.feed(feedName).execute();
+    FeedResponse feedResponse = feedClient.feed(feedName).execute(0);
 
     assertThat(queryParams.getValue().getLimit(), is(1000));
     assertThat(feedResponse.entries().size(), is(48));
@@ -70,7 +70,7 @@ public class FeedClientIT {
     ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
     when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries-limit.json"));
 
-    FeedResponse feedResponse = feedClient.feed(feedName).limit(limit).execute();
+    FeedResponse feedResponse = feedClient.feed(feedName).limit(limit).execute(0);
 
     assertThat(queryParams.getValue().getLimit(), is(10));
     assertThat(feedResponse.entries().size(), is(10));
