@@ -125,7 +125,8 @@ method `update`.
 ```
 orderClient.update(orderId, orderState -> {
   Order order = new Order(orderState);
-  return order.cancel();
+  List<Event> events = order.cancel();
+  return events;
 });
 ```
 
