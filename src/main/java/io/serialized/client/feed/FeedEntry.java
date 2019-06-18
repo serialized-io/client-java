@@ -13,18 +13,30 @@ public class FeedEntry {
   private long timestamp;
   private List<Event> events;
 
+  /**
+   * @return Feed unique sequence number identifying this entry.
+   */
   public long sequenceNumber() {
     return sequenceNumber;
   }
 
+  /**
+   * @return Time when the entry was created.
+   */
   public long timestamp() {
     return timestamp;
   }
 
+  /**
+   * @return ID the the aggregate the events in this entry belongs to.
+   */
   public String aggregateId() {
     return aggregateId;
   }
 
+  /**
+   * @return The events.
+   */
   public List<Event> events() {
     return events;
   }

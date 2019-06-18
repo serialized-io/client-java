@@ -11,18 +11,30 @@ public class Feed {
   private long batchCount;
   private long eventCount;
 
+  /**
+   * @return Aggregate type producing the feed.
+   */
   public String aggregateType() {
     return aggregateType;
   }
 
+  /**
+   * @return Total number of aggregates (i.e unique aggregate ID:s.
+   */
   public long aggregateCount() {
     return aggregateCount;
   }
 
+  /**
+   * @return Total number of event batches
+   */
   public long batchCount() {
     return batchCount;
   }
 
+  /**
+   * @return Total number of events
+   */
   public long eventCount() {
     return eventCount;
   }

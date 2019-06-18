@@ -39,6 +39,9 @@ public class FeedClient implements Closeable {
     return new Builder(config);
   }
 
+  /**
+   * @return Feed names and details.
+   */
   public List<Feed> listFeeds() {
     HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").build();
     return client.get(url, FeedsResponse.class).feeds();
@@ -72,11 +75,18 @@ public class FeedClient implements Closeable {
       return this;
     }
 
+    /**
+     * @param eagerFetching True if the client should continue to fetch event within the same poll as long as there
+     *                      are more available. Default is true.
+     */
     public FeedRequest eagerFetching(boolean eagerFetching) {
       this.eagerFetching = eagerFetching;
       return this;
     }
 
+    /**
+     * @param pollDelay Desired delay between feed polls. Must be between 1s and 60s. Default is 1s.
+     */
     public FeedRequest subscriptionPollDelay(Duration pollDelay) {
       if (SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.isValidValue(pollDelay.get(ChronoUnit.SECONDS))) {
         this.pollDelay = pollDelay;
@@ -101,6 +111,12 @@ public class FeedClient implements Closeable {
       return client.get(url().addQueryParameter("since", String.valueOf(since)).build(), FeedResponse.class);
     }
 
+    /**
+     * Executes a poll starting at given sequence number.
+     *
+     * @param since            Sequence number to start feeding from. Zero (0) starts from the beginning.
+     * @param feedEntryHandler Handler invoked for each received entry
+     */
     public void execute(long since, FeedEntryHandler feedEntryHandler) {
       FeedResponse response;
       long offset = since;
