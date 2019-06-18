@@ -87,7 +87,7 @@ public class ProjectionClient {
     return client.get(url, javaType);
   }
 
-  public <T> ProjectionsResponse<T> list(ListProjectionQuery query) {
+  public <T> ProjectionsResponse<T> query(ListProjectionQuery query) {
     HttpUrl url = query.constructUrl(apiRoot);
 
     JavaType javaType = query.responseClass()

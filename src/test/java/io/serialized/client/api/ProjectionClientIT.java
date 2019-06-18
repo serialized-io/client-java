@@ -3,13 +3,13 @@ package io.serialized.client.api;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.projection.*;
-import io.serialized.client.projection.query.ProjectionQueries;
 import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
+import java.util.Map;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.EventSelector.eventSelector;
@@ -17,7 +17,7 @@ import static io.serialized.client.projection.Function.*;
 import static io.serialized.client.projection.ProjectionDefinitions.newDefinitionList;
 import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.TargetSelector.targetSelector;
-import static io.serialized.client.projection.query.ProjectionQueries.single;
+import static io.serialized.client.projection.query.ProjectionQueries.*;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -278,6 +278,23 @@ public class ProjectionClientIT {
   }
 
   @Test
+  public void testListSingleProjections() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    String projectionName = "orders";
+    String reference = "externalId";
+    when(apiCallback.singleProjectionsFetched(projectionName, reference, "-createdAt", 5, 10))
+        .thenReturn(getResource("/projection/listSingleProjections.json"));
+
+    ProjectionsResponse<Map> projections = projectionClient.query(
+        list("orders").skip(5).limit(10).sortDescending("createdAt").reference(reference)
+            .build(Map.class));
+
+    assertThat(projections.projections.size(), is(1));
+  }
+
+  @Test
   public void testAggregatedProjection() throws IOException {
 
     ProjectionClient projectionClient = getProjectionClient();
@@ -285,7 +302,7 @@ public class ProjectionClientIT {
     when(apiCallback.aggregatedProjectionFetched("order-totals")).thenReturn(getResource("/projection/getAggregatedProjection.json"));
 
     ProjectionResponse<OrderTotalsProjection> projection = projectionClient.query(
-        ProjectionQueries.aggregated("order-totals")
+        aggregated("order-totals")
             .build(OrderTotalsProjection.class));
 
     assertThat(projection.projectionId, is("order-totals"));

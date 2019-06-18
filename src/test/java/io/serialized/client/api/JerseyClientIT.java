@@ -579,7 +579,8 @@ public class JerseyClientIT {
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
     Client client = ClientBuilder.newClient();
 
-    when(projectionApiCallback.singleProjectionsFetched("orders")).thenReturn(getResource("/projection/listSingleProjections.json"));
+    when(projectionApiCallback.singleProjectionsFetched("orders", null, "createdAt", 0, 100))
+        .thenReturn(getResource("/projection/listSingleProjections.json"));
 
     Map response = client.target(apiRoot)
         .path("projections")

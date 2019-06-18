@@ -32,6 +32,14 @@ public class ListProjectionQueryTest {
   }
 
   @Test
+  public void listWithSkip() {
+    HttpUrl httpUrl = list("game").skip(5).build(Map.class).constructUrl(ROOT_URL);
+    assertThat(httpUrl.pathSegments(), hasItems("projections", "single", "game"));
+    assertThat(httpUrl.queryParameter("skip"), is("5"));
+    assertThat(httpUrl.queryParameter("sort"), nullValue());
+  }
+
+  @Test
   public void listWithLimitAndDescSort() {
     HttpUrl httpUrl = list("game").limit(10).sortDescending("startTime").build(Map.class).constructUrl(ROOT_URL);
     assertThat(httpUrl.pathSegments(), hasItems("projections", "single", "game"));

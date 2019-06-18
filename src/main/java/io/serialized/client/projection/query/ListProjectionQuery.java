@@ -31,12 +31,18 @@ public class ListProjectionQuery implements ProjectionQuery {
   public static class Builder {
 
     private final String projectionName;
+    private Integer skip;
     private Integer limit;
     private String sort;
     private String reference;
 
     public Builder(String projectionName) {
       this.projectionName = projectionName;
+    }
+
+    public Builder skip(int skip) {
+      this.skip = skip;
+      return this;
     }
 
     public Builder limit(int limit) {
@@ -70,6 +76,7 @@ public class ListProjectionQuery implements ProjectionQuery {
           .addPathSegment(SINGLE.name().toLowerCase())
           .addPathSegment(projectionName);
 
+      Optional.ofNullable(skip).ifPresent(limit -> projections.addQueryParameter("skip", String.valueOf(skip)));
       Optional.ofNullable(limit).ifPresent(limit -> projections.addQueryParameter("limit", String.valueOf(limit)));
       Optional.ofNullable(sort).ifPresent(limit -> projections.addQueryParameter("sort", sort));
       Optional.ofNullable(reference).ifPresent(reference -> projections.addQueryParameter("reference", reference));

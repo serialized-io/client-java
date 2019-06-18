@@ -78,7 +78,7 @@ public class ProjectionApiStub {
                                         @QueryParam("skip") @DefaultValue("0") IntParam skip,
                                         @QueryParam("limit") @DefaultValue("100") @Min(1) @Max(1000) IntParam limit) {
 
-    Object responseBody = callback.singleProjectionsFetched(projectionName);
+    Object responseBody = callback.singleProjectionsFetched(projectionName, reference, sort, skip.get(), limit.get());
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 
@@ -118,7 +118,7 @@ public class ProjectionApiStub {
 
     Object aggregatedProjectionFetched(String projectionName);
 
-    Object singleProjectionsFetched(String projectionName);
+    Object singleProjectionsFetched(String projectionName, String reference, String sort, int skip, int limit);
 
     Object singleProjectionFetched(String projectionName, String id);
 
