@@ -11,7 +11,7 @@ public class FeedEntry {
   private long sequenceNumber;
   private String aggregateId;
   private long timestamp;
-  private String type;
+  private String feedName;
   private List<Event> events;
 
   /**
@@ -35,8 +35,8 @@ public class FeedEntry {
     return aggregateId;
   }
 
-  public String type() {
-    return type;
+  public String feedName() {
+    return feedName;
   }
 
   /**
