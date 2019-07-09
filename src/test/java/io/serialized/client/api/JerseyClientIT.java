@@ -615,6 +615,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
     assertThat(response.get("totalCount"), is(1));
+    assertThat(response.get("hasMore"), is(false));
   }
 
   @Test

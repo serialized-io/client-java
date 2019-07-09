@@ -6,4 +6,6 @@ public class ProjectionsResponse<T> {
 
   public List<ProjectionResponse<T>> projections;
 
+  public boolean hasMore;
+
 }

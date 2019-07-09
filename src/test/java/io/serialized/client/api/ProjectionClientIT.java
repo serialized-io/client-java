@@ -292,6 +292,7 @@ public class ProjectionClientIT {
             .build(Map.class));
 
     assertThat(projections.projections.size(), is(1));
+    assertThat(projections.hasMore, is(false));
   }
 
   @Test
