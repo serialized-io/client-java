@@ -3,10 +3,12 @@ package io.serialized.client.projection.query;
 import okhttp3.HttpUrl;
 import org.apache.commons.lang3.Validate;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Function;
 
 import static io.serialized.client.projection.ProjectionType.SINGLE;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class SingleProjectionQuery implements ProjectionQuery {
 
@@ -32,6 +34,7 @@ public class SingleProjectionQuery implements ProjectionQuery {
 
     private final String projectionName;
     private String projectionId;
+    private Duration duration;
 
     public Builder(String projectionName) {
       this.projectionName = projectionName;
@@ -42,13 +45,25 @@ public class SingleProjectionQuery implements ProjectionQuery {
       return this;
     }
 
+    public Builder awaitCreation(Duration duration) {
+      this.duration = duration;
+      return this;
+    }
+
     private HttpUrl urlBuilder(HttpUrl rootUrl) {
-      return rootUrl.newBuilder()
+      HttpUrl.Builder builder = rootUrl.newBuilder()
           .addPathSegment("projections")
           .addPathSegment(SINGLE.name().toLowerCase())
           .addPathSegment(projectionName)
-          .addPathSegment(projectionId)
-          .build();
+          .addPathSegment(projectionId);
+
+      if (duration != null) {
+        Validate.isTrue(duration.toMillis() > 0, "Duration must be positive");
+        Validate.isTrue(duration.toMillis() < Duration.of(60, SECONDS).toMillis(), "Duration can be maximum 60s");
+        builder.addQueryParameter("awaitCreation", String.valueOf(duration.toMillis()));
+      }
+
+      return builder.build();
     }
 
     public SingleProjectionQuery build(Class responseClass) {
