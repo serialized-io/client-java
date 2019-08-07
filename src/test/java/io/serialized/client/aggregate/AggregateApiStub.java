@@ -2,11 +2,21 @@ package io.serialized.client.aggregate;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 import java.util.UUID;
 
+import static io.serialized.client.SerializedOkHttpClient.SERIALIZED_TENANT_ID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
@@ -27,10 +37,15 @@ public class AggregateApiStub {
   @Path("{aggregateType}/{aggregateId}/events")
   public Response saveEvents(@PathParam("aggregateType") String aggregateType,
                              @PathParam("aggregateId") String aggregateId,
+                             @HeaderParam(SERIALIZED_TENANT_ID) String tenantId,
                              @NotNull @Valid EventBatch eventBatch) {
 
-    int status = callback.eventsStored(UUID.fromString(aggregateId), eventBatch);
-    return Response.status(status).build();
+    if (tenantId == null) {
+      return Response.status(callback.eventsStored(UUID.fromString(aggregateId), eventBatch)).build();
+    } else {
+      return Response.status(callback.eventsStored(UUID.fromString(aggregateId), eventBatch, UUID.fromString(tenantId))).build();
+    }
+
   }
 
   @GET
@@ -74,6 +89,8 @@ public class AggregateApiStub {
   public interface AggregateApiCallback {
 
     int eventsStored(UUID aggregateId, EventBatch eventBatch);
+
+    int eventsStored(UUID aggregateId, EventBatch eventBatch, UUID tenantId);
 
     Object aggregateLoaded(String aggregateType, String aggregateId);
 

@@ -1,12 +1,25 @@
 package io.serialized.client.projection;
 
 import io.dropwizard.jersey.params.IntParam;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.util.UUID;
 
+import static io.serialized.client.SerializedOkHttpClient.SERIALIZED_TENANT_ID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
@@ -91,9 +104,14 @@ public class ProjectionApiStub {
 
   @GET
   @Path("single/{projectionName}/{id}")
-  public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id) {
-    Object responseBody = callback.singleProjectionFetched(projectionName, id);
-    return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+  public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id, @HeaderParam(SERIALIZED_TENANT_ID) String tenantId) {
+    if (StringUtils.isNotBlank(tenantId)) {
+      Object responseBody = callback.singleProjectionFetched(projectionName, id, UUID.fromString(tenantId));
+      return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+    } else {
+      Object responseBody = callback.singleProjectionFetched(projectionName, id);
+      return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+    }
   }
 
   @GET
@@ -121,6 +139,8 @@ public class ProjectionApiStub {
     Object singleProjectionsFetched(String projectionName, String reference, String sort, int skip, int limit);
 
     Object singleProjectionFetched(String projectionName, String id);
+
+    Object singleProjectionFetched(String projectionName, String id, UUID tenantId);
 
     void singleProjectionsDeleted(String projectionName);
 

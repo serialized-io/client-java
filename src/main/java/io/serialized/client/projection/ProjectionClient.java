@@ -84,7 +84,11 @@ public class ProjectionClient {
         .map(dataClass -> objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, dataClass))
         .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
 
-    return client.get(url, javaType);
+    if (query.tenantId().isPresent()) {
+      return client.get(url, javaType, query.tenantId().get());
+    } else {
+      return client.get(url, javaType);
+    }
   }
 
   public <T> ProjectionsResponse<T> query(ListProjectionQuery query) {
@@ -94,7 +98,11 @@ public class ProjectionClient {
         .map(dataClass -> objectMapper.getTypeFactory().constructParametricType(ProjectionsResponse.class, dataClass))
         .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
 
-    return client.get(url, javaType);
+    if (query.tenantId().isPresent()) {
+      return client.get(url, javaType, query.tenantId().get());
+    } else {
+      return client.get(url, javaType);
+    }
   }
 
   public static ProjectionClient.Builder projectionClient(SerializedClientConfig config) {

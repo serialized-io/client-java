@@ -9,6 +9,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.function.Function;
 
 import static io.serialized.client.SerializedClientConfig.JSON_MEDIA_TYPE;
@@ -16,6 +17,7 @@ import static okhttp3.RequestBody.create;
 
 public class SerializedOkHttpClient {
 
+  public static final String SERIALIZED_TENANT_ID = "Serialized-Tenant-Id";
   private final OkHttpClient httpClient;
   private final ObjectMapper objectMapper;
 
@@ -25,31 +27,71 @@ public class SerializedOkHttpClient {
   }
 
   public void put(HttpUrl url, Object payload) {
-    execute(new Request.Builder().url(url).put(create(JSON_MEDIA_TYPE, toJson(payload))).build(), res -> null);
+    execute(putRequest(url, payload).build(), res -> null);
+  }
+
+  public void put(HttpUrl url, Object payload, UUID tenantId) {
+    execute(putRequest(url, payload).header(SERIALIZED_TENANT_ID, tenantId.toString()).build(), res -> null);
   }
 
   public void post(HttpUrl url, Object payload) {
-    execute(new Request.Builder().url(url).post(create(JSON_MEDIA_TYPE, toJson(payload))).build(), res -> null);
+    execute(postRequest(url, payload).build(), res -> null);
+  }
+
+  public void post(HttpUrl url, Object payload, UUID tenantId) {
+    execute(postRequest(url, payload).header(SERIALIZED_TENANT_ID, tenantId.toString()).build(), res -> null);
   }
 
   public void delete(HttpUrl url) {
-    execute(new Request.Builder().url(url).delete().build(), res -> null);
+    execute(deleteRequest(url).build(), res -> null);
   }
 
   public <T> T head(HttpUrl url, Function<Response, T> handler) {
-    return execute(new Request.Builder().url(url).head().build(), handler);
+    return execute(headRequest(url).build(), handler);
+  }
+
+  public <T> T head(HttpUrl url, Function<Response, T> handler, UUID tenantId) {
+    return execute(headRequest(url).header(SERIALIZED_TENANT_ID, tenantId.toString()).build(), handler);
   }
 
   public <T> T get(HttpUrl url, Class<T> responseClass) {
-    return get(url, contents -> parseJsonAs(contents, responseClass));
+    return get(getRequest(url), contents -> parseJsonAs(contents, responseClass));
+  }
+
+  public <T> T get(HttpUrl url, Class<T> responseClass, UUID tenantId) {
+    return get(getRequest(url).header(SERIALIZED_TENANT_ID, tenantId.toString()), contents -> parseJsonAs(contents, responseClass));
   }
 
   public <T> T get(HttpUrl url, JavaType type) {
-    return get(url, contents -> parseJsonAs(contents, type));
+    return get(getRequest(url), contents -> parseJsonAs(contents, type));
   }
 
-  private <T> T get(HttpUrl url, Function<String, T> contentParser) {
-    return execute(new Request.Builder().url(url).get().build(), response -> {
+  public <T> T get(HttpUrl url, JavaType type, UUID tenantId) {
+    return get(getRequest(url).header(SERIALIZED_TENANT_ID, tenantId.toString()), contents -> parseJsonAs(contents, type));
+  }
+
+  private Request.Builder putRequest(HttpUrl url, Object payload) {
+    return new Request.Builder().url(url).put(create(JSON_MEDIA_TYPE, toJson(payload)));
+  }
+
+  private Request.Builder postRequest(HttpUrl url, Object payload) {
+    return new Request.Builder().url(url).post(create(JSON_MEDIA_TYPE, toJson(payload)));
+  }
+
+  private Request.Builder deleteRequest(HttpUrl url) {
+    return new Request.Builder().url(url).delete();
+  }
+
+  private Request.Builder headRequest(HttpUrl url) {
+    return new Request.Builder().url(url).head();
+  }
+
+  private Request.Builder getRequest(HttpUrl url) {
+    return new Request.Builder().url(url).get();
+  }
+
+  private <T> T get(Request.Builder getRequest, Function<String, T> contentParser) {
+    return execute(getRequest.build(), response -> {
       try {
         String responseContents = response.body().string();
         return contentParser.apply(responseContents);
@@ -97,5 +139,4 @@ public class SerializedOkHttpClient {
       throw new ClientException(e);
     }
   }
-
 }

@@ -3,7 +3,6 @@ package io.serialized.client;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -82,10 +81,8 @@ public class SerializedClientConfig {
       HttpUrl apiRoot = HttpUrl.get(rootApiUrl);
       OkHttpClient client = new OkHttpClient.Builder()
           .addInterceptor(chain -> chain.proceed(chain.request().newBuilder()
-              .headers(new Headers.Builder()
-                  .add("Serialized-Access-Key", accessKey)
-                  .add("Serialized-Secret-Access-Key", secretAccessKey)
-                  .build())
+              .addHeader("Serialized-Access-Key", accessKey)
+              .addHeader("Serialized-Secret-Access-Key", secretAccessKey)
               .build()))
           .build();
       return new SerializedClientConfig(client, objectMapper, apiRoot);

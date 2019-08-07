@@ -5,6 +5,7 @@ import org.apache.commons.lang3.Validate;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 
 import static io.serialized.client.projection.ProjectionType.SINGLE;
@@ -14,15 +15,22 @@ public class SingleProjectionQuery implements ProjectionQuery {
 
   private final Class responseClass;
   private final Function<HttpUrl, HttpUrl> urlBuilder;
+  private final UUID tenantId;
 
-  private SingleProjectionQuery(Function<HttpUrl, HttpUrl> urlBuilder, Class responseClass) {
+  private SingleProjectionQuery(Function<HttpUrl, HttpUrl> urlBuilder, Class responseClass, UUID tenantId) {
     this.urlBuilder = urlBuilder;
     this.responseClass = responseClass;
+    this.tenantId = tenantId;
   }
 
   @Override
   public HttpUrl constructUrl(HttpUrl rootUrl) {
     return urlBuilder.apply(rootUrl);
+  }
+
+  @Override
+  public Optional<UUID> tenantId() {
+    return Optional.ofNullable(this.tenantId);
   }
 
   @Override
@@ -35,6 +43,7 @@ public class SingleProjectionQuery implements ProjectionQuery {
     private final String projectionName;
     private String projectionId;
     private Duration duration;
+    private UUID tenantId;
 
     public Builder(String projectionName) {
       this.projectionName = projectionName;
@@ -47,6 +56,11 @@ public class SingleProjectionQuery implements ProjectionQuery {
 
     public Builder awaitCreation(Duration duration) {
       this.duration = duration;
+      return this;
+    }
+
+    public Builder withTenantId(UUID tenantId) {
+      this.tenantId = tenantId;
       return this;
     }
 
@@ -69,7 +83,7 @@ public class SingleProjectionQuery implements ProjectionQuery {
     public SingleProjectionQuery build(Class responseClass) {
       Validate.notEmpty(projectionName, "'projectionName' must be set");
       Validate.notEmpty(projectionId, "'projectionId' must be set");
-      return new SingleProjectionQuery(this::urlBuilder, responseClass);
+      return new SingleProjectionQuery(this::urlBuilder, responseClass, tenantId);
     }
 
   }

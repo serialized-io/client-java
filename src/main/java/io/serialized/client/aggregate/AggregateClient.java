@@ -41,70 +41,39 @@ public class AggregateClient<T> {
   }
 
   /**
-   * Save events as a new aggregate.
-   * <p>
-   * The ID of the aggregate must be unique for the aggregate type.
+   * Save or append events to an aggregate according to the given request
    *
-   * @param aggregateId The ID of the new aggregate.
-   * @param events      List of events to save.
-   * @throws ConcurrencyException if aggregate with the same ID already exists.
+   * @param request the request to perform
    */
-  public void save(String aggregateId, List<Event> events) {
-    save(UUID.fromString(aggregateId), events);
+  public void save(AggregateRequest request) {
+
+    HttpUrl url = getAggregateUrl(request.aggregateId)
+        .addPathSegment("events")
+        .build();
+
+    try {
+      if (request.getTenantId().isPresent()) {
+        UUID tenantId = request.getTenantId().get();
+        client.post(url, request.getEventBatch(), tenantId);
+      } else {
+        client.post(url, request.getEventBatch());
+      }
+
+    } catch (ApiException e) {
+      if (e.getStatusCode() == 409) {
+        throw new ConcurrencyException(409, e.getMessage());
+      } else {
+        throw e;
+      }
+    }
+
   }
 
-  /**
-   * Save events as a new aggregate.
-   * <p>
-   * The ID of the aggregate must be unique for the aggregate type.
-   *
-   * @param aggregateId The ID of the new aggregate.
-   * @param events      List of events to save.
-   * @throws ConcurrencyException if aggregate with the same ID already exists.
-   */
-  public void save(UUID aggregateId, List<Event> events) {
-    storeBatch(aggregateId, new EventBatch(events, 0L));
-  }
-
-  /**
-   * Unconditionally append events to an aggregate.
-   *
-   * @param aggregateId The ID of the aggregate.
-   * @param events      List of events to save.
-   */
-  public void append(String aggregateId, List<Event> events) {
-    append(UUID.fromString(aggregateId), events);
-  }
-
-  /**
-   * Unconditionally append events to an aggregate.
-   *
-   * @param aggregateId The ID of the aggregate.
-   * @param events      List of events to save.
-   */
-  public void append(UUID aggregateId, List<Event> events) {
-    storeBatch(aggregateId, new EventBatch(events, null));
-  }
-
-  /**
-   * Append events to an aggregate using optimistic concurrency.
-   *
-   * @param aggregateId     The ID of the aggregate.
-   * @param events          List of events to save.
-   * @param expectedVersion Expected existing aggregate version for the aggregate.
-   */
-  public void append(String aggregateId, List<Event> events, long expectedVersion) {
-    append(UUID.fromString(aggregateId), events, expectedVersion);
-  }
-
-  /**
-   * Append events to an aggregate using optimistic concurrency.
-   *
-   * @param aggregateId     The ID of the aggregate.
-   * @param events          List of events to save.
-   * @param expectedVersion Expected existing aggregate version for the aggregate.
-   */
-  public void append(UUID aggregateId, List<Event> events, long expectedVersion) {
+  public void update(UUID aggregateId, UUID tenantId, AggregateUpdate<T> update) {
+    LoadAggregateResponse aggregateResponse = loadState(aggregateId, tenantId);
+    T state = stateBuilder.buildState(aggregateResponse.events);
+    Long expectedVersion = useOptimisticConcurrencyOnUpdate ? aggregateResponse.aggregateVersion : null;
+    List<Event> events = update.apply(state);
     storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
 
@@ -144,10 +113,7 @@ public class AggregateClient<T> {
    * @return True if aggregate with ID exists, false if not.
    */
   public boolean exists(UUID aggregateId) {
-    HttpUrl url = apiRoot.newBuilder()
-        .addPathSegment("aggregates")
-        .addPathSegment(aggregateType)
-        .addPathSegment(aggregateId.toString()).build();
+    HttpUrl url = getAggregateUrl(aggregateId).build();
 
     try {
       return client.head(url, Response::code) == 200;
@@ -160,22 +126,41 @@ public class AggregateClient<T> {
     }
   }
 
+  /**
+   * Check if an aggregate exists for the given tenant.
+   *
+   * @return True if aggregate with ID exists, false if not.
+   */
+  public boolean exists(UUID aggregateId, UUID tenantId) {
+    HttpUrl url = getAggregateUrl(aggregateId).build();
+
+    try {
+      return client.head(url, Response::code, tenantId) == 200;
+    } catch (ApiException e) {
+      if (e.getStatusCode() == 404) {
+        return false;
+      } else {
+        throw e;
+      }
+    }
+  }
+
   private LoadAggregateResponse loadState(UUID aggregateId) {
-    HttpUrl url = apiRoot.newBuilder()
-        .addPathSegment("aggregates")
-        .addPathSegment(aggregateType)
-        .addPathSegment(aggregateId.toString()).build();
+    HttpUrl url = getAggregateUrl(aggregateId).build();
 
     return client.get(url, LoadAggregateResponse.class);
+  }
+
+  private LoadAggregateResponse loadState(UUID aggregateId, UUID tenantId) {
+    HttpUrl url = getAggregateUrl(aggregateId).build();
+
+    return client.get(url, LoadAggregateResponse.class, tenantId);
   }
 
   private void storeBatch(UUID aggregateId, EventBatch eventBatch) {
     if (eventBatch.getEvents().isEmpty()) return;
 
-    HttpUrl url = apiRoot.newBuilder()
-        .addPathSegment("aggregates")
-        .addPathSegment(aggregateType)
-        .addPathSegment(aggregateId.toString())
+    HttpUrl url = getAggregateUrl(aggregateId)
         .addPathSegment("events")
         .build();
 
@@ -188,6 +173,13 @@ public class AggregateClient<T> {
         throw e;
       }
     }
+  }
+
+  private HttpUrl.Builder getAggregateUrl(UUID aggregateId) {
+    return apiRoot.newBuilder()
+        .addPathSegment("aggregates")
+        .addPathSegment(aggregateType)
+        .addPathSegment(aggregateId.toString());
   }
 
   public static class Builder<T> {

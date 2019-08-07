@@ -2,7 +2,14 @@ package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.projection.*;
+import io.serialized.client.projection.Function;
+import io.serialized.client.projection.ProjectionApiStub;
+import io.serialized.client.projection.ProjectionClient;
+import io.serialized.client.projection.ProjectionDefinition;
+import io.serialized.client.projection.ProjectionDefinitions;
+import io.serialized.client.projection.ProjectionHandler;
+import io.serialized.client.projection.ProjectionResponse;
+import io.serialized.client.projection.ProjectionsResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -10,19 +17,27 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.EventSelector.eventSelector;
-import static io.serialized.client.projection.Function.*;
+import static io.serialized.client.projection.Function.inc;
+import static io.serialized.client.projection.Function.set;
+import static io.serialized.client.projection.Function.setref;
 import static io.serialized.client.projection.ProjectionDefinitions.newDefinitionList;
 import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.TargetSelector.targetSelector;
-import static io.serialized.client.projection.query.ProjectionQueries.*;
+import static io.serialized.client.projection.query.ProjectionQueries.aggregated;
+import static io.serialized.client.projection.query.ProjectionQueries.list;
+import static io.serialized.client.projection.query.ProjectionQueries.single;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class ProjectionClientIT {
 
@@ -270,6 +285,27 @@ public class ProjectionClientIT {
     ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(
         single("orders")
             .id(projectionId)
+            .build(OrderBalanceProjection.class));
+
+    assertThat(projection.projectionId, is(projectionId));
+    assertThat(projection.updatedAt, is(1505754083976L));
+    assertThat(projection.data.orderAmount, is(12345L));
+  }
+
+  @Test
+  public void testSingleProjectionForTenant() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    String projectionName = "orders";
+    String projectionId = "84e3565e-cd61-44e7-9769-c4663588c4dd";
+    UUID tenantId = UUID.randomUUID();
+    when(apiCallback.singleProjectionFetched(projectionName, projectionId, tenantId)).thenReturn(getResource("/projection/getSingleProjection.json"));
+
+    ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(
+        single("orders")
+            .id(projectionId)
+            .withTenantId(tenantId)
             .build(OrderBalanceProjection.class));
 
     assertThat(projection.projectionId, is(projectionId));

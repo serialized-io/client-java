@@ -4,6 +4,7 @@ import okhttp3.HttpUrl;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 
 import static io.serialized.client.projection.ProjectionType.SINGLE;
@@ -12,15 +13,22 @@ public class ListProjectionQuery implements ProjectionQuery {
 
   private final Class responseClass;
   private final Function<HttpUrl, HttpUrl> urlBuilder;
+  private final UUID tenantId;
 
-  private ListProjectionQuery(Function<HttpUrl, HttpUrl> urlBuilder, Class responseClass) {
+  private ListProjectionQuery(Function<HttpUrl, HttpUrl> urlBuilder, Class responseClass, UUID tenantId) {
     this.urlBuilder = urlBuilder;
     this.responseClass = responseClass;
+    this.tenantId = tenantId;
   }
 
   @Override
   public HttpUrl constructUrl(HttpUrl rootUrl) {
     return urlBuilder.apply(rootUrl);
+  }
+
+  @Override
+  public Optional<UUID> tenantId() {
+    return Optional.ofNullable(this.tenantId);
   }
 
   @Override
@@ -35,6 +43,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     private Integer limit;
     private String sort;
     private String reference;
+    private UUID tenantId;
 
     public Builder(String projectionName) {
       this.projectionName = projectionName;
@@ -57,6 +66,11 @@ public class ListProjectionQuery implements ProjectionQuery {
 
     public Builder sortAscending(String field) {
       this.sort = field;
+      return this;
+    }
+
+    public Builder withTenantId(UUID tenantId) {
+      this.tenantId = tenantId;
       return this;
     }
 
@@ -86,7 +100,7 @@ public class ListProjectionQuery implements ProjectionQuery {
 
     public ListProjectionQuery build(Class responseClass) {
       Validate.notEmpty(projectionName, "'projectionName' must be set");
-      return new ListProjectionQuery(this::urlBuilder, responseClass);
+      return new ListProjectionQuery(this::urlBuilder, responseClass, tenantId);
     }
 
   }

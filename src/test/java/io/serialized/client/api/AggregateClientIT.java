@@ -7,6 +7,7 @@ import io.serialized.client.ConcurrencyException;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.aggregate.AggregateApiStub;
 import io.serialized.client.aggregate.AggregateClient;
+import io.serialized.client.aggregate.AggregateRequest;
 import io.serialized.client.aggregate.Event;
 import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.aggregate.order.Order;
@@ -29,8 +30,15 @@ import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class AggregateClientIT {
 
@@ -59,7 +67,7 @@ public class AggregateClientIT {
     Order order = new Order(orderState);
     List<Event> events = order.placeOrder(orderId, 123L);
 
-    orderClient.save(orderId, events);
+    orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build());
   }
 
   @Test
@@ -73,7 +81,7 @@ public class AggregateClientIT {
 
     Event event = newEvent("order-placed").data("orderId", orderId, "customerId", UUID.randomUUID()).build();
 
-    orderClient.save(orderId, singletonList(event));
+    orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvent(event).build());
   }
 
   @Test(expected = ConcurrencyException.class)
@@ -91,7 +99,7 @@ public class AggregateClientIT {
     Order order = new Order(orderState);
     List<Event> events = order.placeOrder(orderId, 123L);
 
-    orderClient.save(orderId, events);
+    orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build());
   }
 
   @Test
@@ -165,7 +173,7 @@ public class AggregateClientIT {
     UUID aggregateId = UUID.randomUUID();
     when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(200);
 
-    orderClient.save(aggregateId, singletonList(orderPlaced("order-123", 1234L)));
+    orderClient.save(AggregateRequest.saveRequest().withAggregateId(aggregateId).withEvents(singletonList(orderPlaced("order-123", 1234L))).build());
 
     ArgumentCaptor<EventBatch> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatch.class);
     verify(apiCallback).eventsStored(eq(aggregateId), eventsStoredCaptor.capture());
@@ -174,6 +182,29 @@ public class AggregateClientIT {
     List<Event> events = eventsStored.getEvents();
     assertThat(events.size(), is(1));
     Event event = events.get(0);
+    assertThat(event.getEventType(), is(OrderPlaced.class.getSimpleName()));
+    assertNotNull(event.getData());
+  }
+
+  @Test
+  public void testStoreEventsForTenant() {
+
+    AggregateClient<OrderState> orderClient = getOrderClient("order");
+
+    UUID aggregateId = UUID.randomUUID();
+    UUID tenantId = UUID.randomUUID();
+    List<Event> events = singletonList(orderPlaced("order-123", 1234L));
+    when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class), any(UUID.class))).thenReturn(200);
+
+    AggregateRequest aggregateRequest = AggregateRequest.saveRequest().withTenantId(tenantId).withAggregateId(aggregateId).withEvents(events).build();
+    orderClient.save(aggregateRequest);
+
+    ArgumentCaptor<EventBatch> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatch.class);
+    verify(apiCallback).eventsStored(eq(aggregateId), eventsStoredCaptor.capture(), eq(tenantId));
+
+    EventBatch eventsStored = eventsStoredCaptor.getValue();
+    assertThat(eventsStored.getEvents().size(), is(1));
+    Event event = eventsStored.getEvents().get(0);
     assertThat(event.getEventType(), is(OrderPlaced.class.getSimpleName()));
     assertNotNull(event.getData());
   }
