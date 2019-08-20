@@ -114,7 +114,7 @@ OrderState orderState = new OrderState();
 Order order = new Order(orderState);
 List<Event> events = order.placeOrder(orderId, 123L);
 
-orderClient.save(saveRequest().withAggregateId(orderId).withEvents(events)).build());
+orderClient.save(saveRequest().withAggregateId(orderId).withEvents(events).build());
 ```
 
 ### Updating/appending events to an aggregate
