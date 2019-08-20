@@ -137,9 +137,9 @@ Under the hood this is achieved by including the field *expectedVersion* set to 
 received when the aggregate was first loaded from Serialized.   
 
 ## Creating projections
-To create projections using the client we need to create a `ProjectionApiClient` by calling `projectionsClient(SerializedClientConfig config)`:
+To create projections using the client we need to create a `ProjectionClient` by calling `projectionClient(SerializedClientConfig config)`:
 ```
-ProjectionApiClient projectionsClient = ProjectionApiClient.projectionsClient(serializedConfig).build();
+ProjectionClient projectionClient = ProjectionClient.projectionClient(serializedConfig).build();
 ```
 
 There are numerous combinations of projection definitions that you can create and we encourage you to explore 
@@ -177,7 +177,7 @@ public class OrderCount {
 Querying our aggregated projection is now as simple as this:
 
 ```
-Projection<OrderCount> projectionResponse = projectionApiClient.query(aggregated("order-count").build(OrderCount.class));
+Projection<OrderCount> projectionResponse = projectionClient.query(aggregated("order-count").build(OrderCount.class));
 OrderCount theCount = projectionResponse.data;
 ```
 
@@ -185,7 +185,7 @@ OrderCount theCount = projectionResponse.data;
 
 Start by creating a `FeedClient` like this
 ```
-FeedClient feedClient = FeedClient.feedClient(getConfig()).build();
+FeedClient feedClient = FeedClient.feedClient(serializedConfig).build();
 ```
 
 Point out which feed you want to subscribe to and start receiving events for all orders since the beginning of time.
