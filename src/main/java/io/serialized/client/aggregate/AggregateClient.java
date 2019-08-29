@@ -107,6 +107,21 @@ public class AggregateClient<T> {
     storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
 
+  public AggregateDelete<T> delete() {
+    return getDeleteToken(apiRoot.newBuilder()
+        .addPathSegment("aggregates")
+        .addPathSegment(aggregateType)
+    );
+  }
+
+  public AggregateDelete<T> delete(UUID aggregateId) {
+    return getDeleteToken(apiRoot.newBuilder()
+        .addPathSegment("aggregates")
+        .addPathSegment(aggregateType)
+        .addPathSegment(aggregateId.toString())
+    );
+  }
+
   /**
    * Check if an aggregate exists.
    *
@@ -143,6 +158,13 @@ public class AggregateClient<T> {
         throw e;
       }
     }
+  }
+
+  private AggregateDelete<T> getDeleteToken(HttpUrl.Builder urlBuilder) {
+    Map<String, String> deleteResponse = client.delete(urlBuilder.build(), Map.class);
+    String deleteToken = deleteResponse.get("deleteToken");
+    HttpUrl deleteAggregateUrl = urlBuilder.addQueryParameter("deleteToken", deleteToken).build();
+    return new AggregateDelete<>(client, deleteAggregateUrl);
   }
 
   private LoadAggregateResponse loadState(UUID aggregateId) {

@@ -46,6 +46,10 @@ public class SerializedOkHttpClient {
     execute(deleteRequest(url).build(), res -> null);
   }
 
+  public <T> T delete(HttpUrl url, Class<T> responseClass) {
+    return executeAndGet(deleteRequest(url), contents -> parseJsonAs(contents, responseClass));
+  }
+
   public <T> T head(HttpUrl url, Function<Response, T> handler) {
     return execute(headRequest(url).build(), handler);
   }
@@ -55,19 +59,19 @@ public class SerializedOkHttpClient {
   }
 
   public <T> T get(HttpUrl url, Class<T> responseClass) {
-    return get(getRequest(url), contents -> parseJsonAs(contents, responseClass));
+    return executeAndGet(getRequest(url), contents -> parseJsonAs(contents, responseClass));
   }
 
   public <T> T get(HttpUrl url, Class<T> responseClass, UUID tenantId) {
-    return get(getRequest(url).header(SERIALIZED_TENANT_ID, tenantId.toString()), contents -> parseJsonAs(contents, responseClass));
+    return executeAndGet(getRequest(url).header(SERIALIZED_TENANT_ID, tenantId.toString()), contents -> parseJsonAs(contents, responseClass));
   }
 
   public <T> T get(HttpUrl url, JavaType type) {
-    return get(getRequest(url), contents -> parseJsonAs(contents, type));
+    return executeAndGet(getRequest(url), contents -> parseJsonAs(contents, type));
   }
 
   public <T> T get(HttpUrl url, JavaType type, UUID tenantId) {
-    return get(getRequest(url).header(SERIALIZED_TENANT_ID, tenantId.toString()), contents -> parseJsonAs(contents, type));
+    return executeAndGet(getRequest(url).header(SERIALIZED_TENANT_ID, tenantId.toString()), contents -> parseJsonAs(contents, type));
   }
 
   private Request.Builder putRequest(HttpUrl url, Object payload) {
@@ -90,8 +94,8 @@ public class SerializedOkHttpClient {
     return new Request.Builder().url(url).get();
   }
 
-  private <T> T get(Request.Builder getRequest, Function<String, T> contentParser) {
-    return execute(getRequest.build(), response -> {
+  private <T> T executeAndGet(Request.Builder request, Function<String, T> contentParser) {
+    return execute(request.build(), response -> {
       try {
         String responseContents = response.body().string();
         return contentParser.apply(responseContents);
