@@ -2,14 +2,7 @@ package io.serialized.client.api;
 
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.projection.Function;
-import io.serialized.client.projection.ProjectionApiStub;
-import io.serialized.client.projection.ProjectionClient;
-import io.serialized.client.projection.ProjectionDefinition;
-import io.serialized.client.projection.ProjectionDefinitions;
-import io.serialized.client.projection.ProjectionHandler;
-import io.serialized.client.projection.ProjectionResponse;
-import io.serialized.client.projection.ProjectionsResponse;
+import io.serialized.client.projection.*;
 import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -21,23 +14,16 @@ import java.util.UUID;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.EventSelector.eventSelector;
-import static io.serialized.client.projection.Function.inc;
-import static io.serialized.client.projection.Function.set;
-import static io.serialized.client.projection.Function.setref;
+import static io.serialized.client.projection.Function.*;
 import static io.serialized.client.projection.ProjectionDefinitions.newDefinitionList;
 import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.TargetSelector.targetSelector;
-import static io.serialized.client.projection.query.ProjectionQueries.aggregated;
-import static io.serialized.client.projection.query.ProjectionQueries.list;
-import static io.serialized.client.projection.query.ProjectionQueries.single;
+import static io.serialized.client.projection.query.ProjectionQueries.*;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class ProjectionClientIT {
 
@@ -59,6 +45,19 @@ public class ProjectionClientIT {
   public void testCreateDefinitionFromJson() throws IOException {
 
     String projection = getResource("/projection/simpleDefinition.json");
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    projectionClient.createDefinition(projection);
+
+    ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
+    verify(apiCallback, times(1)).definitionCreated(captor.capture());
+  }
+
+  @Test
+  public void testCreateCustomFunctionDefinitionFromJson() throws IOException {
+
+    String projection = getResource("/projection/customFunctionDefinition.json");
 
     ProjectionClient projectionClient = getProjectionClient();
 

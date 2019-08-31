@@ -1,0 +1,12 @@
+{
+  "aggregated": false,
+  "projectionName": "myprojection",
+  "feedName": "myfeed",
+  "idField": "userId",
+  "handlers": [
+    {
+      "eventType": "MyEvent",
+      "functionUri": "https://example.com/MyEvent"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ package io.serialized.client.projection;
 
 import org.apache.commons.lang3.Validate;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,7 @@ public class ProjectionHandler {
 
   private String eventType;
   private List<Function> functions = new ArrayList<>();
+  private URI functionUri;
   private String idField;
 
   public static Builder handler(String eventType) {
@@ -41,6 +43,10 @@ public class ProjectionHandler {
     return unmodifiableList(functions);
   }
 
+  public URI getFunctionUri() {
+    return functionUri;
+  }
+
   public String getIdField() {
     return idField;
   }
@@ -49,6 +55,7 @@ public class ProjectionHandler {
 
     private final String eventType;
     private final List<Function> functions = new ArrayList<>();
+    private URI functionUri;
     private String idField;
 
     public Builder(String eventType) {
@@ -56,7 +63,14 @@ public class ProjectionHandler {
     }
 
     public Builder addFunction(Function function) {
+      Validate.isTrue(functionUri == null, "Cannot combine 'functions' and 'functionUri'");
       this.functions.add(function);
+      return this;
+    }
+
+    public Builder withFunctionUri(URI functionUri) {
+      Validate.isTrue(functions.isEmpty(), "Cannot combine 'functions' and 'functionUri'");
+      this.functionUri = functionUri;
       return this;
     }
 
@@ -67,11 +81,10 @@ public class ProjectionHandler {
 
     public ProjectionHandler build() {
       Validate.notEmpty(eventType, "'eventType' must be set");
-      Validate.isTrue(!functions.isEmpty(), "'functions' must not be empty");
-
       ProjectionHandler projectionHandler = new ProjectionHandler();
       projectionHandler.eventType = this.eventType;
       projectionHandler.functions = this.functions;
+      projectionHandler.functionUri = this.functionUri;
       projectionHandler.idField = this.idField;
       return projectionHandler;
     }
