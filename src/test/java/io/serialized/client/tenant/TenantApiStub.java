@@ -24,6 +24,12 @@ public class TenantApiStub {
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
+  @GET
+  public Response listTenants() {
+    Object responseBody = callback.tenantsLoaded();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+  }
+
   @DELETE
   @Path("{tenantId}")
   public Response deleteTenant(@PathParam("tenantId") String tenantId) {
@@ -34,6 +40,8 @@ public class TenantApiStub {
   public interface TenantApiCallback {
 
     void tenantCreated(Map tenant);
+
+    Object tenantsLoaded();
 
     void tenantDeleted(String tenantId);
 

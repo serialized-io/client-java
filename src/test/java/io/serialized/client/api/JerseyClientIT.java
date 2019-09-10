@@ -33,13 +33,7 @@ import java.util.UUID;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyMap;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class JerseyClientIT {
 
@@ -725,6 +719,25 @@ public class JerseyClientIT {
 
     verify(tenantApiCallback, times(1)).tenantCreated(anyMap());
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+  }
+
+  @Test
+  public void testListTenants() throws IOException {
+
+    UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
+    Client client = ClientBuilder.newClient();
+
+    when(tenantApiCallback.tenantsLoaded()).thenReturn(getResource("/tenant/tenants.json"));
+
+    Map response = client.target(apiRoot)
+        .path("tenants")
+        .request()
+        .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
+        .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
+        .get(Map.class);
+
+    List<Map> feeds = (List<Map>) response.get("tenants");
+    assertThat(feeds.size(), is(1));
   }
 
   @Test
