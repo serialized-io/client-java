@@ -12,6 +12,7 @@ import io.serialized.client.projection.ProjectionApiStub;
 import io.serialized.client.projection.ProjectionDefinition;
 import io.serialized.client.reaction.ReactionApiStub;
 import io.serialized.client.reaction.ReactionDefinition;
+import io.serialized.client.tenant.Tenant;
 import io.serialized.client.tenant.TenantApiStub;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -33,7 +34,12 @@ import java.util.UUID;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class JerseyClientIT {
 
@@ -60,7 +66,8 @@ public class JerseyClientIT {
   @Test
   public void testLoadAggregate() {
 
-    when(aggregateApiCallback.aggregateLoaded("order", "99415be8-6819-4470-860c-c2933558d8d3")).thenReturn(ImmutableMap.of("apa", "banan"));
+    UUID aggregateId = UUID.fromString("99415be8-6819-4470-860c-c2933558d8d3");
+    when(aggregateApiCallback.aggregateLoaded("order", aggregateId)).thenReturn(ImmutableMap.of("apa", "banan"));
 
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
     Client client = ClientBuilder.newClient();
@@ -68,7 +75,7 @@ public class JerseyClientIT {
     Map aggregateResponse = client.target(apiRoot)
         .path("aggregates")
         .path("order")
-        .path("99415be8-6819-4470-860c-c2933558d8d3")
+        .path(aggregateId.toString())
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
@@ -80,7 +87,7 @@ public class JerseyClientIT {
   @Test
   public void testCheckAggregate() {
 
-    String aggregateId = "99415be8-6819-4470-860c-c2933558d8d3";
+    UUID aggregateId = UUID.fromString("99415be8-6819-4470-860c-c2933558d8d3");
     when(aggregateApiCallback.aggregateChecked("order", aggregateId)).thenReturn(true);
 
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
@@ -89,7 +96,7 @@ public class JerseyClientIT {
     Response response = client.target(apiRoot)
         .path("aggregates")
         .path("order")
-        .path(aggregateId)
+        .path(aggregateId.toString())
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
@@ -106,12 +113,13 @@ public class JerseyClientIT {
     Client client = ClientBuilder.newClient();
 
     String expectedToken = UUID.randomUUID().toString();
-    when(aggregateApiCallback.aggregateDeleteRequested("order", "99415be8-6819-4470-860c-c2933558d8d3")).thenReturn(ImmutableMap.of("deleteToken", expectedToken));
+    UUID aggregateId = UUID.fromString("99415be8-6819-4470-860c-c2933558d8d3");
+    when(aggregateApiCallback.aggregateDeleteRequested("order", aggregateId)).thenReturn(ImmutableMap.of("deleteToken", expectedToken));
 
     Map deleteTokenResponse = client.target(apiRoot)
         .path("aggregates")
         .path("order")
-        .path("99415be8-6819-4470-860c-c2933558d8d3")
+        .path(aggregateId.toString())
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
@@ -122,14 +130,14 @@ public class JerseyClientIT {
     Response response = client.target(apiRoot)
         .path("aggregates")
         .path("order")
-        .path("99415be8-6819-4470-860c-c2933558d8d3")
+        .path(aggregateId.toString())
         .queryParam("deleteToken", deleteToken)
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .delete();
 
-    verify(aggregateApiCallback, times(1)).aggregateDeletePerformed("order", "99415be8-6819-4470-860c-c2933558d8d3", expectedToken);
+    verify(aggregateApiCallback, times(1)).aggregateDeletePerformed("order", aggregateId, expectedToken);
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 
@@ -717,7 +725,7 @@ public class JerseyClientIT {
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .post(Entity.json(tenant));
 
-    verify(tenantApiCallback, times(1)).tenantCreated(anyMap());
+    verify(tenantApiCallback, times(1)).tenantAdded(any(Tenant.class));
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 
@@ -743,18 +751,19 @@ public class JerseyClientIT {
   @Test
   public void testDeleteTenant() {
 
+    UUID aggregateId = UUID.fromString("e9ef574f-4563-4d56-ad9e-0a2d5ce42004");
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
     Client client = ClientBuilder.newClient();
 
     Response response = client.target(apiRoot)
         .path("tenants")
-        .path("e9ef574f-4563-4d56-ad9e-0a2d5ce42004")
+        .path(aggregateId.toString())
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .delete();
 
-    verify(tenantApiCallback, times(1)).tenantDeleted("e9ef574f-4563-4d56-ad9e-0a2d5ce42004");
+    verify(tenantApiCallback, times(1)).tenantDeleted(aggregateId);
     assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
   }
 

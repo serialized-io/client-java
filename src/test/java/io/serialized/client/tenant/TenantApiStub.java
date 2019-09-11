@@ -1,8 +1,15 @@
 package io.serialized.client.tenant;
 
-import javax.ws.rs.*;
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-import java.util.Map;
+import java.util.UUID;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -19,8 +26,8 @@ public class TenantApiStub {
   }
 
   @POST
-  public Response createTenant(Map tenant) {
-    callback.tenantCreated(tenant);
+  public Response createTenant(@Valid Tenant tenant) {
+    callback.tenantAdded(tenant);
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
@@ -33,17 +40,17 @@ public class TenantApiStub {
   @DELETE
   @Path("{tenantId}")
   public Response deleteTenant(@PathParam("tenantId") String tenantId) {
-    callback.tenantDeleted(tenantId);
+    callback.tenantDeleted(UUID.fromString(tenantId));
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
   public interface TenantApiCallback {
 
-    void tenantCreated(Map tenant);
+    void tenantAdded(Tenant tenant);
 
     Object tenantsLoaded();
 
-    void tenantDeleted(String tenantId);
+    void tenantDeleted(UUID tenantId);
 
   }
 
