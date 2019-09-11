@@ -6,7 +6,11 @@ import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.ConcurrencyException;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.aggregate.*;
+import io.serialized.client.aggregate.AggregateApiStub;
+import io.serialized.client.aggregate.AggregateClient;
+import io.serialized.client.aggregate.AggregateRequest;
+import io.serialized.client.aggregate.Event;
+import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.aggregate.order.Order;
 import io.serialized.client.aggregate.order.OrderPlaced;
 import io.serialized.client.aggregate.order.OrderState;
@@ -27,8 +31,15 @@ import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class AggregateClientIT {
 
@@ -101,7 +112,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId.toString())).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(200);
 
     orderClient.update(orderId, orderState -> new Order(orderState).cancel());
@@ -115,11 +126,11 @@ public class AggregateClientIT {
 
     AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig()).build();
 
-    when(apiCallback.aggregateDeleteRequested(aggregateType, orderId.toString())).thenReturn(ImmutableMap.of("deleteToken", deleteToken));
+    when(apiCallback.aggregateDeleteRequested(aggregateType, orderId)).thenReturn(ImmutableMap.of("deleteToken", deleteToken));
 
     orderClient.delete(orderId).confirm();
 
-    verify(apiCallback).aggregateDeletePerformed(aggregateType, orderId.toString(), deleteToken.toString());
+    verify(apiCallback).aggregateDeletePerformed(aggregateType, orderId, deleteToken.toString());
   }
 
   @Test
@@ -145,7 +156,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId.toString())).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(409);
 
     orderClient.update(orderId, orderState -> new Order(orderState).cancel());
@@ -160,7 +171,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId.toString())).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
 
     orderClient.update(orderId, orderState -> {
       assertThat(orderState.status(), is(OrderStatus.PLACED));
@@ -178,7 +189,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateChecked(aggregateType, orderId.toString())).thenReturn(true);
+    when(apiCallback.aggregateChecked(aggregateType, orderId)).thenReturn(true);
 
     assertTrue(orderClient.exists(orderId));
     assertFalse(orderClient.exists(UUID.randomUUID()));

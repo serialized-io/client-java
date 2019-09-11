@@ -51,14 +51,14 @@ public class AggregateApiStub {
   @GET
   @Path("{aggregateType}/{aggregateId}")
   public Response loadAggregate(@PathParam("aggregateType") String aggregateType, @PathParam("aggregateId") String aggregateId) {
-    Object responseBody = callback.aggregateLoaded(aggregateType, aggregateId);
+    Object responseBody = callback.aggregateLoaded(aggregateType, UUID.fromString(aggregateId));
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 
   @HEAD
   @Path("{aggregateType}/{aggregateId}")
   public Response checkAggregate(@PathParam("aggregateType") String aggregateType, @PathParam("aggregateId") String aggregateId) {
-    boolean exists = callback.aggregateChecked(aggregateType, aggregateId);
+    boolean exists = callback.aggregateChecked(aggregateType, UUID.fromString(aggregateId));
     return exists ? Response.ok(APPLICATION_JSON_TYPE).build() : Response.status(NOT_FOUND).build();
   }
 
@@ -66,10 +66,10 @@ public class AggregateApiStub {
   @Path("{aggregateType}/{aggregateId}")
   public Response deleteAggregate(@PathParam("aggregateType") String aggregateType, @PathParam("aggregateId") String aggregateId, @QueryParam("deleteToken") String deleteToken) {
     if (isBlank(deleteToken)) {
-      Map tokenResponse = callback.aggregateDeleteRequested(aggregateType, aggregateId);
+      Map tokenResponse = callback.aggregateDeleteRequested(aggregateType, UUID.fromString(aggregateId));
       return Response.ok(APPLICATION_JSON_TYPE).entity(tokenResponse).build();
     } else {
-      callback.aggregateDeletePerformed(aggregateType, aggregateId, deleteToken);
+      callback.aggregateDeletePerformed(aggregateType, UUID.fromString(aggregateId), deleteToken);
       return Response.ok(APPLICATION_JSON_TYPE).build();
     }
   }
@@ -92,13 +92,13 @@ public class AggregateApiStub {
 
     int eventsStored(UUID aggregateId, EventBatch eventBatch, UUID tenantId);
 
-    Object aggregateLoaded(String aggregateType, String aggregateId);
+    Object aggregateLoaded(String aggregateType, UUID aggregateId);
 
-    boolean aggregateChecked(String aggregateType, String aggregateId);
+    boolean aggregateChecked(String aggregateType, UUID aggregateId);
 
-    Map aggregateDeleteRequested(String aggregateType, String aggregateId);
+    Map aggregateDeleteRequested(String aggregateType, UUID aggregateId);
 
-    void aggregateDeletePerformed(String aggregateType, String aggregateId, String deleteToken);
+    void aggregateDeletePerformed(String aggregateType, UUID aggregateId, String deleteToken);
 
     Map aggregateTypeDeleteRequested(String aggregateType);
 
