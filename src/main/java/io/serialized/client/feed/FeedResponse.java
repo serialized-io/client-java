@@ -3,6 +3,8 @@ package io.serialized.client.feed;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.unmodifiableList;
+
 public class FeedResponse {
 
   private List<FeedEntry> entries;
@@ -13,14 +15,14 @@ public class FeedResponse {
    * @return List of all events from all batches.
    */
   public List<Event> events() {
-    return entries.stream().flatMap(e -> e.events().stream()).collect(Collectors.toList());
+    return unmodifiableList(entries.stream().flatMap(e -> e.events().stream()).collect(Collectors.toList()));
   }
 
   /**
    * @return The entries.
    */
   public List<FeedEntry> entries() {
-    return entries;
+    return unmodifiableList(entries);
   }
 
   /**
