@@ -7,7 +7,6 @@ import io.serialized.client.reaction.ReactionClient;
 import io.serialized.client.reaction.ReactionDefinition;
 import io.serialized.client.reaction.ReactionDefinitions;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -15,26 +14,23 @@ import org.mockito.ArgumentCaptor;
 import java.io.IOException;
 import java.net.URI;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.reaction.Actions.httpAction;
 import static io.serialized.client.reaction.ReactionDefinitions.newDefinitionList;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class ReactionClientIT {
 
   private final ReactionApiStub.ReactionApiCallback apiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
 
   @Rule
-  public final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new ReactionApiStub(apiCallback));
-
-  @Before
-  public void setUp() {
-    DROPWIZARD.getObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-  }
+  public final DropwizardClientRule dropwizard = new DropwizardClientRule(new ReactionApiStub(apiCallback));
 
   @Test
   public void testCreateDefinitionFromJson() throws IOException {
@@ -190,7 +186,7 @@ public class ReactionClientIT {
 
   private SerializedClientConfig getConfig() {
     return serializedConfig()
-        .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
+        .rootApiUrl(dropwizard.baseUri() + "/api-stub/")
         .accessKey("aaaaa")
         .secretAccessKey("bbbbb")
         .build();

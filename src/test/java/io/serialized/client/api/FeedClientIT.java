@@ -17,7 +17,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -27,7 +29,7 @@ public class FeedClientIT {
   private FeedApiStub.FeedApiCallback apiCallback = mock(FeedApiStub.FeedApiCallback.class);
 
   @Rule
-  public final DropwizardClientRule DROPWIZARD = new DropwizardClientRule(new FeedApiStub(apiCallback));
+  public final DropwizardClientRule dropwizard = new DropwizardClientRule(new FeedApiStub(apiCallback));
 
   @Test
   public void listFeeds() throws IOException {
@@ -161,7 +163,7 @@ public class FeedClientIT {
   private FeedClient getFeedClient() {
     return FeedClient.feedClient(
         SerializedClientConfig.serializedConfig()
-            .rootApiUrl(DROPWIZARD.baseUri() + "/api-stub/")
+            .rootApiUrl(dropwizard.baseUri() + "/api-stub/")
             .accessKey("aaaaa")
             .secretAccessKey("bbbbb")
             .build())
