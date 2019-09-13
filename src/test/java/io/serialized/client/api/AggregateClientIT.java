@@ -6,11 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit.DropwizardClientRule;
 import io.serialized.client.ConcurrencyException;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.aggregate.AggregateApiStub;
-import io.serialized.client.aggregate.AggregateClient;
-import io.serialized.client.aggregate.AggregateRequest;
-import io.serialized.client.aggregate.Event;
-import io.serialized.client.aggregate.EventBatch;
+import io.serialized.client.aggregate.*;
 import io.serialized.client.aggregate.order.Order;
 import io.serialized.client.aggregate.order.OrderPlaced;
 import io.serialized.client.aggregate.order.OrderState;
@@ -31,15 +27,8 @@ import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class AggregateClientIT {
 
@@ -128,7 +117,7 @@ public class AggregateClientIT {
 
     when(apiCallback.aggregateDeleteRequested(aggregateType, orderId)).thenReturn(ImmutableMap.of("deleteToken", deleteToken));
 
-    orderClient.delete(orderId).confirm();
+    orderClient.deleteById(orderId).confirm();
 
     verify(apiCallback).aggregateDeletePerformed(aggregateType, orderId, deleteToken.toString());
   }
@@ -142,7 +131,7 @@ public class AggregateClientIT {
 
     when(apiCallback.aggregateTypeDeleteRequested(aggregateType)).thenReturn(ImmutableMap.of("deleteToken", deleteToken));
 
-    orderClient.delete().confirm();
+    orderClient.deleteByType().confirm();
 
     verify(apiCallback).aggregateTypeDeletePerformed(aggregateType, deleteToken.toString());
   }

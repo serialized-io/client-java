@@ -107,14 +107,14 @@ public class AggregateClient<T> {
     storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
 
-  public AggregateDelete<T> delete() {
+  public AggregateDelete<T> deleteByType() {
     return getDeleteToken(apiRoot.newBuilder()
         .addPathSegment("aggregates")
         .addPathSegment(aggregateType)
     );
   }
 
-  public AggregateDelete<T> delete(UUID aggregateId) {
+  public AggregateDelete<T> deleteById(UUID aggregateId) {
     return getDeleteToken(apiRoot.newBuilder()
         .addPathSegment("aggregates")
         .addPathSegment(aggregateType)
