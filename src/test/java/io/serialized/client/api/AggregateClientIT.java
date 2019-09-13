@@ -24,6 +24,7 @@ import java.util.UUID;
 import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
 import static io.serialized.client.aggregate.Event.newEvent;
 import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
@@ -234,15 +235,19 @@ public class AggregateClientIT {
         .build();
   }
 
-  private SerializedClientConfig getConfig() {
+  private SerializedClientConfig.Builder getConfigBuilder() {
     return SerializedClientConfig.serializedConfig()
         .rootApiUrl(dropwizard.baseUri() + "/api-stub/")
         .accessKey("aaaaa")
-        .secretAccessKey("bbbbb").build();
+        .secretAccessKey("bbbbb");
+  }
+
+  private SerializedClientConfig getConfig() {
+    return getConfigBuilder().build();
   }
 
   private String getResource(String resource) throws IOException {
-    return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
+    return IOUtils.toString(getClass().getResourceAsStream(resource), UTF_8);
   }
 
 }

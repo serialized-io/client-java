@@ -50,6 +50,10 @@ public class SerializedOkHttpClient {
     return executeAndGet(deleteRequest(url), contents -> parseJsonAs(contents, responseClass));
   }
 
+  public <T> T delete(HttpUrl url, Class<T> responseClass, UUID tenantId) {
+    return executeAndGet(deleteRequest(url).header(SERIALIZED_TENANT_ID, tenantId.toString()), contents -> parseJsonAs(contents, responseClass));
+  }
+
   public <T> T head(HttpUrl url, Function<Response, T> handler) {
     return execute(headRequest(url).build(), handler);
   }

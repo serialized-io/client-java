@@ -114,11 +114,28 @@ public class AggregateClient<T> {
     );
   }
 
+  public AggregateDelete<T> deleteByType(UUID tenantId) {
+    return getDeleteToken(apiRoot.newBuilder()
+            .addPathSegment("aggregates")
+            .addPathSegment(aggregateType),
+        tenantId
+    );
+  }
+
   public AggregateDelete<T> deleteById(UUID aggregateId) {
     return getDeleteToken(apiRoot.newBuilder()
         .addPathSegment("aggregates")
         .addPathSegment(aggregateType)
         .addPathSegment(aggregateId.toString())
+    );
+  }
+
+  public AggregateDelete<T> deleteById(UUID aggregateId, UUID tenantId) {
+    return getDeleteToken(apiRoot.newBuilder()
+            .addPathSegment("aggregates")
+            .addPathSegment(aggregateType)
+            .addPathSegment(aggregateId.toString()),
+        tenantId
     );
   }
 
@@ -161,7 +178,14 @@ public class AggregateClient<T> {
   }
 
   private AggregateDelete<T> getDeleteToken(HttpUrl.Builder urlBuilder) {
-    Map<String, String> deleteResponse = client.delete(urlBuilder.build(), Map.class);
+    return extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class));
+  }
+
+  private AggregateDelete<T> getDeleteToken(HttpUrl.Builder urlBuilder, UUID tenantId) {
+    return extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class, tenantId));
+  }
+
+  private AggregateDelete<T> extractDeleteToken(HttpUrl.Builder urlBuilder, Map<String, String> deleteResponse) {
     String deleteToken = deleteResponse.get("deleteToken");
     HttpUrl deleteAggregateUrl = urlBuilder.addQueryParameter("deleteToken", deleteToken).build();
     return new AggregateDelete<>(client, deleteAggregateUrl);
@@ -182,9 +206,7 @@ public class AggregateClient<T> {
   private void storeBatch(UUID aggregateId, EventBatch eventBatch) {
     if (eventBatch.getEvents().isEmpty()) return;
 
-    HttpUrl url = getAggregateUrl(aggregateId)
-        .addPathSegment("events")
-        .build();
+    HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
 
     try {
       client.post(url, eventBatch);
