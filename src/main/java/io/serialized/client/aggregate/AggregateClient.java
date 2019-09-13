@@ -47,11 +47,9 @@ public class AggregateClient<T> {
    */
   public void save(AggregateRequest request) {
 
-    HttpUrl url = getAggregateUrl(request.aggregateId)
-        .addPathSegment("events")
-        .build();
-
     try {
+      HttpUrl url = getAggregateUrl(request.aggregateId).addPathSegment("events").build();
+
       if (request.getTenantId().isPresent()) {
         UUID tenantId = request.getTenantId().get();
         client.post(url, request.getEventBatch(), tenantId);
@@ -60,21 +58,9 @@ public class AggregateClient<T> {
       }
 
     } catch (ApiException e) {
-      if (e.getStatusCode() == 409) {
-        throw new ConcurrencyException(409, e.getMessage());
-      } else {
-        throw e;
-      }
+      handleConcurrencyException(e);
     }
 
-  }
-
-  public void update(UUID aggregateId, UUID tenantId, AggregateUpdate<T> update) {
-    LoadAggregateResponse aggregateResponse = loadState(aggregateId, tenantId);
-    T state = stateBuilder.buildState(aggregateResponse.events);
-    Long expectedVersion = useOptimisticConcurrencyOnUpdate ? aggregateResponse.aggregateVersion : null;
-    List<Event> events = update.apply(state);
-    storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
 
   /**
@@ -102,52 +88,54 @@ public class AggregateClient<T> {
   public void update(UUID aggregateId, AggregateUpdate<T> update) {
     LoadAggregateResponse aggregateResponse = loadState(aggregateId);
     T state = stateBuilder.buildState(aggregateResponse.events);
-    Long expectedVersion = useOptimisticConcurrencyOnUpdate ? aggregateResponse.aggregateVersion : null;
+    Long expectedVersion = getExpectedVersion(aggregateResponse);
     List<Event> events = update.apply(state);
     storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
 
+  /**
+   * Update the aggregate.
+   * <p>
+   * The update will be performed using optimistic concurrency check depending on the
+   * {@link #useOptimisticConcurrencyOnUpdate} configuration flag.
+   *
+   * @param aggregateId The ID of the aggregate.
+   * @param tenantId    The ID of the tenant.
+   * @param update      Function that executes business logic and returns the resulting domain events.
+   */
+  public void update(UUID aggregateId, UUID tenantId, AggregateUpdate<T> update) {
+    LoadAggregateResponse aggregateResponse = loadState(aggregateId, tenantId);
+    T state = stateBuilder.buildState(aggregateResponse.events);
+    Long expectedVersion = getExpectedVersion(aggregateResponse);
+    List<Event> events = update.apply(state);
+    storeBatch(aggregateId, tenantId, new EventBatch(events, expectedVersion));
+  }
+
   public AggregateDelete<T> deleteByType() {
-    return getDeleteToken(apiRoot.newBuilder()
-        .addPathSegment("aggregates")
-        .addPathSegment(aggregateType)
-    );
+    return getDeleteToken(getAggregateTypeUrl());
   }
 
   public AggregateDelete<T> deleteByType(UUID tenantId) {
-    return getDeleteToken(apiRoot.newBuilder()
-            .addPathSegment("aggregates")
-            .addPathSegment(aggregateType),
-        tenantId
-    );
+    return getDeleteToken(getAggregateTypeUrl(), tenantId);
   }
 
   public AggregateDelete<T> deleteById(UUID aggregateId) {
-    return getDeleteToken(apiRoot.newBuilder()
-        .addPathSegment("aggregates")
-        .addPathSegment(aggregateType)
-        .addPathSegment(aggregateId.toString())
-    );
+    return getDeleteToken(getAggregateUrl(aggregateId));
   }
 
   public AggregateDelete<T> deleteById(UUID aggregateId, UUID tenantId) {
-    return getDeleteToken(apiRoot.newBuilder()
-            .addPathSegment("aggregates")
-            .addPathSegment(aggregateType)
-            .addPathSegment(aggregateId.toString()),
-        tenantId
-    );
+    return getDeleteToken(getAggregateUrl(aggregateId), tenantId);
   }
 
   /**
    * Check if an aggregate exists.
    *
+   * @param aggregateId ID of aggregate to check.
    * @return True if aggregate with ID exists, false if not.
    */
   public boolean exists(UUID aggregateId) {
-    HttpUrl url = getAggregateUrl(aggregateId).build();
-
     try {
+      HttpUrl url = getAggregateUrl(aggregateId).build();
       return client.head(url, Response::code) == 200;
     } catch (ApiException e) {
       if (e.getStatusCode() == 404) {
@@ -161,12 +149,13 @@ public class AggregateClient<T> {
   /**
    * Check if an aggregate exists for the given tenant.
    *
+   * @param aggregateId ID of aggregate to check.
+   * @param tenantId    ID of tenant.
    * @return True if aggregate with ID exists, false if not.
    */
   public boolean exists(UUID aggregateId, UUID tenantId) {
-    HttpUrl url = getAggregateUrl(aggregateId).build();
-
     try {
+      HttpUrl url = getAggregateUrl(aggregateId).build();
       return client.head(url, Response::code, tenantId) == 200;
     } catch (ApiException e) {
       if (e.getStatusCode() == 404) {
@@ -175,6 +164,10 @@ public class AggregateClient<T> {
         throw e;
       }
     }
+  }
+
+  private Long getExpectedVersion(LoadAggregateResponse aggregateResponse) {
+    return useOptimisticConcurrencyOnUpdate ? aggregateResponse.aggregateVersion : null;
   }
 
   private AggregateDelete<T> getDeleteToken(HttpUrl.Builder urlBuilder) {
@@ -193,37 +186,50 @@ public class AggregateClient<T> {
 
   private LoadAggregateResponse loadState(UUID aggregateId) {
     HttpUrl url = getAggregateUrl(aggregateId).build();
-
     return client.get(url, LoadAggregateResponse.class);
   }
 
   private LoadAggregateResponse loadState(UUID aggregateId, UUID tenantId) {
     HttpUrl url = getAggregateUrl(aggregateId).build();
-
     return client.get(url, LoadAggregateResponse.class, tenantId);
   }
 
   private void storeBatch(UUID aggregateId, EventBatch eventBatch) {
     if (eventBatch.getEvents().isEmpty()) return;
 
-    HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
-
     try {
+      HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
       client.post(url, eventBatch);
     } catch (ApiException e) {
-      if (e.getStatusCode() == 409) {
-        throw new ConcurrencyException(409, e.getMessage());
-      } else {
-        throw e;
-      }
+      handleConcurrencyException(e);
     }
   }
 
+  private void storeBatch(UUID aggregateId, UUID tenantId, EventBatch eventBatch) {
+    if (eventBatch.getEvents().isEmpty()) return;
+
+    try {
+      HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
+      client.post(url, eventBatch, tenantId);
+    } catch (ApiException e) {
+      handleConcurrencyException(e);
+    }
+  }
+
+  private void handleConcurrencyException(ApiException e) {
+    if (e.getStatusCode() == 409) {
+      throw new ConcurrencyException(409, e.getMessage());
+    } else {
+      throw e;
+    }
+  }
+
+  private HttpUrl.Builder getAggregateTypeUrl() {
+    return apiRoot.newBuilder().addPathSegment("aggregates").addPathSegment(aggregateType);
+  }
+
   private HttpUrl.Builder getAggregateUrl(UUID aggregateId) {
-    return apiRoot.newBuilder()
-        .addPathSegment("aggregates")
-        .addPathSegment(aggregateType)
-        .addPathSegment(aggregateId.toString());
+    return getAggregateTypeUrl().addPathSegment(aggregateId.toString());
   }
 
   public static class Builder<T> {
