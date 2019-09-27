@@ -247,6 +247,24 @@ public class ProjectionClientIT {
   }
 
   @Test
+  public void testDeleteSingleProjections() {
+    ProjectionClient projectionClient = getProjectionClient();
+
+    String projectionName = "payments";
+    projectionClient.deleteSingleProjections(projectionName);
+    verify(apiCallback, times(1)).singleProjectionsDeleted(projectionName);
+  }
+
+  @Test
+  public void testDeleteAggregatedProjection() {
+    ProjectionClient projectionClient = getProjectionClient();
+
+    String projectionName = "payments-per-month";
+    projectionClient.deleteAggregatedProjection(projectionName);
+    verify(apiCallback, times(1)).aggregatedProjectionsDeleted(projectionName);
+  }
+
+  @Test
   public void testGetDefinition() {
     ProjectionClient projectionClient = getProjectionClient();
 

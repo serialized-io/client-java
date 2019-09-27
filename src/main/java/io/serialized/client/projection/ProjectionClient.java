@@ -12,6 +12,9 @@ import okhttp3.OkHttpClient;
 import java.io.IOException;
 import java.util.Map;
 
+import static io.serialized.client.projection.ProjectionType.AGGREGATED;
+import static io.serialized.client.projection.ProjectionType.SINGLE;
+
 public class ProjectionClient {
 
   private final SerializedOkHttpClient client;
@@ -61,6 +64,24 @@ public class ProjectionClient {
     client.delete(url);
   }
 
+  /**
+   * This call deletes all existing projections and starts a rebuild from the beginning of the event history.
+   * Keep in mind that this might take a while.
+   */
+  public void deleteSingleProjections(String projectionName) {
+    HttpUrl url = pathForProjections(projectionName, SINGLE).build();
+    client.delete(url);
+  }
+
+  /**
+   * Delete/recreate aggregated projections.
+   * This call deletes all existing projections and starts a rebuild from the beginning of the event history.
+   */
+  public void deleteAggregatedProjection(String projectionName) {
+    HttpUrl url = pathForProjections(projectionName, AGGREGATED).build();
+    client.delete(url);
+  }
+
   public ProjectionDefinition getDefinition(String projectionName) {
     HttpUrl url = pathForDefinitions().addPathSegment(projectionName).build();
     return client.get(url, ProjectionDefinition.class);
@@ -75,6 +96,13 @@ public class ProjectionClient {
     return apiRoot.newBuilder()
         .addPathSegment("projections")
         .addPathSegment("definitions");
+  }
+
+  private HttpUrl.Builder pathForProjections(String projectionName, ProjectionType type) {
+    return apiRoot.newBuilder()
+        .addPathSegment("projections")
+        .addPathSegment(type.name().toLowerCase())
+        .addPathSegment(projectionName);
   }
 
   public <T> ProjectionResponse<T> query(ProjectionQuery query) {
