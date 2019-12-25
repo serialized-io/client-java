@@ -4,6 +4,7 @@ This is the official Java client for Serialized.
 
 [![Build Status](https://travis-ci.org/serialized-io/client-java.svg?branch=master)](https://travis-ci.org/serialized-io/client-java)
 [![Maven Central](https://img.shields.io/maven-central/v/io.serialized/serialized-client.svg)](https://maven-badges.herokuapp.com/maven-central/io.serialized/serialized-client)
+[![](https://tokei.rs/b1/github/serialized-io/client-java)](https://github.com/serialized-io/client-java)
 
 ## Getting started
 
