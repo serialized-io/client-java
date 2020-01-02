@@ -182,9 +182,31 @@ Projection<OrderCount> projectionResponse = projectionClient.query(aggregated("o
 OrderCount theCount = projectionResponse.data;
 ```
 
+## Defining reactions
+
+Create a client like this:
+
+```
+ReactionClient reactionClient = ReactionClient.reactionClient(config).build();
+```
+
+Define what action should be triggered given your event:
+
+```
+reactionClient.createOrUpdate(newReactionDefinition("new-order-notifier")
+        .feed("order")
+        .reactOnEventType("OrderPlaced")
+        .action(httpAction(
+            URI.create("https://yourserver.com/notifications")
+            .build()
+        ).build());
+```
+
+For details, see the [full documentation](https://docs.serialized.io/api-reference/apis/reactions).
+
 ## Subscribing to event feeds
 
-Start by creating a `FeedClient` like this
+Start by creating a `FeedClient` like this:
 ```
 FeedClient feedClient = FeedClient.feedClient(serializedConfig).build();
 ```
