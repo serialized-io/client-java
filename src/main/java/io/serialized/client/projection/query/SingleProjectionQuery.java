@@ -54,6 +54,11 @@ public class SingleProjectionQuery implements ProjectionQuery {
       return this;
     }
 
+    public Builder id(UUID projectionId) {
+      this.projectionId = projectionId.toString();
+      return this;
+    }
+
     public Builder awaitCreation(Duration duration) {
       this.duration = duration;
       return this;
