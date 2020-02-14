@@ -1,5 +1,6 @@
 package io.serialized.client.projection;
 
+import java.util.List;
 import java.util.Map;
 
 public class RawData {
@@ -11,6 +12,14 @@ public class RawData {
   }
 
   public static RawData rawData(String data) {
+    return new RawData(data);
+  }
+
+  public static RawData rawData(Boolean data) {
+    return new RawData(data);
+  }
+
+  public static RawData rawData(List<Object> data) {
     return new RawData(data);
   }
 
