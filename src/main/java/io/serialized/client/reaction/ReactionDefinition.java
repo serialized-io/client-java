@@ -65,31 +65,63 @@ public class ReactionDefinition {
       this.reactionName = reactionName;
     }
 
+    /**
+     * @param feedName Name of the feed to subscribe to.
+     */
     public DefinitionBuilder feed(String feedName) {
       this.feedName = feedName;
       return this;
     }
 
+    /**
+     * @param reactOnEventType Event type to react on.
+     */
     public DefinitionBuilder reactOnEventType(String reactOnEventType) {
       this.reactOnEventType = reactOnEventType;
       return this;
     }
 
+    /**
+     * @param triggerTimeField Path to event data field containing trigger time.
+     *                         If not specified, trigger time will be ASAP. Dot notation supported.
+     */
     public DefinitionBuilder triggerTimeField(String triggerTimeField) {
       this.triggerTimeField = triggerTimeField;
       return this;
     }
 
+    /**
+     * <pre>
+     *   {@code
+     *   "PT20.345S" - parses as "20.345 seconds"
+     *   "PT15M"     - parses as "15 minutes" (where a minute is 60 seconds)
+     *   "PT10H"     - parses as "10 hours" (where an hour is 3600 seconds)
+     *   "P2D"       - parses as "2 days" (where a day is 24 hours or 86400 seconds)
+     *   "P2DT3H4M"  - parses as "2 days, 3 hours and 4 minutes"
+     *   "PT-6H3M"   - parses as "-6 hours and +3 minutes"
+     *   "-PT6H3M"   - parses as "-6 hours and -3 minutes"
+     *   "-PT-6H+3M" - parses as "+6 hours and -3 minutes"
+     *   }
+     * </pre>
+     *
+     * @param offset Trigger time offset. Defined in the ISO-8601 duration format (PnDTnHnMn.nS). May be negative.
+     */
     public DefinitionBuilder offset(String offset) {
       this.offset = offset;
       return this;
     }
 
+    /**
+     * @param eventTypes Event types to cancel reaction scheduled in the future.
+     */
     public DefinitionBuilder cancelOnEventType(String... eventTypes) {
       this.cancelOnEventTypes.addAll(Arrays.asList(eventTypes));
       return this;
     }
 
+    /**
+     * @param action Action to invoke when triggered.
+     */
     public DefinitionBuilder action(Action action) {
       this.action = action;
       return this;
