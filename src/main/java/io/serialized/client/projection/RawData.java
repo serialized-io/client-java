@@ -19,6 +19,10 @@ public class RawData {
     return new RawData(data);
   }
 
+  public static RawData rawData(Number data) {
+    return new RawData(data);
+  }
+
   public static RawData rawData(List<Object> data) {
     return new RawData(data);
   }
