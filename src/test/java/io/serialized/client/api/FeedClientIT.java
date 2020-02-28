@@ -171,7 +171,7 @@ public class FeedClientIT {
   }
 
   private String getResource(String resource) throws IOException {
-    return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
+    return IOUtils.toString(getClass().getResourceAsStream(resource), UTF_8);
   }
 
 }
