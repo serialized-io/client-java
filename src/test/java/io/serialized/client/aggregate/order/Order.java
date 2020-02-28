@@ -22,7 +22,7 @@ public class Order {
     this.orderId = state.orderId();
   }
 
-  public List<Event> placeOrder(UUID orderId, long amount) {
+  public List<Event<?>> placeOrder(UUID orderId, long amount) {
     if (NEW.equals(status)) {
       return singletonList(orderPlaced(orderId.toString(), amount));
     } else {
@@ -30,7 +30,7 @@ public class Order {
     }
   }
 
-  public List<Event> cancel() {
+  public List<Event<?>> cancel() {
     if (CANCELED.equals(status)) {
       return emptyList();
     } else {

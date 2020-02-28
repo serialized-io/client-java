@@ -8,7 +8,7 @@ import java.util.UUID;
 public class AggregateRequest {
 
   public final UUID aggregateId;
-  public final List<Event> events;
+  public final List<Event<?>> events;
   private final UUID tenantId;
   private final Long expectedVersion;
 
@@ -42,7 +42,7 @@ public class AggregateRequest {
   public static class Builder {
 
     private UUID aggregateId;
-    private List<Event> events = new ArrayList<>();
+    private List<Event<?>> events = new ArrayList<>();
     private UUID tenantId;
     private Long expectedVersion;
 
@@ -55,7 +55,7 @@ public class AggregateRequest {
       return this;
     }
 
-    public Builder withEvents(List<? extends Event> events) {
+    public Builder withEvents(List<Event<?>> events) {
       this.events.addAll(events);
       return this;
     }

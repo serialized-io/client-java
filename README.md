@@ -40,7 +40,7 @@ The *state* implementation and the *aggregate root* implementation. The *state* 
  materialize the current state from the events for a given aggregate type.
 
 The *aggregate root* implementation is a Java class that contains a number of methods that handles commands.
-Each method in the aggregate root typically returns `List<Event>` that should contain `0..N` events.
+Each method in the aggregate root typically returns `List<Event<?>` that should contain `0..N` events.
 These events will be saved atomically by the client during save/update.  
 
 You can choose how to organize the command handler methods, but it's recommended to keep them in a single class for each aggregate type.
@@ -80,7 +80,7 @@ public class Order {
     this.orderId = state.orderId();
   }
 
-  public List<Event> placeOrder(UUID orderId, long amount) {
+  public List<Event<?> placeOrder(UUID orderId, long amount) {
     if (orderId.toString().equals(this.orderId)) {
       return emptyList();
     } else {
@@ -113,7 +113,7 @@ Under the hood this is achieved by including the field *expectedVersion* set to 
 ```
 OrderState orderState = new OrderState();
 Order order = new Order(orderState);
-List<Event> events = order.placeOrder(orderId, 123L);
+List<Event<?> events = order.placeOrder(orderId, 123L);
 
 orderClient.save(saveRequest().withAggregateId(orderId).withEvents(events).build());
 ```
@@ -127,7 +127,7 @@ method `update`.
 ```
 orderClient.update(orderId, orderState -> {
   Order order = new Order(orderState);
-  List<Event> events = order.cancel();
+  List<Event<?> events = order.cancel();
   return events;
 });
 ```

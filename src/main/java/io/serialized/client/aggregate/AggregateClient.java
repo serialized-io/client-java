@@ -89,7 +89,7 @@ public class AggregateClient<T> {
     LoadAggregateResponse aggregateResponse = loadState(aggregateId);
     T state = stateBuilder.buildState(aggregateResponse.events);
     Long expectedVersion = getExpectedVersion(aggregateResponse);
-    List<Event> events = update.apply(state);
+    List<Event<?>> events = update.apply(state);
     storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
 
@@ -107,7 +107,7 @@ public class AggregateClient<T> {
     LoadAggregateResponse aggregateResponse = loadState(aggregateId, tenantId);
     T state = stateBuilder.buildState(aggregateResponse.events);
     Long expectedVersion = getExpectedVersion(aggregateResponse);
-    List<Event> events = update.apply(state);
+    List<Event<?>> events = update.apply(state);
     storeBatch(aggregateId, tenantId, new EventBatch(events, expectedVersion));
   }
 
@@ -279,7 +279,7 @@ public class AggregateClient<T> {
     String aggregateId;
     String aggregateType;
     long aggregateVersion;
-    List<Event> events;
+    List<Event<?>> events;
 
   }
 

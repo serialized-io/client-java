@@ -68,7 +68,7 @@ public class AggregateClientIT {
 
     OrderState orderState = new OrderState();
     Order order = new Order(orderState);
-    List<Event> events = order.placeOrder(orderId, 123L);
+    List<Event<?>> events = order.placeOrder(orderId, 123L);
 
     orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build());
   }
@@ -100,7 +100,7 @@ public class AggregateClientIT {
 
     OrderState orderState = new OrderState();
     Order order = new Order(orderState);
-    List<Event> events = order.placeOrder(orderId, 123L);
+    List<Event<?>> events = order.placeOrder(orderId, 123L);
 
     assertThrows(ConcurrencyException.class, () ->
         orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build())
@@ -215,7 +215,7 @@ public class AggregateClientIT {
     verify(apiCallback).eventsStored(eq(aggregateId), eventsStoredCaptor.capture());
 
     EventBatch eventsStored = eventsStoredCaptor.getValue();
-    List<Event> events = eventsStored.getEvents();
+    List<Event<?>> events = eventsStored.getEvents();
     assertThat(events).hasSize(1);
     Event event = events.get(0);
     assertThat(event.getEventType()).isEqualTo(OrderPlaced.class.getSimpleName());
@@ -229,7 +229,7 @@ public class AggregateClientIT {
 
     UUID aggregateId = UUID.randomUUID();
     UUID tenantId = UUID.randomUUID();
-    List<Event> events = singletonList(orderPlaced("order-123", 1234L));
+    List<Event<?>> events = singletonList(orderPlaced("order-123", 1234L));
     when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class), any(UUID.class))).thenReturn(200);
 
     AggregateRequest aggregateRequest = AggregateRequest.saveRequest().withTenantId(tenantId).withAggregateId(aggregateId).withEvents(events).build();
@@ -240,7 +240,7 @@ public class AggregateClientIT {
 
     EventBatch eventsStored = eventsStoredCaptor.getValue();
     assertThat(eventsStored.getEvents()).hasSize(1);
-    Event event = eventsStored.getEvents().get(0);
+    Event<?> event = eventsStored.getEvents().get(0);
     assertThat(event.getEventType()).isEqualTo(OrderPlaced.class.getSimpleName());
     assertNotNull(event.getData());
   }

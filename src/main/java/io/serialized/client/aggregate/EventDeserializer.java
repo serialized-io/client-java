@@ -14,7 +14,7 @@ import java.util.UUID;
 
 import static io.serialized.client.aggregate.Event.newEvent;
 
-class EventDeserializer extends StdDeserializer<Event> {
+class EventDeserializer extends StdDeserializer<Event<?>> {
 
   private Map<String, Class> eventTypes;
 
@@ -30,7 +30,7 @@ class EventDeserializer extends StdDeserializer<Event> {
   }
 
   @Override
-  public Event deserialize(JsonParser jp, DeserializationContext context) throws IOException {
+  public Event<?> deserialize(JsonParser jp, DeserializationContext context) throws IOException {
     JsonNode node = jp.getCodec().readTree(jp);
     String eventId = node.get("eventId").asText();
     String eventType = node.get("eventType").asText();

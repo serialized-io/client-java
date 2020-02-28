@@ -7,12 +7,12 @@ import java.util.Optional;
 public class EventBatch {
 
   private Long expectedVersion;
-  private List<Event> events;
+  private List<Event<?>> events;
 
   public EventBatch() {
   }
 
-  public EventBatch(List<Event> events, Long expectedVersion) {
+  public EventBatch(List<Event<?>> events, Long expectedVersion) {
     this.events = events;
     this.expectedVersion = expectedVersion;
   }
@@ -21,7 +21,7 @@ public class EventBatch {
     return expectedVersion;
   }
 
-  public List<Event> getEvents() {
+  public List<Event<?>> getEvents() {
     return Optional.ofNullable(events).map(Collections::unmodifiableList).orElseGet(Collections::emptyList);
   }
 
