@@ -2,15 +2,16 @@ package io.serialized.client.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import io.dropwizard.testing.junit.DropwizardClientRule;
+import io.dropwizard.testing.junit5.DropwizardClientExtension;
+import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.tenant.Tenant;
 import io.serialized.client.tenant.TenantApiStub;
 import io.serialized.client.tenant.TenantClient;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
@@ -18,21 +19,21 @@ import java.util.List;
 import java.util.UUID;
 
 import static io.serialized.client.tenant.Tenant.newTenant;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(DropwizardExtensionsSupport.class)
 public class TenantClientIT {
 
   private final TenantApiStub.TenantApiCallback apiCallback = mock(TenantApiStub.TenantApiCallback.class);
 
-  @Rule
-  public final DropwizardClientRule dropwizard = new DropwizardClientRule(new TenantApiStub(apiCallback));
+  public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new TenantApiStub(apiCallback));
 
-  @Before
+  @BeforeEach
   public void setUp() {
     dropwizard.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
   }
@@ -54,8 +55,8 @@ public class TenantClientIT {
     verify(apiCallback, times(1)).tenantAdded(captor.capture());
 
     Tenant value = captor.getValue();
-    assertThat(value.tenantId(), is(tenantId.toString()));
-    assertThat(value.reference(), is("my-ref"));
+    assertThat(value.tenantId()).isEqualTo(tenantId.toString());
+    assertThat(value.reference()).isEqualTo("my-ref");
   }
 
   @Test
@@ -76,11 +77,11 @@ public class TenantClientIT {
     when(apiCallback.tenantsLoaded()).thenReturn(getResource("/tenant/tenants.json"));
 
     List<Tenant> tenants = tenantClient.listTenants();
-    assertThat(tenants.size(), is(1));
-    assertThat(tenants.get(0).tenantId(), is("a8c929ac-b59d-429b-8570-99c9a84f6b2c"));
-    assertThat(tenants.get(0).tenantNumber(), is("1"));
-    assertThat(tenants.get(0).addedAt(), is(1568105144988L));
-    assertThat(tenants.get(0).deleted(), is(false));
+    assertThat(tenants).hasSize(1);
+    assertThat(tenants.get(0).tenantId()).isEqualTo("a8c929ac-b59d-429b-8570-99c9a84f6b2c");
+    assertThat(tenants.get(0).tenantNumber()).isEqualTo("1");
+    assertThat(tenants.get(0).addedAt()).isEqualTo(1568105144988L);
+    assertThat(tenants.get(0).deleted()).isEqualTo(false);
   }
 
   private TenantClient getTenantClient() {
@@ -94,7 +95,7 @@ public class TenantClientIT {
   }
 
   private String getResource(String resource) throws IOException {
-    return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
+    return IOUtils.toString(getClass().getResourceAsStream(resource), UTF_8);
   }
 
 }

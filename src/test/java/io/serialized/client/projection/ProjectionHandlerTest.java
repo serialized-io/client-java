@@ -1,12 +1,11 @@
 package io.serialized.client.projection;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 public class ProjectionHandlerTest {
 
@@ -24,7 +23,7 @@ public class ProjectionHandlerTest {
       // expected
     }
 
-    assertThat(builder.build().getFunctionUri(), is(functionUri));
+    assertThat(builder.build().getFunctionUri()).isEqualTo(functionUri);
   }
 
   @Test
@@ -40,7 +39,7 @@ public class ProjectionHandlerTest {
       // expected
     }
 
-    assertThat(builder.build().getFunctions().iterator().next().getFunction(), is("add"));
+    assertThat(builder.build().getFunctions().iterator().next().getFunction()).isEqualTo("add");
   }
 
 }

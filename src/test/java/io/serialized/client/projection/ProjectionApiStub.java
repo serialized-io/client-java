@@ -1,6 +1,5 @@
 package io.serialized.client.projection;
 
-import io.dropwizard.jersey.params.IntParam;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.constraints.Max;
@@ -17,6 +16,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.util.OptionalInt;
 import java.util.UUID;
 
 import static io.serialized.client.SerializedOkHttpClient.SERIALIZED_TENANT_ID;
@@ -88,10 +88,10 @@ public class ProjectionApiStub {
   public Response listSingleProjections(@PathParam("projectionName") String projectionName,
                                         @QueryParam("reference") String reference,
                                         @QueryParam("sort") @DefaultValue("createdAt") String sort,
-                                        @QueryParam("skip") @DefaultValue("0") IntParam skip,
-                                        @QueryParam("limit") @DefaultValue("100") @Min(1) @Max(1000) IntParam limit) {
+                                        @QueryParam("skip") @DefaultValue("0") OptionalInt skip,
+                                        @QueryParam("limit") @DefaultValue("100") @Min(1) @Max(1000) OptionalInt limit) {
 
-    Object responseBody = callback.singleProjectionsFetched(projectionName, reference, sort, skip.get(), limit.get());
+    Object responseBody = callback.singleProjectionsFetched(projectionName, reference, sort, skip.getAsInt(), limit.getAsInt());
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 

@@ -3,18 +3,23 @@ package io.serialized.client.api;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.google.common.collect.ImmutableMap;
-import io.dropwizard.testing.junit.DropwizardClientRule;
+import io.dropwizard.testing.junit5.DropwizardClientExtension;
+import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.ConcurrencyException;
 import io.serialized.client.SerializedClientConfig;
-import io.serialized.client.aggregate.*;
+import io.serialized.client.aggregate.AggregateApiStub;
+import io.serialized.client.aggregate.AggregateClient;
+import io.serialized.client.aggregate.AggregateRequest;
+import io.serialized.client.aggregate.Event;
+import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.aggregate.order.Order;
 import io.serialized.client.aggregate.order.OrderPlaced;
 import io.serialized.client.aggregate.order.OrderState;
 import io.serialized.client.aggregate.order.OrderStatus;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
@@ -27,18 +32,25 @@ import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(DropwizardExtensionsSupport.class)
 public class AggregateClientIT {
 
   private final AggregateApiStub.AggregateApiCallback apiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
 
-  @Rule
-  public final DropwizardClientRule dropwizard = new DropwizardClientRule(new AggregateApiStub(apiCallback));
+  public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new AggregateApiStub(apiCallback));
 
-  @Before
+  @BeforeEach
   public void setUp() {
     dropwizard.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
   }
@@ -75,7 +87,7 @@ public class AggregateClientIT {
     orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvent(event).build());
   }
 
-  @Test(expected = ConcurrencyException.class)
+  @Test
   public void testConcurrencyExceptionDuringSave() {
     UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
     String aggregateType = "order";
@@ -90,7 +102,9 @@ public class AggregateClientIT {
     Order order = new Order(orderState);
     List<Event> events = order.placeOrder(orderId, 123L);
 
-    orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build());
+    assertThrows(ConcurrencyException.class, () ->
+        orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build())
+    );
   }
 
   @Test
@@ -137,7 +151,7 @@ public class AggregateClientIT {
     verify(apiCallback).aggregateTypeDeletePerformed(aggregateType, deleteToken.toString());
   }
 
-  @Test(expected = ConcurrencyException.class)
+  @Test
   public void testConcurrencyExceptionDuringUpdate() throws IOException {
     UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
     String aggregateType = "order";
@@ -149,7 +163,9 @@ public class AggregateClientIT {
     when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(409);
 
-    orderClient.update(orderId, orderState -> new Order(orderState).cancel());
+    assertThrows(ConcurrencyException.class, () ->
+        orderClient.update(orderId, orderState -> new Order(orderState).cancel())
+    );
   }
 
   @Test
@@ -164,7 +180,7 @@ public class AggregateClientIT {
     when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
 
     orderClient.update(orderId, orderState -> {
-      assertThat(orderState.status(), is(OrderStatus.PLACED));
+      assertThat(orderState.status()).isEqualTo(OrderStatus.PLACED);
       return emptyList();
     });
 
@@ -200,9 +216,9 @@ public class AggregateClientIT {
 
     EventBatch eventsStored = eventsStoredCaptor.getValue();
     List<Event> events = eventsStored.getEvents();
-    assertThat(events.size(), is(1));
+    assertThat(events).hasSize(1);
     Event event = events.get(0);
-    assertThat(event.getEventType(), is(OrderPlaced.class.getSimpleName()));
+    assertThat(event.getEventType()).isEqualTo(OrderPlaced.class.getSimpleName());
     assertNotNull(event.getData());
   }
 
@@ -223,9 +239,9 @@ public class AggregateClientIT {
     verify(apiCallback).eventsStored(eq(aggregateId), eventsStoredCaptor.capture(), eq(tenantId));
 
     EventBatch eventsStored = eventsStoredCaptor.getValue();
-    assertThat(eventsStored.getEvents().size(), is(1));
+    assertThat(eventsStored.getEvents()).hasSize(1);
     Event event = eventsStored.getEvents().get(0);
-    assertThat(event.getEventType(), is(OrderPlaced.class.getSimpleName()));
+    assertThat(event.getEventType()).isEqualTo(OrderPlaced.class.getSimpleName());
     assertNotNull(event.getData());
   }
 

@@ -1,12 +1,18 @@
 package io.serialized.client.feed;
 
-import io.dropwizard.jersey.params.IntParam;
-import io.dropwizard.jersey.params.LongParam;
-
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -45,10 +51,11 @@ public class FeedApiStub {
   @GET
   @Path("{feedName}")
   public Response feedEntries(@PathParam("feedName") String feedName,
-                              @QueryParam("before") @DefaultValue("0") LongParam before,
-                              @QueryParam("since") @DefaultValue("0") LongParam since,
-                              @QueryParam("limit") @DefaultValue("1000") @Min(1) @Max(1000) IntParam limit) {
-    QueryParams queryParams = new QueryParams(limit.get(), since.get(), before.get());
+                              @QueryParam("before") @DefaultValue("0") OptionalLong before,
+                              @QueryParam("since") @DefaultValue("0") OptionalLong since,
+                              @QueryParam("limit") @DefaultValue("1000") @Min(1) @Max(1000) OptionalInt limit) {
+
+    QueryParams queryParams = new QueryParams(limit.getAsInt(), since.getAsLong(), before.getAsLong());
     Object responseBody = callback.feedEntriesLoaded(feedName, queryParams);
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }

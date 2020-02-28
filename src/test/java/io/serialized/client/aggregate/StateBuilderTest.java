@@ -3,14 +3,13 @@ package io.serialized.client.aggregate;
 import io.serialized.client.aggregate.order.OrderPlaced;
 import io.serialized.client.aggregate.order.OrderState;
 import io.serialized.client.aggregate.order.OrderStatus;
-import org.hamcrest.core.Is;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.UUID;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class StateBuilderTest {
 
@@ -27,7 +26,7 @@ public class StateBuilderTest {
 
     OrderState orderState = orderStateBuilder.buildState(events);
 
-    assertThat(orderState.status(), Is.is(OrderStatus.PLACED));
+    assertThat(orderState.status()).isEqualTo(OrderStatus.PLACED);
   }
 
 }

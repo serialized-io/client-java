@@ -1,14 +1,15 @@
 package io.serialized.client.api;
 
-import io.dropwizard.testing.junit.DropwizardClientRule;
+import io.dropwizard.testing.junit5.DropwizardClientExtension;
+import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.feed.Feed;
 import io.serialized.client.feed.FeedApiStub;
 import io.serialized.client.feed.FeedClient;
 import io.serialized.client.feed.FeedResponse;
 import org.apache.commons.io.IOUtils;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
@@ -17,20 +18,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(DropwizardExtensionsSupport.class)
 public class FeedClientIT {
 
   private FeedApiStub.FeedApiCallback apiCallback = mock(FeedApiStub.FeedApiCallback.class);
 
-  @Rule
-  public final DropwizardClientRule dropwizard = new DropwizardClientRule(new FeedApiStub(apiCallback));
+  public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new FeedApiStub(apiCallback));
 
   @Test
   public void listFeeds() throws IOException {
@@ -40,11 +40,11 @@ public class FeedClientIT {
     when(apiCallback.feedOverviewLoaded()).thenReturn(getResource("/feed/feeds.json"));
 
     List<Feed> feeds = feedClient.request().listFeeds();
-    assertThat(feeds.size(), is(1));
-    assertThat(feeds.get(0).aggregateType(), is("games"));
-    assertThat(feeds.get(0).aggregateCount(), is(10L));
-    assertThat(feeds.get(0).batchCount(), is(48L));
-    assertThat(feeds.get(0).eventCount(), is(96L));
+    assertThat(feeds).hasSize(1);
+    assertThat(feeds.get(0).aggregateType()).isEqualTo("games");
+    assertThat(feeds.get(0).aggregateCount()).isEqualTo(10L);
+    assertThat(feeds.get(0).batchCount()).isEqualTo(48L);
+    assertThat(feeds.get(0).eventCount()).isEqualTo(96L);
   }
 
   @Test
@@ -54,7 +54,7 @@ public class FeedClientIT {
 
     when(apiCallback.currentSequenceNumberRequested()).thenReturn(7L);
 
-    assertThat(feedClient.feed("games").getCurrentSequenceNumber(), is(7L));
+    assertThat(feedClient.feed("games").getCurrentSequenceNumber()).isEqualTo(7L);
   }
 
   @Test
@@ -64,7 +64,7 @@ public class FeedClientIT {
 
     when(apiCallback.currentGlobalSequenceNumberRequested()).thenReturn(777L);
 
-    assertThat(feedClient.all().getCurrentSequenceNumber(), is(777L));
+    assertThat(feedClient.all().getCurrentSequenceNumber()).isEqualTo(777L);
   }
 
   @Test
@@ -76,8 +76,8 @@ public class FeedClientIT {
 
     FeedResponse feedResponse = feedClient.all().execute(0);
 
-    assertThat(feedResponse.entries().size(), is(1));
-    assertThat(feedResponse.events().size(), is(1));
+    assertThat(feedResponse.entries()).hasSize(1);
+    assertThat(feedResponse.events()).hasSize(1);
   }
 
   @Test
@@ -91,9 +91,9 @@ public class FeedClientIT {
 
     FeedResponse feedResponse = feedClient.feed(feedName).execute(0);
 
-    assertThat(queryParams.getValue().getLimit(), is(1000));
-    assertThat(feedResponse.entries().size(), is(48));
-    assertThat(feedResponse.events().size(), is(96));
+    assertThat(queryParams.getValue().getLimit()).isEqualTo(1000);
+    assertThat(feedResponse.entries()).hasSize(48);
+    assertThat(feedResponse.events()).hasSize(96);
   }
 
   @Test
@@ -108,9 +108,9 @@ public class FeedClientIT {
 
     FeedResponse feedResponse = feedClient.feed(feedName).limit(limit).execute(0);
 
-    assertThat(queryParams.getValue().getLimit(), is(10));
-    assertThat(feedResponse.entries().size(), is(10));
-    assertThat(feedResponse.events().size(), is(20));
+    assertThat(queryParams.getValue().getLimit()).isEqualTo(10);
+    assertThat(feedResponse.entries()).hasSize(10);
+    assertThat(feedResponse.events()).hasSize(20);
   }
 
   @Test
@@ -125,10 +125,10 @@ public class FeedClientIT {
 
     FeedResponse feedResponse = feedClient.feed(feedName).limit(limit).execute(3);
 
-    assertThat(queryParams.getValue().getLimit(), is(10));
-    assertThat(queryParams.getValue().getSince(), is(3L));
-    assertThat(feedResponse.entries().size(), is(10));
-    assertThat(feedResponse.events().size(), is(20));
+    assertThat(queryParams.getValue().getLimit()).isEqualTo(10);
+    assertThat(queryParams.getValue().getSince()).isEqualTo(3L);
+    assertThat(feedResponse.entries().size()).isEqualTo(10);
+    assertThat(feedResponse.events().size()).isEqualTo(20);
   }
 
   @Test
@@ -152,13 +152,13 @@ public class FeedClientIT {
       lastProcessedEntry.set(feedEntry.sequenceNumber());
     });
 
-    assertThat(queryParams.getValue().getLimit(), is(10));
-    assertThat(queryParams.getValue().getSince(), is(3L));
+    assertThat(queryParams.getValue().getLimit()).isEqualTo(10);
+    assertThat(queryParams.getValue().getSince()).isEqualTo(3L);
 
-    assertThat(entries.get(), is(10));
-    assertThat(events.get(), is(20));
+    assertThat(entries.get()).isEqualTo(10);
+    assertThat(events.get()).isEqualTo(20);
 
-    assertThat(lastProcessedEntry.get(), is(13L));
+    assertThat(lastProcessedEntry.get()).isEqualTo(13L);
   }
 
   private FeedClient getFeedClient() {

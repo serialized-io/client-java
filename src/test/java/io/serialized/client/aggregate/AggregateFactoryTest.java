@@ -3,13 +3,12 @@ package io.serialized.client.aggregate;
 import io.serialized.client.aggregate.order.Order;
 import io.serialized.client.aggregate.order.OrderPlaced;
 import io.serialized.client.aggregate.order.OrderState;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static io.serialized.client.aggregate.AggregateFactory.newFactory;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AggregateFactoryTest {
 
@@ -23,8 +22,8 @@ public class AggregateFactoryTest {
     AggregateFactory<Order, OrderState> orderFactory = newFactory(Order::new, orderStateBuilder);
     Order order = orderFactory.fromCommands(aggregate -> aggregate.placeOrder(orderId, 1000));
 
-    assertThat(order.placeOrder(orderId, 1000).size(), is(0));
-    assertThat(order.cancel().size(), is(1));
+    assertThat(order.placeOrder(orderId, 1000)).isEqualTo(0);
+    assertThat(order.cancel()).hasSize(1);
   }
 
 }

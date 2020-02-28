@@ -1,14 +1,15 @@
 package io.serialized.client.api;
 
-import io.dropwizard.testing.junit.DropwizardClientRule;
+import io.dropwizard.testing.junit5.DropwizardClientExtension;
+import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.reaction.ReactionApiStub;
 import io.serialized.client.reaction.ReactionClient;
 import io.serialized.client.reaction.ReactionDefinition;
 import io.serialized.client.reaction.ReactionDefinitions;
 import org.apache.commons.io.IOUtils;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
@@ -17,20 +18,20 @@ import java.net.URI;
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.reaction.Actions.httpAction;
 import static io.serialized.client.reaction.ReactionDefinitions.newDefinitionList;
-import static java.util.Arrays.asList;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(DropwizardExtensionsSupport.class)
 public class ReactionClientIT {
 
   private final ReactionApiStub.ReactionApiCallback apiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
 
-  @Rule
-  public final DropwizardClientRule dropwizard = new DropwizardClientRule(new ReactionApiStub(apiCallback));
+  public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new ReactionApiStub(apiCallback));
 
   @Test
   public void testCreateDefinitionFromJson() throws IOException {
@@ -83,10 +84,10 @@ public class ReactionClientIT {
     verify(apiCallback, times(1)).definitionCreated(captor.capture());
 
     ReactionDefinition value = captor.getValue();
-    assertThat(value.getReactionName(), is(reactionName));
-    assertThat(value.getFeedName(), is(feedName));
-    assertThat(value.getReactOnEventType(), is(eventType));
-    assertThat(value.getAction().getTargetUri(), is(targetUri));
+    assertThat(value.getReactionName()).isEqualTo(reactionName);
+    assertThat(value.getFeedName()).isEqualTo(feedName);
+    assertThat(value.getReactOnEventType()).isEqualTo(eventType);
+    assertThat(value.getAction().getTargetUri()).isEqualTo(targetUri);
   }
 
   @Test
@@ -112,10 +113,10 @@ public class ReactionClientIT {
     verify(apiCallback, times(1)).definitionUpdated(captor.capture());
 
     ReactionDefinition value = captor.getValue();
-    assertThat(value.getReactionName(), is(reactionName));
-    assertThat(value.getFeedName(), is(feedName));
-    assertThat(value.getReactOnEventType(), is(eventType));
-    assertThat(value.getAction().getTargetUri(), is(targetUri));
+    assertThat(value.getReactionName()).isEqualTo(reactionName);
+    assertThat(value.getFeedName()).isEqualTo(feedName);
+    assertThat(value.getReactOnEventType()).isEqualTo(eventType);
+    assertThat(value.getAction().getTargetUri()).isEqualTo(targetUri);
   }
 
   @Test
@@ -147,10 +148,10 @@ public class ReactionClientIT {
 
     ReactionDefinition definition = reactionClient.getDefinition(reactionName);
 
-    assertThat(definition.getReactionName(), is(reactionName));
-    assertThat(definition.getFeedName(), is(feedName));
-    assertThat(definition.getReactOnEventType(), is(eventType));
-    assertThat(definition.getAction().getTargetUri(), is(targetUri));
+    assertThat(definition.getReactionName()).isEqualTo(reactionName);
+    assertThat(definition.getFeedName()).isEqualTo(feedName);
+    assertThat(definition.getReactOnEventType()).isEqualTo(eventType);
+    assertThat(definition.getAction().getTargetUri()).isEqualTo(targetUri);
   }
 
   @Test
@@ -163,7 +164,7 @@ public class ReactionClientIT {
     String feedName = "orders";
     String eventType = "OrderPlacedEvent";
 
-    ReactionDefinitions expected = newDefinitionList(asList(ReactionDefinition.newReactionDefinition(reactionName)
+    ReactionDefinitions expected = newDefinitionList(singletonList(ReactionDefinition.newReactionDefinition(reactionName)
         .reactOnEventType(eventType)
         .feed(feedName)
         .action(httpAction(targetUri).build())
@@ -174,10 +175,10 @@ public class ReactionClientIT {
     ReactionDefinitions reactionDefinitions = reactionClient.listDefinitions();
 
     ReactionDefinition definition = reactionDefinitions.getDefinitions().get(0);
-    assertThat(definition.getReactionName(), is(reactionName));
-    assertThat(definition.getFeedName(), is(feedName));
-    assertThat(definition.getReactOnEventType(), is(eventType));
-    assertThat(definition.getAction().getTargetUri(), is(targetUri));
+    assertThat(definition.getReactionName()).isEqualTo(reactionName);
+    assertThat(definition.getFeedName()).isEqualTo(feedName);
+    assertThat(definition.getReactOnEventType()).isEqualTo(eventType);
+    assertThat(definition.getAction().getTargetUri()).isEqualTo(targetUri);
   }
 
   private ReactionClient getReactionClient() {
@@ -193,7 +194,7 @@ public class ReactionClientIT {
   }
 
   private String getResource(String resource) throws IOException {
-    return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
+    return IOUtils.toString(getClass().getResourceAsStream(resource), UTF_8);
   }
 
 }

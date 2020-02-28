@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.dropwizard.testing.junit.DropwizardClientRule;
+import io.dropwizard.testing.junit5.DropwizardClientExtension;
+import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.aggregate.AggregateApiStub;
 import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.feed.FeedApiStub;
@@ -15,9 +16,9 @@ import io.serialized.client.reaction.ReactionDefinition;
 import io.serialized.client.tenant.Tenant;
 import io.serialized.client.tenant.TenantApiStub;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
 import javax.ws.rs.client.Client;
@@ -31,9 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -41,6 +42,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(DropwizardExtensionsSupport.class)
 public class JerseyClientIT {
 
   private AggregateApiStub.AggregateApiCallback aggregateApiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
@@ -49,8 +51,7 @@ public class JerseyClientIT {
   private ProjectionApiStub.ProjectionApiCallback projectionApiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
   private TenantApiStub.TenantApiCallback tenantApiCallback = mock(TenantApiStub.TenantApiCallback.class);
 
-  @Rule
-  public final DropwizardClientRule dropwizardRule = new DropwizardClientRule(
+  public final DropwizardClientExtension dropwizardRule = new DropwizardClientExtension(
       new AggregateApiStub(aggregateApiCallback),
       new FeedApiStub(feedApiCallback),
       new ReactionApiStub(reactionApiCallback),
@@ -58,7 +59,7 @@ public class JerseyClientIT {
       new TenantApiStub(tenantApiCallback)
   );
 
-  @Before
+  @BeforeEach
   public void setUp() {
     dropwizardRule.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
   }
@@ -81,7 +82,7 @@ public class JerseyClientIT {
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .get(Map.class);
 
-    assertThat(aggregateResponse.get("apa"), is("banan"));
+    assertThat(aggregateResponse.get("apa")).isEqualTo("banan");
   }
 
   @Test
@@ -103,7 +104,7 @@ public class JerseyClientIT {
         .head();
 
     verify(aggregateApiCallback, times(1)).aggregateChecked("order", aggregateId);
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -138,7 +139,7 @@ public class JerseyClientIT {
         .delete();
 
     verify(aggregateApiCallback, times(1)).aggregateDeletePerformed("order", aggregateId, expectedToken);
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -170,7 +171,7 @@ public class JerseyClientIT {
         .delete();
 
     verify(aggregateApiCallback, times(1)).aggregateTypeDeletePerformed("order", expectedToken);
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -209,7 +210,7 @@ public class JerseyClientIT {
 
     verify(aggregateApiCallback, times(1)).eventsStored(eq(aggregateId), any(EventBatch.class));
 
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -228,7 +229,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
     List<Map> feeds = (List<Map>) response.get("feeds");
-    assertThat(feeds.size(), is(1));
+    assertThat(feeds).hasSize(1);
   }
 
   @Test
@@ -250,7 +251,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
     List entries = (List) response.get("entries");
-    assertThat(entries.size(), is(48));
+    assertThat(entries).hasSize(48);
   }
 
   @Test
@@ -271,7 +272,7 @@ public class JerseyClientIT {
         .head();
 
     Long globalSequenceNumber = Long.parseLong((String) response.getHeaders().getFirst("Serialized-SequenceNumber-Current"));
-    assertThat(globalSequenceNumber, is(sequenceNumber));
+    assertThat(globalSequenceNumber).isEqualTo(sequenceNumber);
   }
 
   @Test
@@ -292,7 +293,7 @@ public class JerseyClientIT {
         .head();
 
     Long globalSequenceNumber = Long.parseLong((String) response.getHeaders().getFirst("Serialized-SequenceNumber-Current"));
-    assertThat(globalSequenceNumber, is(sequenceNumber));
+    assertThat(globalSequenceNumber).isEqualTo(sequenceNumber);
   }
 
   @Test
@@ -312,7 +313,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
     List<Map> entries = (List<Map>) response.get("entries");
-    assertThat(entries.size(), is(1));
+    assertThat(entries.size()).isEqualTo(1);
   }
 
   @Test
@@ -332,8 +333,8 @@ public class JerseyClientIT {
         .get(Map.class);
 
     List<Map> definitions = (List<Map>) response.get("definitions");
-    assertThat(definitions.size(), is(1));
-    assertThat(definitions.get(0).get("feedName"), is("payment"));
+    assertThat(definitions).hasSize(1);
+    assertThat(definitions.get(0).get("feedName")).isEqualTo("payment");
   }
 
   @Test
@@ -361,7 +362,7 @@ public class JerseyClientIT {
         .post(Entity.json(reactionDefinition));
 
     verify(reactionApiCallback, times(1)).definitionCreated(any(ReactionDefinition.class));
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -390,7 +391,7 @@ public class JerseyClientIT {
         .put(Entity.json(reactionDefinition));
 
     verify(reactionApiCallback, times(1)).definitionUpdated(any(ReactionDefinition.class));
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -409,7 +410,7 @@ public class JerseyClientIT {
         .delete();
 
     verify(reactionApiCallback, times(1)).definitionDeleted("payment-notifier");
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -440,7 +441,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
 
-    assertThat(response.get("reactionName"), is("payment-processed-email-reaction"));
+    assertThat(response.get("reactionName")).isEqualTo("payment-processed-email-reaction");
   }
 
   @Test
@@ -459,7 +460,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
     List<Map> projections = (List<Map>) response.get("projections");
-    assertThat(projections.size(), is(1));
+    assertThat(projections).hasSize(1);
   }
 
   @Test
@@ -479,7 +480,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
     List<Map> projections = (List<Map>) response.get("definitions");
-    assertThat(projections.size(), is(1));
+    assertThat(projections).hasSize(1);
   }
 
   @Test
@@ -499,7 +500,7 @@ public class JerseyClientIT {
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .get(Map.class);
 
-    assertThat(response.get("projectionName"), is("orders"));
+    assertThat(response.get("projectionName")).isEqualTo("orders");
   }
 
 
@@ -541,7 +542,7 @@ public class JerseyClientIT {
         .post(Entity.json(projectionDefinition));
 
     verify(projectionApiCallback, times(1)).definitionCreated(any(ProjectionDefinition.class));
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -582,7 +583,7 @@ public class JerseyClientIT {
         .put(Entity.json(projectionDefinition));
 
     verify(projectionApiCallback, times(1)).definitionUpdated(any(ProjectionDefinition.class));
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -601,7 +602,7 @@ public class JerseyClientIT {
         .delete();
 
     verify(projectionApiCallback, times(1)).definitionDeleted("orders");
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -622,8 +623,8 @@ public class JerseyClientIT {
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")
         .get(Map.class);
 
-    assertThat(response.get("totalCount"), is(1));
-    assertThat(response.get("hasMore"), is(false));
+    assertThat(response.get("totalCount")).isEqualTo(1);
+    assertThat(response.get("hasMore")).isEqualTo(false);
   }
 
   @Test
@@ -642,7 +643,7 @@ public class JerseyClientIT {
         .delete();
 
     verify(projectionApiCallback, times(1)).singleProjectionsDeleted("orders");
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -664,7 +665,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
     verify(projectionApiCallback, times(1)).singleProjectionFetched("orders", "84e3565e-cd61-44e7-9769-c4663588c4dd");
-    assertThat(response.get("projectionId"), is("84e3565e-cd61-44e7-9769-c4663588c4dd"));
+    assertThat(response.get("projectionId")).isEqualTo("84e3565e-cd61-44e7-9769-c4663588c4dd");
   }
 
   @Test
@@ -685,7 +686,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
     verify(projectionApiCallback, times(1)).aggregatedProjectionFetched("order-totals");
-    assertThat(response.get("projectionId"), is("order-totals"));
+    assertThat(response.get("projectionId")).isEqualTo("order-totals");
   }
 
   @Test
@@ -704,7 +705,7 @@ public class JerseyClientIT {
         .delete();
 
     verify(projectionApiCallback, times(1)).aggregatedProjectionsDeleted("order-totals");
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -726,7 +727,7 @@ public class JerseyClientIT {
         .post(Entity.json(tenant));
 
     verify(tenantApiCallback, times(1)).tenantAdded(any(Tenant.class));
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   @Test
@@ -745,7 +746,7 @@ public class JerseyClientIT {
         .get(Map.class);
 
     List<Map> feeds = (List<Map>) response.get("tenants");
-    assertThat(feeds.size(), is(1));
+    assertThat(feeds).hasSize(1);
   }
 
   @Test
@@ -764,11 +765,11 @@ public class JerseyClientIT {
         .delete();
 
     verify(tenantApiCallback, times(1)).tenantDeleted(aggregateId);
-    assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL));
+    assertThat(response.getStatusInfo().getFamily()).isEqualTo(SUCCESSFUL);
   }
 
   private String getResource(String resource) throws IOException {
-    return IOUtils.toString(getClass().getResourceAsStream(resource), "UTF-8");
+    return IOUtils.toString(getClass().getResourceAsStream(resource), UTF_8);
   }
 
 }
