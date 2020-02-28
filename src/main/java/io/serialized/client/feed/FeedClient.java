@@ -5,6 +5,8 @@ import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.SerializedOkHttpClient;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
+import org.apache.commons.lang3.Validate;
 
 import java.io.Closeable;
 import java.time.Duration;
@@ -14,11 +16,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -41,33 +45,8 @@ public class FeedClient implements Closeable {
     return new Builder(config);
   }
 
-  /**
-   * @return Feed names and details.
-   */
-  public List<Feed> listFeeds() {
-    HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").build();
-    return client.get(url, FeedsResponse.class).feeds();
-  }
-
-  /**
-   * Gets the current project global sequence number.
-   *
-   * @return The current sequence number, i.e the sequence number of the most recently stored event batch, regardless of feed.
-   */
-  public long getCurrentGlobalSequenceNumber() {
-    HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment("_all").build();
-    return client.head(url, response -> Long.parseLong(requireNonNull(response.header(SEQUENCE_NUMBER_HEADER))));
-  }
-
-  /**
-   * Gets the current sequence number given a feed.
-   *
-   * @param feedName Name of feed
-   * @return The current sequence number, i.e the sequence number of the most recently stored event batch.
-   */
-  public long getCurrentSequenceNumber(String feedName) {
-    HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment(feedName).build();
-    return client.head(url, response -> Long.parseLong(requireNonNull(response.header(SEQUENCE_NUMBER_HEADER))));
+  public FeedRequest request() {
+    return new FeedRequest();
   }
 
   public FeedRequest feed(String feedName) {
@@ -89,9 +68,23 @@ public class FeedClient implements Closeable {
     private String feedName;
     private Duration pollDelay = Duration.ofSeconds(1);
     private boolean eagerFetching = true;
+    private UUID tenantId;
+
+    private FeedRequest() {
+    }
 
     private FeedRequest(String feedName) {
       this.feedName = feedName;
+    }
+
+    public FeedRequest withFeed(String feedName) {
+      this.feedName = feedName;
+      return this;
+    }
+
+    public FeedRequest withTenantId(UUID tenantId) {
+      this.tenantId = tenantId;
+      return this;
     }
 
     /**
@@ -130,7 +123,15 @@ public class FeedClient implements Closeable {
      * @param since Sequence number to start feeding from. Zero (0) starts from the beginning.
      */
     public FeedResponse execute(long since) {
-      return client.get(url().addQueryParameter("since", String.valueOf(since)).build(), FeedResponse.class);
+      HttpUrl.Builder urlBuilder = url();
+      Optional.ofNullable(limit).ifPresent(limit -> urlBuilder.addQueryParameter("limit", String.valueOf(limit)));
+      HttpUrl url = urlBuilder.addQueryParameter("since", String.valueOf(since)).build();
+
+      if (tenantId != null) {
+        return client.get(url, FeedResponse.class, tenantId);
+      } else {
+        return client.get(url, FeedResponse.class);
+      }
     }
 
     /**
@@ -189,10 +190,40 @@ public class FeedClient implements Closeable {
       executors.add(executor);
     }
 
+    /**
+     * @return Feed names and details.
+     */
+    public List<Feed> listFeeds() {
+      HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").build();
+
+      if (tenantId != null) {
+        return client.get(url, FeedsResponse.class, tenantId).feeds();
+      } else {
+        return client.get(url, FeedsResponse.class).feeds();
+      }
+    }
+
+    /**
+     * Gets the current sequence number for current feed.
+     * <p>
+     * Note that the 'all' feed has it's own global sequence.
+     *
+     * @return The current sequence number, i.e the sequence number of the most recently stored event batch.
+     */
+    public long getCurrentSequenceNumber() {
+      HttpUrl url = url().build();
+      Function<Response, Long> func = response -> Long.parseLong(requireNonNull(response.header(SEQUENCE_NUMBER_HEADER)));
+
+      if (tenantId != null) {
+        return client.head(url, func, tenantId);
+      } else {
+        return client.head(url, func);
+      }
+    }
+
     private HttpUrl.Builder url() {
-      HttpUrl.Builder url = apiRoot.newBuilder().addPathSegment("feeds").addPathSegment(feedName);
-      Optional.ofNullable(limit).ifPresent(limit -> url.addQueryParameter("limit", String.valueOf(limit)));
-      return url;
+      Validate.notBlank(feedName, "No feed specified");
+      return apiRoot.newBuilder().addPathSegment("feeds").addPathSegment(feedName);
     }
   }
 

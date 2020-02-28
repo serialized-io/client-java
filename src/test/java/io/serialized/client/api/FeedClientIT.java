@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -38,7 +39,7 @@ public class FeedClientIT {
 
     when(apiCallback.feedOverviewLoaded()).thenReturn(getResource("/feed/feeds.json"));
 
-    List<Feed> feeds = feedClient.listFeeds();
+    List<Feed> feeds = feedClient.request().listFeeds();
     assertThat(feeds.size(), is(1));
     assertThat(feeds.get(0).aggregateType(), is("games"));
     assertThat(feeds.get(0).aggregateCount(), is(10L));
@@ -53,7 +54,7 @@ public class FeedClientIT {
 
     when(apiCallback.currentSequenceNumberRequested()).thenReturn(7L);
 
-    assertThat(feedClient.getCurrentSequenceNumber("games"), is(7L));
+    assertThat(feedClient.feed("games").getCurrentSequenceNumber(), is(7L));
   }
 
   @Test
@@ -63,7 +64,7 @@ public class FeedClientIT {
 
     when(apiCallback.currentGlobalSequenceNumberRequested()).thenReturn(777L);
 
-    assertThat(feedClient.getCurrentGlobalSequenceNumber(), is(777L));
+    assertThat(feedClient.all().getCurrentSequenceNumber(), is(777L));
   }
 
   @Test
