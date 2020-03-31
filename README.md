@@ -178,7 +178,7 @@ public class OrderCount {
 Querying our aggregated projection is now as simple as this:
 
 ```
-Projection<OrderCount> projectionResponse = projectionClient.query(aggregated("order-count").build(OrderCount.class));
+ProjectionResponse<OrderCount> projectionResponse = projectionClient.query(aggregated("order-count").build(OrderCount.class));
 OrderCount theCount = projectionResponse.data;
 ```
 
