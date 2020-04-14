@@ -12,7 +12,7 @@ public class AggregateRequest {
   private final UUID tenantId;
   private final Long expectedVersion;
 
-  public AggregateRequest(Builder builder) {
+  private AggregateRequest(Builder builder) {
     this.aggregateId = builder.aggregateId;
     this.events = builder.events;
     this.tenantId = builder.tenantId;
