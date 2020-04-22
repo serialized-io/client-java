@@ -147,6 +147,7 @@ public class ReactionDefinition {
     private Map<String, Object> httpHeaders;
     private URI targetUri;
     private String body;
+    private Map<String, String> valueMap;
 
     public String getActionType() {
       return actionType;
@@ -164,12 +165,17 @@ public class ReactionDefinition {
       return body;
     }
 
-    static Action newAction(String actionType, URI targetUri, Map<String, Object> httpHeaders, String body) {
+    public Map<String, String> getValueMap() {
+      return valueMap;
+    }
+
+    static Action newAction(String actionType, URI targetUri, Map<String, Object> httpHeaders, String body, Map<String, String> valueMap) {
       Action action = new Action();
       action.actionType = actionType;
       action.targetUri = targetUri;
       action.httpHeaders = httpHeaders;
       action.body = body;
+      action.valueMap = valueMap;
       return action;
     }
   }
