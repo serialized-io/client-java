@@ -7,6 +7,7 @@ import io.serialized.client.feed.Feed;
 import io.serialized.client.feed.FeedApiStub;
 import io.serialized.client.feed.FeedClient;
 import io.serialized.client.feed.FeedResponse;
+import io.serialized.client.feed.GetFeedRequest;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static io.serialized.client.feed.FeedRequests.getFromAll;
+import static io.serialized.client.feed.FeedRequests.getFromFeed;
+import static io.serialized.client.feed.FeedRequests.getSequenceNumber;
+import static io.serialized.client.feed.FeedRequests.listFeeds;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,13 +38,13 @@ public class FeedClientIT {
   public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new FeedApiStub(apiCallback));
 
   @Test
-  public void listFeeds() throws IOException {
+  public void shouldListFeeds() throws IOException {
 
     FeedClient feedClient = getFeedClient();
 
     when(apiCallback.feedOverviewLoaded()).thenReturn(getResource("/feed/feeds.json"));
 
-    List<Feed> feeds = feedClient.request().listFeeds();
+    List<Feed> feeds = feedClient.execute(listFeeds().build());
     assertThat(feeds).hasSize(1);
     assertThat(feeds.get(0).aggregateType()).isEqualTo("games");
     assertThat(feeds.get(0).aggregateCount()).isEqualTo(10L);
@@ -54,7 +59,7 @@ public class FeedClientIT {
 
     when(apiCallback.currentSequenceNumberRequested()).thenReturn(7L);
 
-    assertThat(feedClient.feed("games").getCurrentSequenceNumber()).isEqualTo(7L);
+    assertThat(feedClient.execute(getSequenceNumber().withFeed("games").build())).isEqualTo(7L);
   }
 
   @Test
@@ -64,7 +69,7 @@ public class FeedClientIT {
 
     when(apiCallback.currentGlobalSequenceNumberRequested()).thenReturn(777L);
 
-    assertThat(feedClient.all().getCurrentSequenceNumber()).isEqualTo(777L);
+    assertThat(feedClient.execute(getSequenceNumber().build())).isEqualTo(777L);
   }
 
   @Test
@@ -74,7 +79,7 @@ public class FeedClientIT {
 
     when(apiCallback.allFeedLoaded()).thenReturn(getResource("/feed/allFeed.json"));
 
-    FeedResponse feedResponse = feedClient.all().execute(0);
+    FeedResponse feedResponse = feedClient.execute(getFromAll().build(), 0);
 
     assertThat(feedResponse.entries()).hasSize(1);
     assertThat(feedResponse.events()).hasSize(1);
@@ -89,7 +94,7 @@ public class FeedClientIT {
     ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
     when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries.json"));
 
-    FeedResponse feedResponse = feedClient.feed(feedName).execute(0);
+    FeedResponse feedResponse = feedClient.execute(getFromFeed(feedName).build(), 0);
 
     assertThat(queryParams.getValue().getLimit()).isEqualTo(1000);
     assertThat(feedResponse.entries()).hasSize(48);
@@ -106,7 +111,8 @@ public class FeedClientIT {
     ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
     when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries-limit.json"));
 
-    FeedResponse feedResponse = feedClient.feed(feedName).limit(limit).execute(0);
+    GetFeedRequest request = getFromFeed(feedName).withLimit(limit).build();
+    FeedResponse feedResponse = feedClient.execute(request, 0);
 
     assertThat(queryParams.getValue().getLimit()).isEqualTo(10);
     assertThat(feedResponse.entries()).hasSize(10);
@@ -123,7 +129,8 @@ public class FeedClientIT {
     ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
     when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenReturn(getResource("/feed/feedentries-limit.json"));
 
-    FeedResponse feedResponse = feedClient.feed(feedName).limit(limit).execute(3);
+    GetFeedRequest request = getFromFeed(feedName).withLimit(limit).build();
+    FeedResponse feedResponse = feedClient.execute(request, 3);
 
     assertThat(queryParams.getValue().getLimit()).isEqualTo(10);
     assertThat(queryParams.getValue().getSince()).isEqualTo(3L);
@@ -144,7 +151,8 @@ public class FeedClientIT {
     AtomicInteger events = new AtomicInteger();
     AtomicLong lastProcessedEntry = new AtomicLong();
 
-    feedClient.feed(feedName).limit(10).execute(3, feedEntry -> {
+    GetFeedRequest request = getFromFeed(feedName).withLimit(10).build();
+    feedClient.execute(request, 3, feedEntry -> {
       entries.incrementAndGet();
       events.addAndGet(feedEntry.events().size());
       assertNotNull(feedEntry.aggregateId());
