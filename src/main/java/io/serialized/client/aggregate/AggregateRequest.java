@@ -74,13 +74,13 @@ public class AggregateRequest {
       return this;
     }
 
+    public Builder withTenantId(String tenantId) {
+      return this.withTenantId(UUID.fromString(tenantId));
+    }
+
     public Builder withExpectedVersion(long expectedVersion) {
       this.expectedVersion = expectedVersion;
       return this;
-    }
-
-    public Builder withTenantId(String tenantId) {
-      return this.withTenantId(UUID.fromString(tenantId));
     }
 
     public AggregateRequest build() {

@@ -9,6 +9,7 @@ import io.serialized.client.projection.ProjectionClient;
 import io.serialized.client.projection.ProjectionDefinition;
 import io.serialized.client.projection.ProjectionDefinitions;
 import io.serialized.client.projection.ProjectionHandler;
+import io.serialized.client.projection.ProjectionRequests;
 import io.serialized.client.projection.ProjectionResponse;
 import io.serialized.client.projection.ProjectionsResponse;
 import org.apache.commons.io.IOUtils;
@@ -251,7 +252,7 @@ public class ProjectionClientIT {
     ProjectionClient projectionClient = getProjectionClient();
 
     String projectionName = "payments";
-    projectionClient.deleteSingleProjections(projectionName);
+    projectionClient.delete(ProjectionRequests.single(projectionName).build());
     verify(apiCallback, times(1)).singleProjectionsDeleted(projectionName);
   }
 
@@ -260,7 +261,7 @@ public class ProjectionClientIT {
     ProjectionClient projectionClient = getProjectionClient();
 
     String projectionName = "payments-per-month";
-    projectionClient.deleteAggregatedProjection(projectionName);
+    projectionClient.delete(ProjectionRequests.aggregated(projectionName).build());
     verify(apiCallback, times(1)).aggregatedProjectionsDeleted(projectionName);
   }
 

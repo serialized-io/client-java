@@ -12,9 +12,6 @@ import okhttp3.OkHttpClient;
 import java.io.IOException;
 import java.util.Map;
 
-import static io.serialized.client.projection.ProjectionType.AGGREGATED;
-import static io.serialized.client.projection.ProjectionType.SINGLE;
-
 public class ProjectionClient {
 
   private final SerializedOkHttpClient client;
@@ -83,18 +80,13 @@ public class ProjectionClient {
    * This call deletes all existing projections and starts a rebuild from the beginning of the event history.
    * Keep in mind that this might take a while.
    */
-  public void deleteSingleProjections(String projectionName) {
-    HttpUrl url = pathForProjections(projectionName, SINGLE).build();
-    client.delete(url);
-  }
-
-  /**
-   * Delete/recreate aggregated projections.
-   * This call deletes all existing projections and starts a rebuild from the beginning of the event history.
-   */
-  public void deleteAggregatedProjection(String projectionName) {
-    HttpUrl url = pathForProjections(projectionName, AGGREGATED).build();
-    client.delete(url);
+  public void delete(ProjectionRequest request) {
+    HttpUrl url = pathForProjections(request.projectionName, request.projectionType).build();
+    if (request.hasTenantId()) {
+      client.delete(url, request.tenantId);
+    } else {
+      client.delete(url);
+    }
   }
 
   private HttpUrl.Builder pathForDefinitions() {
