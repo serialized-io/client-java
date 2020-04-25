@@ -27,6 +27,10 @@ public class ProjectionClient {
     this.objectMapper = builder.objectMapper;
   }
 
+  public static ProjectionClient.Builder projectionClient(SerializedClientConfig config) {
+    return new ProjectionClient.Builder(config);
+  }
+
   public void createDefinition(ProjectionDefinition projectionDefinition) {
     HttpUrl url = pathForDefinitions().build();
     client.post(url, projectionDefinition);
@@ -44,7 +48,8 @@ public class ProjectionClient {
   }
 
   public void createOrUpdate(ProjectionDefinition projectionDefinition) {
-    HttpUrl url = pathForDefinitions().addPathSegment(projectionDefinition.getProjectionName()).build();
+    String projectionName = projectionDefinition.getProjectionName();
+    HttpUrl url = pathForDefinitions().addPathSegment(projectionName).build();
     client.put(url, projectionDefinition);
   }
 
@@ -57,6 +62,16 @@ public class ProjectionClient {
   public void createOrUpdate(String jsonString) throws IOException {
     ProjectionDefinition projectionDefinition = objectMapper.readValue(jsonString, ProjectionDefinition.class);
     createOrUpdate(projectionDefinition);
+  }
+
+  public ProjectionDefinition getDefinition(String projectionName) {
+    HttpUrl url = pathForDefinitions().addPathSegment(projectionName).build();
+    return client.get(url, ProjectionDefinition.class);
+  }
+
+  public ProjectionDefinitions listDefinitions() {
+    HttpUrl url = pathForDefinitions().build();
+    return client.get(url, ProjectionDefinitions.class);
   }
 
   public void deleteDefinition(String projectionName) {
@@ -80,16 +95,6 @@ public class ProjectionClient {
   public void deleteAggregatedProjection(String projectionName) {
     HttpUrl url = pathForProjections(projectionName, AGGREGATED).build();
     client.delete(url);
-  }
-
-  public ProjectionDefinition getDefinition(String projectionName) {
-    HttpUrl url = pathForDefinitions().addPathSegment(projectionName).build();
-    return client.get(url, ProjectionDefinition.class);
-  }
-
-  public ProjectionDefinitions listDefinitions() {
-    HttpUrl url = pathForDefinitions().build();
-    return client.get(url, ProjectionDefinitions.class);
   }
 
   private HttpUrl.Builder pathForDefinitions() {
@@ -131,10 +136,6 @@ public class ProjectionClient {
     } else {
       return client.get(url, javaType);
     }
-  }
-
-  public static ProjectionClient.Builder projectionClient(SerializedClientConfig config) {
-    return new ProjectionClient.Builder(config);
   }
 
   public static class Builder {
