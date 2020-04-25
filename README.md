@@ -214,8 +214,8 @@ FeedClient feedClient = FeedClient.feedClient(serializedConfig).build();
 Point out which feed you want to subscribe to and start receiving events for all orders since the beginning of time.
 
 ```
-FeedClient.FeedRequest request = feedClient.feed("order");
-request.subscribe(feedEntry -> {
+GetFeedRequest request = FeedRequests.getFromFeed("customer").build();
+feedClient.subscribe(request, feedEntry -> {
   // Process events in entry...
 });
 ```
