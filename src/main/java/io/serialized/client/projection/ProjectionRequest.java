@@ -8,7 +8,7 @@ public class ProjectionRequest {
   public final String projectionName;
   public final UUID tenantId;
 
-  public ProjectionRequest(Builder builder) {
+  private ProjectionRequest(Builder builder) {
     this.projectionType = builder.projectionType;
     this.projectionName = builder.projectionName;
     this.tenantId = builder.tenantId;

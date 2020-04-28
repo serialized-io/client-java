@@ -1,12 +1,16 @@
 package io.serialized.client.projection;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class ProjectionDefinition {
 
@@ -24,24 +28,39 @@ public class ProjectionDefinition {
     return new AggregatedProjectionBuilder(projectionName);
   }
 
-  public String getFeedName() {
+  public String feedName() {
     return feedName;
   }
 
-  public boolean isAggregated() {
+  public boolean aggregated() {
     return aggregated;
   }
 
-  public String getIdField() {
+  public String idField() {
     return idField;
   }
 
-  public List<ProjectionHandler> getHandlers() {
+  public List<ProjectionHandler> handlers() {
     return unmodifiableList(handlers);
   }
 
-  public String getProjectionName() {
+  public String projectionName() {
     return projectionName;
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this, SHORT_PREFIX_STYLE);
   }
 
   public static class AggregatedProjectionBuilder {
@@ -70,6 +89,7 @@ public class ProjectionDefinition {
       return addHandler(builder.build());
     }
 
+    // TODO: Move to constructor
     public ProjectionDefinition build() {
       Validate.isTrue(!handlers.isEmpty(), "'handlers' must not be empty");
       Validate.notEmpty(projectionName, "'projectionName' must be set");
@@ -117,6 +137,7 @@ public class ProjectionDefinition {
       return this;
     }
 
+    // TODO: Move to constructor
     public ProjectionDefinition build() {
       Validate.isTrue(!handlers.isEmpty(), "'handlers' must not be empty");
       Validate.notEmpty(projectionName, "'projectionName' must be set");

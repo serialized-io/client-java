@@ -6,7 +6,7 @@ public class ListFeedsRequest {
 
   public final UUID tenantId;
 
-  public ListFeedsRequest(Builder builder) {
+  private ListFeedsRequest(Builder builder) {
     this.tenantId = builder.tenantId;
   }
 

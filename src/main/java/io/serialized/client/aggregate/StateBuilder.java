@@ -32,7 +32,7 @@ public class StateBuilder<T> {
     try {
       AtomicReference<T> data = new AtomicReference<>(stateClass.newInstance());
       events.forEach(e -> {
-        String simpleName = e.getData().getClass().getSimpleName();
+        String simpleName = e.data().getClass().getSimpleName();
         EventHandler<T, ?> handler = handlers.get(simpleName);
 
         if (handler == null) {

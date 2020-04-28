@@ -31,11 +31,11 @@ public class AggregateRequest {
     return new Builder(null);
   }
 
-  public Optional<UUID> getTenantId() {
+  public Optional<UUID> tenantId() {
     return Optional.ofNullable(tenantId);
   }
 
-  public EventBatch getEventBatch() {
+  public EventBatch eventBatch() {
     return new EventBatch(this.events, expectedVersion);
   }
 

@@ -1,5 +1,7 @@
 package io.serialized.client.api;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import io.dropwizard.testing.junit5.DropwizardClientExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.SerializedClientConfig;
@@ -8,6 +10,7 @@ import io.serialized.client.reaction.ReactionClient;
 import io.serialized.client.reaction.ReactionDefinition;
 import io.serialized.client.reaction.ReactionDefinitions;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -32,6 +35,11 @@ public class ReactionClientIT {
   private final ReactionApiStub.ReactionApiCallback apiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
 
   public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new ReactionApiStub(apiCallback));
+
+  @BeforeEach
+  void setUp() {
+    dropwizard.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+  }
 
   @Test
   public void testCreateDefinitionFromJson() throws IOException {
@@ -84,10 +92,10 @@ public class ReactionClientIT {
     verify(apiCallback, times(1)).definitionCreated(captor.capture());
 
     ReactionDefinition value = captor.getValue();
-    assertThat(value.getReactionName()).isEqualTo(reactionName);
-    assertThat(value.getFeedName()).isEqualTo(feedName);
-    assertThat(value.getReactOnEventType()).isEqualTo(eventType);
-    assertThat(value.getAction().getTargetUri()).isEqualTo(targetUri);
+    assertThat(value.reactionName()).isEqualTo(reactionName);
+    assertThat(value.feedName()).isEqualTo(feedName);
+    assertThat(value.reactOnEventType()).isEqualTo(eventType);
+    assertThat(value.action().targetUri()).isEqualTo(targetUri);
   }
 
   @Test
@@ -113,10 +121,10 @@ public class ReactionClientIT {
     verify(apiCallback, times(1)).definitionUpdated(captor.capture());
 
     ReactionDefinition value = captor.getValue();
-    assertThat(value.getReactionName()).isEqualTo(reactionName);
-    assertThat(value.getFeedName()).isEqualTo(feedName);
-    assertThat(value.getReactOnEventType()).isEqualTo(eventType);
-    assertThat(value.getAction().getTargetUri()).isEqualTo(targetUri);
+    assertThat(value.reactionName()).isEqualTo(reactionName);
+    assertThat(value.feedName()).isEqualTo(feedName);
+    assertThat(value.reactOnEventType()).isEqualTo(eventType);
+    assertThat(value.action().targetUri()).isEqualTo(targetUri);
   }
 
   @Test
@@ -148,10 +156,10 @@ public class ReactionClientIT {
 
     ReactionDefinition definition = reactionClient.getDefinition(reactionName);
 
-    assertThat(definition.getReactionName()).isEqualTo(reactionName);
-    assertThat(definition.getFeedName()).isEqualTo(feedName);
-    assertThat(definition.getReactOnEventType()).isEqualTo(eventType);
-    assertThat(definition.getAction().getTargetUri()).isEqualTo(targetUri);
+    assertThat(definition.reactionName()).isEqualTo(reactionName);
+    assertThat(definition.feedName()).isEqualTo(feedName);
+    assertThat(definition.reactOnEventType()).isEqualTo(eventType);
+    assertThat(definition.action().targetUri()).isEqualTo(targetUri);
   }
 
   @Test
@@ -174,11 +182,11 @@ public class ReactionClientIT {
 
     ReactionDefinitions reactionDefinitions = reactionClient.listDefinitions();
 
-    ReactionDefinition definition = reactionDefinitions.getDefinitions().get(0);
-    assertThat(definition.getReactionName()).isEqualTo(reactionName);
-    assertThat(definition.getFeedName()).isEqualTo(feedName);
-    assertThat(definition.getReactOnEventType()).isEqualTo(eventType);
-    assertThat(definition.getAction().getTargetUri()).isEqualTo(targetUri);
+    ReactionDefinition definition = reactionDefinitions.definitions().get(0);
+    assertThat(definition.reactionName()).isEqualTo(reactionName);
+    assertThat(definition.feedName()).isEqualTo(feedName);
+    assertThat(definition.reactOnEventType()).isEqualTo(eventType);
+    assertThat(definition.action().targetUri()).isEqualTo(targetUri);
   }
 
   private ReactionClient getReactionClient() {

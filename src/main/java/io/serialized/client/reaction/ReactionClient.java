@@ -41,7 +41,7 @@ public class ReactionClient {
   }
 
   public void createOrUpdate(ReactionDefinition reactionDefinition) {
-    String reactionName = reactionDefinition.getReactionName();
+    String reactionName = reactionDefinition.reactionName();
     HttpUrl url = pathForDefinitions().addPathSegment(reactionName).build();
     client.put(url, reactionDefinition);
   }
@@ -99,7 +99,7 @@ public class ReactionClient {
     private final ObjectMapper objectMapper;
     private final HttpUrl apiRoot;
 
-    Builder(SerializedClientConfig config) {
+    public Builder(SerializedClientConfig config) {
       this.httpClient = config.httpClient();
       this.objectMapper = config.objectMapper();
       this.apiRoot = config.apiRoot();

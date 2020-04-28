@@ -1,9 +1,13 @@
 package io.serialized.client.feed;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.List;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class FeedEntry {
@@ -43,7 +47,17 @@ public class FeedEntry {
    * @return The events.
    */
   public List<Event> events() {
-    return events;
+    return events == null ? emptyList() : unmodifiableList(events);
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
   }
 
   @Override

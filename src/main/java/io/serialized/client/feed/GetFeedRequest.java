@@ -15,7 +15,7 @@ public class GetFeedRequest {
   public final boolean eagerFetching;
   public final UUID tenantId;
 
-  public GetFeedRequest(Builder builder) {
+  private GetFeedRequest(Builder builder) {
     this.feedName = builder.feedName;
     this.limit = builder.limit;
     this.pollDelay = builder.pollDelay;

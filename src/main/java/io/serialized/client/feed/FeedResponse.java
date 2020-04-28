@@ -1,9 +1,10 @@
 package io.serialized.client.feed;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 
 public class FeedResponse {
 
@@ -15,14 +16,14 @@ public class FeedResponse {
    * @return List of all events from all batches.
    */
   public List<Event> events() {
-    return unmodifiableList(entries.stream().flatMap(e -> e.events().stream()).collect(Collectors.toList()));
+    return unmodifiableList(entries().stream().flatMap(e -> e.events().stream()).collect(toList()));
   }
 
   /**
    * @return The entries.
    */
   public List<FeedEntry> entries() {
-    return unmodifiableList(entries);
+    return entries == null ? emptyList() : unmodifiableList(entries);
   }
 
   /**

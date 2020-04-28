@@ -7,7 +7,7 @@ public class GetSequenceNumberRequest {
   public final String feedName;
   public final UUID tenantId;
 
-  public GetSequenceNumberRequest(Builder builder) {
+  private GetSequenceNumberRequest(Builder builder) {
     this.feedName = builder.feedName;
     this.tenantId = builder.tenantId;
   }

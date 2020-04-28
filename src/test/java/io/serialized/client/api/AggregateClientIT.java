@@ -215,11 +215,11 @@ public class AggregateClientIT {
     verify(apiCallback).eventsStored(eq(aggregateId), eventsStoredCaptor.capture());
 
     EventBatch eventsStored = eventsStoredCaptor.getValue();
-    List<Event<?>> events = eventsStored.getEvents();
+    List<Event<?>> events = eventsStored.events();
     assertThat(events).hasSize(1);
     Event event = events.get(0);
-    assertThat(event.getEventType()).isEqualTo(OrderPlaced.class.getSimpleName());
-    assertNotNull(event.getData());
+    assertThat(event.eventType()).isEqualTo(OrderPlaced.class.getSimpleName());
+    assertNotNull(event.data());
   }
 
   @Test
@@ -239,10 +239,10 @@ public class AggregateClientIT {
     verify(apiCallback).eventsStored(eq(aggregateId), eventsStoredCaptor.capture(), eq(tenantId));
 
     EventBatch eventsStored = eventsStoredCaptor.getValue();
-    assertThat(eventsStored.getEvents()).hasSize(1);
-    Event<?> event = eventsStored.getEvents().get(0);
-    assertThat(event.getEventType()).isEqualTo(OrderPlaced.class.getSimpleName());
-    assertNotNull(event.getData());
+    assertThat(eventsStored.events()).hasSize(1);
+    Event<?> event = eventsStored.events().get(0);
+    assertThat(event.eventType()).isEqualTo(OrderPlaced.class.getSimpleName());
+    assertNotNull(event.data());
   }
 
   private AggregateClient<OrderState> getOrderClient(String order) {

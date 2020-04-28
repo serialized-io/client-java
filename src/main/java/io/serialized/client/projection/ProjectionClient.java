@@ -45,7 +45,7 @@ public class ProjectionClient {
   }
 
   public void createOrUpdate(ProjectionDefinition projectionDefinition) {
-    String projectionName = projectionDefinition.getProjectionName();
+    String projectionName = projectionDefinition.projectionName();
     HttpUrl url = pathForDefinitions().addPathSegment(projectionName).build();
     client.put(url, projectionDefinition);
   }
@@ -136,7 +136,7 @@ public class ProjectionClient {
     private final ObjectMapper objectMapper;
     private final HttpUrl apiRoot;
 
-    Builder(SerializedClientConfig config) {
+    public Builder(SerializedClientConfig config) {
       this.httpClient = config.httpClient();
       this.objectMapper = config.objectMapper();
       this.apiRoot = config.apiRoot();

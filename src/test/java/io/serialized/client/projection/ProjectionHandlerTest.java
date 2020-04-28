@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 
+import static io.serialized.client.projection.Functions.add;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -17,20 +18,20 @@ public class ProjectionHandlerTest {
     builder.withFunctionUri(functionUri);
 
     try {
-      builder.addFunction(Function.add().build());
+      builder.addFunction(add().build());
       fail("Illegal combination");
     } catch (Exception e) {
       // expected
     }
 
-    assertThat(builder.build().getFunctionUri()).isEqualTo(functionUri);
+    assertThat(builder.build().functionUri()).isEqualTo(functionUri);
   }
 
   @Test
   public void testCannotAddFunctionUriIfFunctionsArePresent() {
     ProjectionHandler.Builder builder = new ProjectionHandler.Builder("myType");
 
-    builder.addFunction(Function.add().build());
+    builder.addFunction(add().build());
 
     try {
       builder.withFunctionUri(URI.create("https://example.com"));
@@ -39,7 +40,7 @@ public class ProjectionHandlerTest {
       // expected
     }
 
-    assertThat(builder.build().getFunctions().iterator().next().getFunction()).isEqualTo("add");
+    assertThat(builder.build().functions().iterator().next().function()).isEqualTo("add");
   }
 
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
 public class ReactionDefinitions {
@@ -16,8 +17,8 @@ public class ReactionDefinitions {
     return reactionDefinitions;
   }
 
-  public List<ReactionDefinition> getDefinitions() {
-    return unmodifiableList(definitions);
+  public List<ReactionDefinition> definitions() {
+    return definitions == null ? emptyList() : unmodifiableList(definitions);
   }
 
 }

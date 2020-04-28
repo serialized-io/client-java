@@ -1,5 +1,11 @@
 package io.serialized.client.projection;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+
 public class Function {
 
   private String function;
@@ -9,84 +15,43 @@ public class Function {
   private String eventFilter;
   private Object rawData;
 
-  public String getFunction() {
+  public String function() {
     return function;
   }
 
-  public String getTargetSelector() {
+  public String targetSelector() {
     return targetSelector;
   }
 
-  public String getTargetFilter() {
+  public String targetFilter() {
     return targetFilter;
   }
 
-  public String getEventSelector() {
+  public String eventSelector() {
     return eventSelector;
   }
 
-  public String getEventFilter() {
+  public String eventFilter() {
     return eventFilter;
   }
 
-  public Object getRawData() {
+  public Object rawData() {
     return rawData;
   }
 
-  public static Function clearref() {
-    return new Builder("clearref").build();
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
   }
 
-  public static Function delete() {
-    return new Builder("delete").build();
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
   }
 
-  public static Function clear() {
-    return new Builder("clear").build();
-  }
-
-  public static Builder handlerFunction(String function) {
-    return new Builder(function);
-  }
-
-  public static Builder setref() {
-    return new Builder("setref");
-  }
-
-  public static Builder inc() {
-    return new Builder("inc");
-  }
-
-  public static Builder dec() {
-    return new Builder("dec");
-  }
-
-  public static Builder push() {
-    return new Builder("push");
-  }
-
-  public static Builder add() {
-    return new Builder("add");
-  }
-
-  public static Builder subtract() {
-    return new Builder("subtract");
-  }
-
-  public static Builder set() {
-    return new Builder("set");
-  }
-
-  public static Builder merge() {
-    return new Builder("merge");
-  }
-
-  public static Builder remove() {
-    return new Builder("remove");
-  }
-
-  public static Builder prepend() {
-    return new Builder("prepend");
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this, SHORT_PREFIX_STYLE);
   }
 
   public static class Builder {
@@ -127,6 +92,7 @@ public class Function {
       return this;
     }
 
+    // TODO: Move to constructor.
     public Function build() {
       Function function = new Function();
       function.function = this.function;

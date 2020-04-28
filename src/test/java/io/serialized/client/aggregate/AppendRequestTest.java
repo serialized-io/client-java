@@ -16,7 +16,7 @@ public class AppendRequestTest {
     AggregateRequest request = appendRequest().withAggregateId(aggregateId).withEvent(newEvent("test-event").build()).build();
     assertThat(request.aggregateId).isEqualTo(UUID.fromString(aggregateId));
     assertThat(request.events).hasSize(1);
-    assertThat(request.getEventBatch().getExpectedVersion()).isNull();
+    assertThat(request.eventBatch().expectedVersion()).isNull();
   }
 
   @Test
@@ -26,8 +26,8 @@ public class AppendRequestTest {
     AggregateRequest request = appendRequest().withAggregateId(aggregateId).withEvent(newEvent("test-event").build()).withTenantId(tenantId).build();
     assertThat(request.aggregateId).isEqualTo(aggregateId);
     assertThat(request.events).hasSize(1);
-    assertThat(request.getTenantId()).isPresent();
-    assertThat(request.getEventBatch().getExpectedVersion()).isNull();
+    assertThat(request.tenantId()).isPresent();
+    assertThat(request.eventBatch().expectedVersion()).isNull();
   }
 
   @Test
@@ -36,7 +36,7 @@ public class AppendRequestTest {
     AggregateRequest request = appendRequest().withAggregateId(aggregateId).withEvent(newEvent("test-event").build()).withExpectedVersion(10).build();
     assertThat(request.aggregateId).isEqualTo(aggregateId);
     assertThat(request.events).hasSize(1);
-    assertThat(request.getEventBatch().getExpectedVersion()).isEqualTo(10L);
+    assertThat(request.eventBatch().expectedVersion()).isEqualTo(10L);
   }
 
 }

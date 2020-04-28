@@ -17,11 +17,11 @@ public class EventBatch {
     this.expectedVersion = expectedVersion;
   }
 
-  public Long getExpectedVersion() {
+  public Long expectedVersion() {
     return expectedVersion;
   }
 
-  public List<Event<?>> getEvents() {
+  public List<Event<?>> events() {
     return Optional.ofNullable(events).map(Collections::unmodifiableList).orElseGet(Collections::emptyList);
   }
 

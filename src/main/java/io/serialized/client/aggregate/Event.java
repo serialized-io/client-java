@@ -13,19 +13,19 @@ public class Event<T> {
   private T data;
   private String encryptedData;
 
-  public String getEventId() {
+  public String eventId() {
     return eventId;
   }
 
-  public String getEventType() {
+  public String eventType() {
     return eventType;
   }
 
-  public T getData() {
+  public T data() {
     return data;
   }
 
-  public String getEncryptedData() {
+  public String encryptedData() {
     return encryptedData;
   }
 

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
 public class ProjectionDefinitions {
@@ -16,7 +17,8 @@ public class ProjectionDefinitions {
     return projectionDefinitions;
   }
 
-  public List<ProjectionDefinition> getDefinitions() {
-    return unmodifiableList(definitions);
+  public List<ProjectionDefinition> definitions() {
+    return definitions == null ? emptyList() : unmodifiableList(definitions);
   }
+
 }

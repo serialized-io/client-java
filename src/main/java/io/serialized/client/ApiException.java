@@ -9,7 +9,7 @@ public class ApiException extends RuntimeException {
     this.statusCode = statusCode;
   }
 
-  public int getStatusCode() {
+  public int statusCode() {
     return statusCode;
   }
 

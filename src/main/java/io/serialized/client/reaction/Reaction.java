@@ -19,35 +19,35 @@ public class Reaction {
   private Long triggerAt;
   private Long finishedAt;
 
-  public UUID getReactionId() {
+  public UUID reactionId() {
     return reactionId;
   }
 
-  public String getReactionName() {
+  public String reactionName() {
     return reactionName;
   }
 
-  public String getAggregateType() {
+  public String aggregateType() {
     return aggregateType;
   }
 
-  public UUID getAggregateId() {
+  public UUID aggregateId() {
     return aggregateId;
   }
 
-  public UUID getEventId() {
+  public UUID eventId() {
     return eventId;
   }
 
-  public Long getCreatedAt() {
+  public Long createdAt() {
     return createdAt;
   }
 
-  public Long getTriggerAt() {
+  public Long triggerAt() {
     return triggerAt;
   }
 
-  public Long getFinishedAt() {
+  public Long finishedAt() {
     return finishedAt;
   }
 

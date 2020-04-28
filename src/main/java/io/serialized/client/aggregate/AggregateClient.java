@@ -50,11 +50,11 @@ public class AggregateClient<T> {
     try {
       HttpUrl url = getAggregateUrl(request.aggregateId).addPathSegment("events").build();
 
-      if (request.getTenantId().isPresent()) {
-        UUID tenantId = request.getTenantId().get();
-        client.post(url, request.getEventBatch(), tenantId);
+      if (request.tenantId().isPresent()) {
+        UUID tenantId = request.tenantId().get();
+        client.post(url, request.eventBatch(), tenantId);
       } else {
-        client.post(url, request.getEventBatch());
+        client.post(url, request.eventBatch());
       }
 
     } catch (ApiException e) {
@@ -138,7 +138,7 @@ public class AggregateClient<T> {
       HttpUrl url = getAggregateUrl(aggregateId).build();
       return client.head(url, Response::code) == 200;
     } catch (ApiException e) {
-      if (e.getStatusCode() == 404) {
+      if (e.statusCode() == 404) {
         return false;
       } else {
         throw e;
@@ -158,7 +158,7 @@ public class AggregateClient<T> {
       HttpUrl url = getAggregateUrl(aggregateId).build();
       return client.head(url, Response::code, tenantId) == 200;
     } catch (ApiException e) {
-      if (e.getStatusCode() == 404) {
+      if (e.statusCode() == 404) {
         return false;
       } else {
         throw e;
@@ -195,7 +195,7 @@ public class AggregateClient<T> {
   }
 
   private void storeBatch(UUID aggregateId, EventBatch eventBatch) {
-    if (eventBatch.getEvents().isEmpty()) return;
+    if (eventBatch.events().isEmpty()) return;
 
     try {
       HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
@@ -206,7 +206,7 @@ public class AggregateClient<T> {
   }
 
   private void storeBatch(UUID aggregateId, UUID tenantId, EventBatch eventBatch) {
-    if (eventBatch.getEvents().isEmpty()) return;
+    if (eventBatch.events().isEmpty()) return;
 
     try {
       HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
@@ -217,7 +217,7 @@ public class AggregateClient<T> {
   }
 
   private void handleConcurrencyException(ApiException e) {
-    if (e.getStatusCode() == 409) {
+    if (e.statusCode() == 409) {
       throw new ConcurrencyException(409, e.getMessage());
     } else {
       throw e;

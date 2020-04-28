@@ -1,5 +1,9 @@
 package io.serialized.client.reaction;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.net.URI;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -8,6 +12,7 @@ import java.util.Set;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class ReactionDefinition {
 
@@ -19,32 +24,47 @@ public class ReactionDefinition {
   private Set<String> cancelOnEventTypes;
   private Action action;
 
-  public String getReactionName() {
+  public String reactionName() {
     return reactionName;
   }
 
-  public String getFeedName() {
+  public String feedName() {
     return feedName;
   }
 
-  public String getReactOnEventType() {
+  public String reactOnEventType() {
     return reactOnEventType;
   }
 
-  public String getTriggerTimeField() {
+  public String triggerTimeField() {
     return triggerTimeField;
   }
 
-  public String getOffset() {
+  public String offset() {
     return offset;
   }
 
-  public Set<String> getCancelOnEventTypes() {
+  public Set<String> cancelOnEventTypes() {
     return cancelOnEventTypes == null ? emptySet() : unmodifiableSet(cancelOnEventTypes);
   }
 
-  public Action getAction() {
+  public Action action() {
     return action;
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this, SHORT_PREFIX_STYLE);
   }
 
   public static DefinitionBuilder newReactionDefinition(String reactionName) {
@@ -149,23 +169,23 @@ public class ReactionDefinition {
     private String body;
     private Map<String, String> valueMap;
 
-    public String getActionType() {
+    public String actionType() {
       return actionType;
     }
 
-    public Map<String, Object> getHttpHeaders() {
+    public Map<String, Object> httpHeaders() {
       return httpHeaders;
     }
 
-    public URI getTargetUri() {
+    public URI targetUri() {
       return targetUri;
     }
 
-    public String getBody() {
+    public String body() {
       return body;
     }
 
-    public Map<String, String> getValueMap() {
+    public Map<String, String> valueMap() {
       return valueMap;
     }
 

@@ -1,5 +1,7 @@
 package io.serialized.client.api;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import io.dropwizard.testing.junit5.DropwizardClientExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.SerializedClientConfig;
@@ -13,6 +15,7 @@ import io.serialized.client.projection.ProjectionRequests;
 import io.serialized.client.projection.ProjectionResponse;
 import io.serialized.client.projection.ProjectionsResponse;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -23,9 +26,9 @@ import java.util.UUID;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.EventSelector.eventSelector;
-import static io.serialized.client.projection.Function.inc;
-import static io.serialized.client.projection.Function.set;
-import static io.serialized.client.projection.Function.setref;
+import static io.serialized.client.projection.Functions.inc;
+import static io.serialized.client.projection.Functions.set;
+import static io.serialized.client.projection.Functions.setref;
 import static io.serialized.client.projection.ProjectionDefinitions.newDefinitionList;
 import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.TargetSelector.targetSelector;
@@ -55,6 +58,11 @@ public class ProjectionClientIT {
   private ProjectionApiStub.ProjectionApiCallback apiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
 
   public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new ProjectionApiStub(apiCallback));
+
+  @BeforeEach
+  void setUp() {
+    dropwizard.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+  }
 
   @Test
   public void testCreateDefinitionFromJson() throws IOException {
@@ -116,21 +124,21 @@ public class ProjectionClientIT {
     verify(apiCallback, times(1)).definitionCreated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
-    assertThat(value.getProjectionName()).isEqualTo("high-score");
-    assertThat(value.getFeedName()).isEqualTo("game");
-    assertThat(value.getIdField()).isEqualTo("winner");
-    assertThat(value.getHandlers()).hasSize(1);
-    assertThat(value.getHandlers().get(0).getFunctions()).hasSize(3);
+    assertThat(value.projectionName()).isEqualTo("high-score");
+    assertThat(value.feedName()).isEqualTo("game");
+    assertThat(value.idField()).isEqualTo("winner");
+    assertThat(value.handlers()).hasSize(1);
+    assertThat(value.handlers().get(0).functions()).hasSize(3);
 
-    assertThat(value.getHandlers().get(0).getFunctions().get(0).getFunction()).isEqualTo("set");
-    assertThat(value.getHandlers().get(0).getFunctions().get(0).getTargetSelector()).isEqualTo("$.projection.playerName");
-    assertThat(value.getHandlers().get(0).getFunctions().get(0).getEventSelector()).isEqualTo("$.event.winner");
+    assertThat(value.handlers().get(0).functions().get(0).function()).isEqualTo("set");
+    assertThat(value.handlers().get(0).functions().get(0).targetSelector()).isEqualTo("$.projection.playerName");
+    assertThat(value.handlers().get(0).functions().get(0).eventSelector()).isEqualTo("$.event.winner");
 
-    assertThat(value.getHandlers().get(0).getFunctions().get(1).getFunction()).isEqualTo("inc");
-    assertThat(value.getHandlers().get(0).getFunctions().get(1).getTargetSelector()).isEqualTo("$.projection.wins");
+    assertThat(value.handlers().get(0).functions().get(1).function()).isEqualTo("inc");
+    assertThat(value.handlers().get(0).functions().get(1).targetSelector()).isEqualTo("$.projection.wins");
 
-    assertThat(value.getHandlers().get(0).getFunctions().get(2).getFunction()).isEqualTo("setref");
-    assertThat(value.getHandlers().get(0).getFunctions().get(2).getTargetSelector()).isEqualTo("$.projection.wins");
+    assertThat(value.handlers().get(0).functions().get(2).function()).isEqualTo("setref");
+    assertThat(value.handlers().get(0).functions().get(2).targetSelector()).isEqualTo("$.projection.wins");
   }
 
   @Test
@@ -154,21 +162,21 @@ public class ProjectionClientIT {
     verify(apiCallback, times(1)).definitionUpdated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
-    assertThat(value.getProjectionName()).isEqualTo("high-score");
-    assertThat(value.getFeedName()).isEqualTo("game");
-    assertThat(value.getIdField()).isEqualTo("winner");
-    assertThat(value.getHandlers()).hasSize(1);
-    assertThat(value.getHandlers().get(0).getFunctions()).hasSize(3);
+    assertThat(value.projectionName()).isEqualTo("high-score");
+    assertThat(value.feedName()).isEqualTo("game");
+    assertThat(value.idField()).isEqualTo("winner");
+    assertThat(value.handlers()).hasSize(1);
+    assertThat(value.handlers().get(0).functions()).hasSize(3);
 
-    assertThat(value.getHandlers().get(0).getFunctions().get(0).getFunction()).isEqualTo("set");
-    assertThat(value.getHandlers().get(0).getFunctions().get(0).getTargetSelector()).isEqualTo("$.projection.playerName");
-    assertThat(value.getHandlers().get(0).getFunctions().get(0).getEventSelector()).isEqualTo("$.event.winner");
+    assertThat(value.handlers().get(0).functions().get(0).function()).isEqualTo("set");
+    assertThat(value.handlers().get(0).functions().get(0).targetSelector()).isEqualTo("$.projection.playerName");
+    assertThat(value.handlers().get(0).functions().get(0).eventSelector()).isEqualTo("$.event.winner");
 
-    assertThat(value.getHandlers().get(0).getFunctions().get(1).getFunction()).isEqualTo("inc");
-    assertThat(value.getHandlers().get(0).getFunctions().get(1).getTargetSelector()).isEqualTo("$.projection.wins");
+    assertThat(value.handlers().get(0).functions().get(1).function()).isEqualTo("inc");
+    assertThat(value.handlers().get(0).functions().get(1).targetSelector()).isEqualTo("$.projection.wins");
 
-    assertThat(value.getHandlers().get(0).getFunctions().get(2).getFunction()).isEqualTo("setref");
-    assertThat(value.getHandlers().get(0).getFunctions().get(2).getTargetSelector()).isEqualTo("$.projection.wins");
+    assertThat(value.handlers().get(0).functions().get(2).function()).isEqualTo("setref");
+    assertThat(value.handlers().get(0).functions().get(2).targetSelector()).isEqualTo("$.projection.wins");
   }
 
   @Test
@@ -188,21 +196,21 @@ public class ProjectionClientIT {
     verify(apiCallback, times(1)).definitionUpdated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
-    assertThat(value.getProjectionName()).isEqualTo("high-score");
-    assertThat(value.getFeedName()).isEqualTo("games");
-    assertThat(value.getIdField()).isEqualTo("winner");
-    assertThat(value.getHandlers()).hasSize(1);
+    assertThat(value.projectionName()).isEqualTo("high-score");
+    assertThat(value.feedName()).isEqualTo("games");
+    assertThat(value.idField()).isEqualTo("winner");
+    assertThat(value.handlers()).hasSize(1);
 
-    ProjectionHandler projectionHandler = value.getHandlers().get(0);
-    assertThat(projectionHandler.getEventType()).isEqualTo("GameFinished");
-    assertThat(projectionHandler.getFunctions()).hasSize(1);
-    Function function = projectionHandler.getFunctions().get(0);
-    assertThat(function.getFunction()).isEqualTo("inc");
-    assertThat(function.getEventSelector()).isNull();
-    assertThat(function.getTargetSelector()).isEqualTo("$.projection.wins");
-    assertThat(function.getEventFilter()).isNull();
-    assertThat(function.getTargetFilter()).isNull();
-    assertThat(function.getRawData()).isNull();
+    ProjectionHandler projectionHandler = value.handlers().get(0);
+    assertThat(projectionHandler.eventType()).isEqualTo("GameFinished");
+    assertThat(projectionHandler.functions()).hasSize(1);
+    Function function = projectionHandler.functions().get(0);
+    assertThat(function.function()).isEqualTo("inc");
+    assertThat(function.eventSelector()).isNull();
+    assertThat(function.targetSelector()).isEqualTo("$.projection.wins");
+    assertThat(function.eventFilter()).isNull();
+    assertThat(function.targetFilter()).isNull();
+    assertThat(function.rawData()).isNull();
   }
 
   @Test
@@ -221,21 +229,21 @@ public class ProjectionClientIT {
     verify(apiCallback, times(1)).definitionUpdated(captor.capture());
 
     ProjectionDefinition value = captor.getValue();
-    assertThat(value.getProjectionName()).isEqualTo("game-count");
-    assertThat(value.getFeedName()).isEqualTo("games");
-    assertThat(value.getIdField()).isNull();
-    assertThat(value.getHandlers()).hasSize(1);
+    assertThat(value.projectionName()).isEqualTo("game-count");
+    assertThat(value.feedName()).isEqualTo("games");
+    assertThat(value.idField()).isNull();
+    assertThat(value.handlers()).hasSize(1);
 
-    ProjectionHandler projectionHandler = value.getHandlers().get(0);
-    assertThat(projectionHandler.getEventType()).isEqualTo("GameFinished");
-    assertThat(projectionHandler.getFunctions()).hasSize(1);
-    Function function = projectionHandler.getFunctions().get(0);
-    assertThat(function.getFunction()).isEqualTo("inc");
-    assertThat(function.getEventSelector()).isNull();
-    assertThat(function.getTargetSelector()).isEqualTo("$.projection.count");
-    assertThat(function.getEventFilter()).isNull();
-    assertThat(function.getTargetFilter()).isNull();
-    assertThat(function.getRawData()).isNull();
+    ProjectionHandler projectionHandler = value.handlers().get(0);
+    assertThat(projectionHandler.eventType()).isEqualTo("GameFinished");
+    assertThat(projectionHandler.functions()).hasSize(1);
+    Function function = projectionHandler.functions().get(0);
+    assertThat(function.function()).isEqualTo("inc");
+    assertThat(function.eventSelector()).isNull();
+    assertThat(function.targetSelector()).isEqualTo("$.projection.count");
+    assertThat(function.eventFilter()).isNull();
+    assertThat(function.targetFilter()).isNull();
+    assertThat(function.rawData()).isNull();
   }
 
   @Test
@@ -279,9 +287,9 @@ public class ProjectionClientIT {
     when(apiCallback.definitionFetched()).thenReturn(expected);
 
     ProjectionDefinition definition = projectionClient.getDefinition(projectionName);
-    assertThat(definition.getProjectionName()).isEqualTo(projectionName);
-    assertThat(definition.getFeedName()).isEqualTo(feedName);
-    assertThat(definition.getHandlers()).hasSize(1);
+    assertThat(definition.projectionName()).isEqualTo(projectionName);
+    assertThat(definition.feedName()).isEqualTo(feedName);
+    assertThat(definition.handlers()).hasSize(1);
   }
 
   @Test
@@ -299,10 +307,10 @@ public class ProjectionClientIT {
     when(apiCallback.definitionsFetched()).thenReturn(expected);
 
     ProjectionDefinitions definitions = projectionClient.listDefinitions();
-    ProjectionDefinition definition = definitions.getDefinitions().get(0);
-    assertThat(definition.getProjectionName()).isEqualTo(projectionName);
-    assertThat(definition.getFeedName()).isEqualTo(feedName);
-    assertThat(definition.getHandlers()).hasSize(1);
+    ProjectionDefinition definition = definitions.definitions().get(0);
+    assertThat(definition.projectionName()).isEqualTo(projectionName);
+    assertThat(definition.feedName()).isEqualTo(feedName);
+    assertThat(definition.handlers()).hasSize(1);
   }
 
   @Test
@@ -319,9 +327,9 @@ public class ProjectionClientIT {
             .id(projectionId)
             .build(OrderBalanceProjection.class));
 
-    assertThat(projection.projectionId).isEqualTo(projectionId);
-    assertThat(projection.updatedAt).isEqualTo(1505754083976L);
-    assertThat(projection.data.orderAmount).isEqualTo(12345L);
+    assertThat(projection.projectionId()).isEqualTo(projectionId);
+    assertThat(projection.updatedAt()).isEqualTo(1505754083976L);
+    assertThat(projection.data().orderAmount).isEqualTo(12345L);
   }
 
   @Test
@@ -340,9 +348,9 @@ public class ProjectionClientIT {
             .withTenantId(tenantId)
             .build(OrderBalanceProjection.class));
 
-    assertThat(projection.projectionId).isEqualTo(projectionId);
-    assertThat(projection.updatedAt).isEqualTo(1505754083976L);
-    assertThat(projection.data.orderAmount).isEqualTo(12345L);
+    assertThat(projection.projectionId()).isEqualTo(projectionId);
+    assertThat(projection.updatedAt()).isEqualTo(1505754083976L);
+    assertThat(projection.data().orderAmount).isEqualTo(12345L);
   }
 
   @Test
@@ -359,8 +367,8 @@ public class ProjectionClientIT {
         list("orders").skip(5).limit(10).sortDescending("createdAt").reference(reference)
             .build(Map.class));
 
-    assertThat(projections.projections).hasSize(1);
-    assertThat(projections.hasMore).isEqualTo(false);
+    assertThat(projections.projections()).hasSize(1);
+    assertThat(projections.hasMore()).isEqualTo(false);
   }
 
   @Test
@@ -374,10 +382,10 @@ public class ProjectionClientIT {
         aggregated("order-totals")
             .build(OrderTotalsProjection.class));
 
-    assertThat(projection.projectionId).isEqualTo("order-totals");
-    assertThat(projection.updatedAt).isEqualTo(1505850788368L);
-    assertThat(projection.data.orderAmount).isEqualTo(1000L);
-    assertThat(projection.data.orderCount).isEqualTo(2L);
+    assertThat(projection.projectionId()).isEqualTo("order-totals");
+    assertThat(projection.updatedAt()).isEqualTo(1505850788368L);
+    assertThat(projection.data().orderAmount).isEqualTo(1000L);
+    assertThat(projection.data().orderCount).isEqualTo(2L);
   }
 
 

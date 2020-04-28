@@ -4,7 +4,7 @@ public class EventFilter {
 
   private String filter;
 
-  public EventFilter(String filter) {
+  private EventFilter(String filter) {
     this.filter = filter;
   }
 

@@ -8,7 +8,7 @@ public class AggregateDelete<T> {
   private final SerializedOkHttpClient client;
   private final HttpUrl url;
 
-  public AggregateDelete(SerializedOkHttpClient client, HttpUrl url) {
+  AggregateDelete(SerializedOkHttpClient client, HttpUrl url) {
     this.client = client;
     this.url = url;
   }

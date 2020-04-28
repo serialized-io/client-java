@@ -7,7 +7,7 @@ public class ReactionRequest {
   public final String type;
   public final UUID tenantId;
 
-  public ReactionRequest(Builder builder) {
+  private ReactionRequest(Builder builder) {
     this.type = builder.type;
     this.tenantId = builder.tenantId;
   }
@@ -21,7 +21,7 @@ public class ReactionRequest {
     private String type;
     private UUID tenantId;
 
-    Builder(String type) {
+    public Builder(String type) {
       this.type = type;
     }
 

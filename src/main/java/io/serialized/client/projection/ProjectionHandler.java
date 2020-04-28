@@ -1,12 +1,16 @@
 package io.serialized.client.projection;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class ProjectionHandler {
 
@@ -35,20 +39,35 @@ public class ProjectionHandler {
     return builder;
   }
 
-  public String getEventType() {
+  public String eventType() {
     return eventType;
   }
 
-  public List<Function> getFunctions() {
+  public List<Function> functions() {
     return unmodifiableList(functions);
   }
 
-  public URI getFunctionUri() {
+  public URI functionUri() {
     return functionUri;
   }
 
-  public String getIdField() {
+  public String idField() {
     return idField;
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this, SHORT_PREFIX_STYLE);
   }
 
   public static class Builder {
@@ -79,6 +98,7 @@ public class ProjectionHandler {
       return this;
     }
 
+    // TODO: Move to constructor!
     public ProjectionHandler build() {
       Validate.notEmpty(eventType, "'eventType' must be set");
       ProjectionHandler projectionHandler = new ProjectionHandler();

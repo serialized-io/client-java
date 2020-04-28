@@ -9,7 +9,7 @@ public class ReactionsResponse {
 
   private List<Reaction> reactions;
 
-  public List<Reaction> getReactions() {
+  public List<Reaction> reactions() {
     return reactions == null ? emptyList() : unmodifiableList(reactions);
   }
 
