@@ -25,7 +25,7 @@ public class ReactionClient {
   }
 
   public void createDefinition(ReactionDefinition reactionDefinition) {
-    HttpUrl url = pathForDefinition().build();
+    HttpUrl url = pathForDefinitions().build();
     client.post(url, reactionDefinition);
   }
 
@@ -42,7 +42,7 @@ public class ReactionClient {
 
   public void createOrUpdate(ReactionDefinition reactionDefinition) {
     String reactionName = reactionDefinition.getReactionName();
-    HttpUrl url = pathForDefinition().addPathSegment(reactionName).build();
+    HttpUrl url = pathForDefinitions().addPathSegment(reactionName).build();
     client.put(url, reactionDefinition);
   }
 
@@ -58,24 +58,39 @@ public class ReactionClient {
   }
 
   public ReactionDefinition getDefinition(String reactionName) {
-    HttpUrl url = pathForDefinition().addPathSegment(reactionName).build();
+    HttpUrl url = pathForDefinitions().addPathSegment(reactionName).build();
     return client.get(url, ReactionDefinition.class);
   }
 
   public ReactionDefinitions listDefinitions() {
-    HttpUrl url = pathForDefinition().build();
+    HttpUrl url = pathForDefinitions().build();
     return client.get(url, ReactionDefinitions.class);
   }
 
   public void deleteDefinition(String reactionName) {
-    HttpUrl url = pathForDefinition().addPathSegment(reactionName).build();
+    HttpUrl url = pathForDefinitions().addPathSegment(reactionName).build();
     client.delete(url);
   }
 
-  private HttpUrl.Builder pathForDefinition() {
+  public ReactionsResponse listReactions(ReactionRequest request) {
+    HttpUrl url = pathForReactions(request.type).build();
+    if (request.hasTenantId()) {
+      return client.get(url, ReactionsResponse.class, request.tenantId);
+    } else {
+      return client.get(url, ReactionsResponse.class);
+    }
+  }
+
+  private HttpUrl.Builder pathForDefinitions() {
     return apiRoot.newBuilder()
         .addPathSegment("reactions")
         .addPathSegment("definitions");
+  }
+
+  private HttpUrl.Builder pathForReactions(String type) {
+    return apiRoot.newBuilder()
+        .addPathSegment("reactions")
+        .addPathSegment(type);
   }
 
   public static class Builder {
