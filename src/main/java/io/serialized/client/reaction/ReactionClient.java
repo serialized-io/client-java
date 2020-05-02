@@ -7,6 +7,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class ReactionClient {
 
@@ -40,6 +41,11 @@ public class ReactionClient {
     createDefinition(reactionDefinition);
   }
 
+  /**
+   * Creates/updates a Reaction definition.
+   * <p>
+   * Note that this method is idempotent.
+   */
   public void createOrUpdate(ReactionDefinition reactionDefinition) {
     String reactionName = reactionDefinition.reactionName();
     HttpUrl url = pathForDefinitions().addPathSegment(reactionName).build();
@@ -48,6 +54,8 @@ public class ReactionClient {
 
   /**
    * Creates/updates a Reaction definition from a JSON String value.
+   * <p>
+   * Note that this method is idempotent.
    *
    * @param jsonString a JSON String with a valid Reaction definition
    * @throws IOException if the given String is not a valid Reaction definition
@@ -57,27 +65,63 @@ public class ReactionClient {
     createOrUpdate(reactionDefinition);
   }
 
+  /**
+   * Get reaction definition.
+   */
   public ReactionDefinition getDefinition(String reactionName) {
     HttpUrl url = pathForDefinitions().addPathSegment(reactionName).build();
     return client.get(url, ReactionDefinition.class);
   }
 
+  /**
+   * List all definitions.
+   */
   public ReactionDefinitions listDefinitions() {
     HttpUrl url = pathForDefinitions().build();
     return client.get(url, ReactionDefinitions.class);
   }
 
+  /**
+   * Delete the definition and all related reactions.
+   */
   public void deleteDefinition(String reactionName) {
     HttpUrl url = pathForDefinitions().addPathSegment(reactionName).build();
     client.delete(url);
   }
 
+  /**
+   * List triggered or scheduled reactions.
+   */
   public ReactionsResponse listReactions(ReactionRequest request) {
     HttpUrl url = pathForReactions(request.type).build();
     if (request.hasTenantId()) {
       return client.get(url, ReactionsResponse.class, request.tenantId);
     } else {
       return client.get(url, ReactionsResponse.class);
+    }
+  }
+
+  /**
+   * Trigger a scheduled reaction or re-trigger an already triggered reaction.
+   */
+  public void triggerReaction(TriggerReactionRequest request) {
+    HttpUrl url = pathForReaction(request.type, request.reactionId).build();
+    if (request.hasTenantId()) {
+      client.post(url, "", request.tenantId);
+    } else {
+      client.post(url, "");
+    }
+  }
+
+  /**
+   * Delete a scheduled reaction.
+   */
+  public void deleteReaction(DeleteReactionRequest request) {
+    HttpUrl url = pathForReaction(request.type, request.reactionId).build();
+    if (request.hasTenantId()) {
+      client.delete(url, request.tenantId);
+    } else {
+      client.delete(url);
     }
   }
 
@@ -91,6 +135,13 @@ public class ReactionClient {
     return apiRoot.newBuilder()
         .addPathSegment("reactions")
         .addPathSegment(type);
+  }
+
+  private HttpUrl.Builder pathForReaction(String type, UUID reactionId) {
+    return apiRoot.newBuilder()
+        .addPathSegment("reactions")
+        .addPathSegment(type)
+        .addPathSegment(reactionId.toString());
   }
 
   public static class Builder {
