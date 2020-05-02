@@ -1,6 +1,13 @@
 package io.serialized.client.reaction;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -52,6 +59,20 @@ public class ReactionApiStub {
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
+  @GET
+  @Path("scheduled")
+  public Response listScheduled() {
+    Object definitions = callback.scheduledReactionsFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(definitions).build();
+  }
+
+  @GET
+  @Path("triggered")
+  public Response listTriggered() {
+    Object definitions = callback.triggeredReactionsFetched();
+    return Response.ok(APPLICATION_JSON_TYPE).entity(definitions).build();
+  }
+
   public interface ReactionApiCallback {
 
     void definitionCreated(ReactionDefinition definition);
@@ -63,6 +84,10 @@ public class ReactionApiStub {
     Object definitionsFetched();
 
     void definitionDeleted(String reactionName);
+
+    Object scheduledReactionsFetched();
+
+    Object triggeredReactionsFetched();
 
   }
 

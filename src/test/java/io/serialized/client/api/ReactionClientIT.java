@@ -2,13 +2,19 @@ package io.serialized.client.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit5.DropwizardClientExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.SerializedClientConfig;
+import io.serialized.client.reaction.Reaction;
 import io.serialized.client.reaction.ReactionApiStub;
 import io.serialized.client.reaction.ReactionClient;
 import io.serialized.client.reaction.ReactionDefinition;
 import io.serialized.client.reaction.ReactionDefinitions;
+import io.serialized.client.reaction.ReactionRequest;
+import io.serialized.client.reaction.ReactionRequests;
+import io.serialized.client.reaction.ReactionsResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,11 +23,15 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.reaction.Actions.httpAction;
 import static io.serialized.client.reaction.ReactionDefinitions.newDefinitionList;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.ZoneOffset.UTC;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -187,6 +197,74 @@ public class ReactionClientIT {
     assertThat(definition.feedName()).isEqualTo(feedName);
     assertThat(definition.reactOnEventType()).isEqualTo(eventType);
     assertThat(definition.action().targetUri()).isEqualTo(targetUri);
+  }
+
+  @Test
+  public void testListScheduledReactions() {
+
+    ReactionClient reactionClient = getReactionClient();
+
+    String aggregateId = "750fc2c9-0c2e-4504-9a95-87281d7bbd1f";
+    String reactionName = "order-notifier";
+    String aggregateType = "orders";
+
+    Map<String, Object> expected = new ImmutableMap.Builder<String, Object>()
+        .put("reactions", ImmutableList.of(
+            ImmutableMap.of(
+                "reactionId", aggregateId,
+                "reactionName", reactionName,
+                "aggregateType", aggregateType,
+                "triggerAt", LocalDate.now().plusDays(1).atStartOfDay().toInstant(UTC).toEpochMilli()
+            )
+        )).build();
+
+    ReactionRequest request = ReactionRequests.scheduled().build();
+
+    when(apiCallback.scheduledReactionsFetched()).thenReturn(expected);
+
+    ReactionsResponse response = reactionClient.listReactions(request);
+    List<Reaction> reactions = response.reactions();
+    assertThat(reactions).hasSize(1);
+
+    Reaction reaction = reactions.iterator().next();
+    assertThat(reaction.reactionId().toString()).isEqualTo(aggregateId);
+    assertThat(reaction.reactionName()).isEqualTo(reactionName);
+    assertThat(reaction.aggregateType()).isEqualTo(aggregateType);
+    assertThat(reaction.triggerAt()).isGreaterThan(System.currentTimeMillis());
+  }
+
+  @Test
+  public void testListTriggeredReactions() {
+
+    ReactionClient reactionClient = getReactionClient();
+
+    String aggregateId = "750fc2c9-0c2e-4504-9a95-87281d7bbd1f";
+    String reactionName = "order-notifier";
+    String aggregateType = "orders";
+
+    Map<String, Object> expected = new ImmutableMap.Builder<String, Object>()
+        .put("reactions", ImmutableList.of(
+            ImmutableMap.of(
+                "reactionId", aggregateId,
+                "reactionName", reactionName,
+                "aggregateType", aggregateType,
+                "finishedAt", LocalDate.now().minusDays(1).atStartOfDay().toInstant(UTC)
+            )
+        )).build();
+
+    ReactionRequest request = ReactionRequests.triggered().build();
+
+    when(apiCallback.triggeredReactionsFetched()).thenReturn(expected);
+
+    ReactionsResponse response = reactionClient.listReactions(request);
+    List<Reaction> reactions = response.reactions();
+    assertThat(reactions).hasSize(1);
+
+    Reaction reaction = reactions.iterator().next();
+    assertThat(reaction.reactionId().toString()).isEqualTo(aggregateId);
+    assertThat(reaction.reactionName()).isEqualTo(reactionName);
+    assertThat(reaction.aggregateType()).isEqualTo(aggregateType);
+    assertThat(reaction.finishedAt()).isLessThan(System.currentTimeMillis());
   }
 
   private ReactionClient getReactionClient() {
