@@ -26,10 +26,14 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.reaction.Actions.httpAction;
 import static io.serialized.client.reaction.ReactionDefinitions.newDefinitionList;
+import static io.serialized.client.reaction.ReactionRequests.deleteReaction;
+import static io.serialized.client.reaction.ReactionRequests.reTriggerReaction;
+import static io.serialized.client.reaction.ReactionRequests.triggerReaction;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.ZoneOffset.UTC;
 import static java.util.Collections.singletonList;
@@ -265,6 +269,42 @@ public class ReactionClientIT {
     assertThat(reaction.reactionName()).isEqualTo(reactionName);
     assertThat(reaction.aggregateType()).isEqualTo(aggregateType);
     assertThat(reaction.finishedAt()).isLessThan(System.currentTimeMillis());
+  }
+
+  @Test
+  public void testTriggerScheduledReaction() {
+
+    ReactionClient reactionClient = getReactionClient();
+
+    String aggregateId = "750fc2c9-0c2e-4504-9a95-87281d7bbd1f";
+
+    reactionClient.triggerReaction(triggerReaction(UUID.fromString(aggregateId)).build());
+
+    verify(apiCallback).scheduledReactionTriggered(aggregateId);
+  }
+
+  @Test
+  public void testReTriggerTriggeredReaction() {
+
+    ReactionClient reactionClient = getReactionClient();
+
+    String aggregateId = "750fc2c9-0c2e-4504-9a95-87281d7bbd1f";
+
+    reactionClient.triggerReaction(reTriggerReaction(UUID.fromString(aggregateId)).build());
+
+    verify(apiCallback).triggeredReactionReTriggered(aggregateId);
+  }
+
+  @Test
+  public void testDeleteScheduledReaction() {
+
+    ReactionClient reactionClient = getReactionClient();
+
+    String aggregateId = "750fc2c9-0c2e-4504-9a95-87281d7bbd1f";
+
+    reactionClient.deleteReaction(deleteReaction(UUID.fromString(aggregateId)).build());
+
+    verify(apiCallback).scheduledReactionDeleted(aggregateId);
   }
 
   private ReactionClient getReactionClient() {

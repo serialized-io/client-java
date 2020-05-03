@@ -66,11 +66,32 @@ public class ReactionApiStub {
     return Response.ok(APPLICATION_JSON_TYPE).entity(definitions).build();
   }
 
+  @POST
+  @Path("scheduled/{reactionId}")
+  public Response trigger(@PathParam("reactionId") String reactionId) {
+    callback.scheduledReactionTriggered(reactionId);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
+  @DELETE
+  @Path("scheduled/{reactionId}")
+  public Response deleteScheduled(@PathParam("reactionId") String reactionId) {
+    callback.scheduledReactionDeleted(reactionId);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
+  }
+
   @GET
   @Path("triggered")
   public Response listTriggered() {
     Object definitions = callback.triggeredReactionsFetched();
     return Response.ok(APPLICATION_JSON_TYPE).entity(definitions).build();
+  }
+
+  @POST
+  @Path("triggered/{reactionId}")
+  public Response reTrigger(@PathParam("reactionId") String reactionId) {
+    callback.triggeredReactionReTriggered(reactionId);
+    return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
   public interface ReactionApiCallback {
@@ -88,6 +109,12 @@ public class ReactionApiStub {
     Object scheduledReactionsFetched();
 
     Object triggeredReactionsFetched();
+
+    void scheduledReactionTriggered(String reactionId);
+
+    void triggeredReactionReTriggered(String reactionId);
+
+    void scheduledReactionDeleted(String reactionId);
 
   }
 
