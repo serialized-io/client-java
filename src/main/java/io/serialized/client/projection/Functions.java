@@ -54,6 +54,10 @@ public class Functions {
     return new Function.Builder("remove");
   }
 
+  public static Function.Builder append() {
+    return new Function.Builder("append");
+  }
+
   public static Function.Builder prepend() {
     return new Function.Builder("prepend");
   }
