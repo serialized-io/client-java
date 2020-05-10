@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(DropwizardExtensionsSupport.class)
 public class FeedClientIT {
 
-  private FeedApiStub.FeedApiCallback apiCallback = mock(FeedApiStub.FeedApiCallback.class);
+  private final FeedApiStub.FeedApiCallback apiCallback = mock(FeedApiStub.FeedApiCallback.class);
 
   public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new FeedApiStub(apiCallback));
 

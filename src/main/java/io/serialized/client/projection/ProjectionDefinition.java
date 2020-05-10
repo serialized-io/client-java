@@ -65,7 +65,7 @@ public class ProjectionDefinition {
 
   public static class AggregatedProjectionBuilder {
 
-    private List<ProjectionHandler> handlers = new ArrayList<>();
+    private final List<ProjectionHandler> handlers = new ArrayList<>();
     private final String projectionName;
     private String feedName;
 
@@ -107,7 +107,7 @@ public class ProjectionDefinition {
 
   public static class SingleProjectionBuilder {
 
-    private List<ProjectionHandler> handlers = new ArrayList<>();
+    private final List<ProjectionHandler> handlers = new ArrayList<>();
     private final String projectionName;
     private String feedName;
     private String idField;

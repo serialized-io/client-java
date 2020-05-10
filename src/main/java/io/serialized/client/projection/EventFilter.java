@@ -2,7 +2,7 @@ package io.serialized.client.projection;
 
 public class EventFilter {
 
-  private String filter;
+  private final String filter;
 
   private EventFilter(String filter) {
     this.filter = filter;

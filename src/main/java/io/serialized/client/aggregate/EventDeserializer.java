@@ -16,7 +16,7 @@ import static io.serialized.client.aggregate.Event.newEvent;
 
 class EventDeserializer extends StdDeserializer<Event<?>> {
 
-  private Map<String, Class> eventTypes;
+  private final Map<String, Class> eventTypes;
 
   private EventDeserializer(Map<String, Class> eventTypes) {
     super((Class) null);

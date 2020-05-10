@@ -18,7 +18,7 @@ public class ReactionRequest {
 
   public static class Builder {
 
-    private String type;
+    private final String type;
     private UUID tenantId;
 
     public Builder(String type) {

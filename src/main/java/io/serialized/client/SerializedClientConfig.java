@@ -52,7 +52,7 @@ public class SerializedClientConfig {
     private String accessKey;
     private String secretAccessKey;
 
-    private Supplier<ObjectMapper> objectMapper = () -> new ObjectMapper()
+    private final Supplier<ObjectMapper> objectMapper = () -> new ObjectMapper()
         .configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
         .configure(FAIL_ON_EMPTY_BEANS, false)
         .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)

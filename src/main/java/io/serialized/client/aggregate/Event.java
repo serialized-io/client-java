@@ -45,7 +45,7 @@ public class Event<T> {
   public static class TypedBuilder<T> {
 
     private UUID eventId;
-    private String eventType;
+    private final String eventType;
     private T data;
     private String encryptedData;
 
@@ -91,7 +91,7 @@ public class Event<T> {
   public static class RawBuilder {
 
     private UUID eventId;
-    private String eventType;
+    private final String eventType;
     private Object data = new LinkedHashMap<>();
     private String encryptedData;
 
@@ -110,9 +110,7 @@ public class Event<T> {
     }
 
     public RawBuilder data(Map<String, Object> data) {
-      LinkedHashMap<Object, Object> dataMap = new LinkedHashMap<>();
-      dataMap.putAll(data);
-      this.data = dataMap;
+      this.data = new LinkedHashMap<Object, Object>(data);
       return this;
     }
 

@@ -45,11 +45,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(DropwizardExtensionsSupport.class)
 public class JerseyClientIT {
 
-  private AggregateApiStub.AggregateApiCallback aggregateApiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
-  private FeedApiStub.FeedApiCallback feedApiCallback = mock(FeedApiStub.FeedApiCallback.class);
-  private ReactionApiStub.ReactionApiCallback reactionApiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
-  private ProjectionApiStub.ProjectionApiCallback projectionApiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
-  private TenantApiStub.TenantApiCallback tenantApiCallback = mock(TenantApiStub.TenantApiCallback.class);
+  private final AggregateApiStub.AggregateApiCallback aggregateApiCallback = mock(AggregateApiStub.AggregateApiCallback.class);
+  private final FeedApiStub.FeedApiCallback feedApiCallback = mock(FeedApiStub.FeedApiCallback.class);
+  private final ReactionApiStub.ReactionApiCallback reactionApiCallback = mock(ReactionApiStub.ReactionApiCallback.class);
+  private final ProjectionApiStub.ProjectionApiCallback projectionApiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
+  private final TenantApiStub.TenantApiCallback tenantApiCallback = mock(TenantApiStub.TenantApiCallback.class);
 
   public final DropwizardClientExtension dropwizardRule = new DropwizardClientExtension(
       new AggregateApiStub(aggregateApiCallback),

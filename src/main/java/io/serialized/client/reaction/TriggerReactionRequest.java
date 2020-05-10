@@ -20,7 +20,7 @@ public class TriggerReactionRequest {
 
   public static class Builder {
 
-    private String type;
+    private final String type;
     private UUID tenantId;
     private UUID reactionId;
 

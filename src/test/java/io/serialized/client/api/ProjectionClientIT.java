@@ -55,7 +55,7 @@ public class ProjectionClientIT {
     public long orderCount;
   }
 
-  private ProjectionApiStub.ProjectionApiCallback apiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
+  private final ProjectionApiStub.ProjectionApiCallback apiCallback = mock(ProjectionApiStub.ProjectionApiCallback.class);
 
   public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new ProjectionApiStub(apiCallback));
 

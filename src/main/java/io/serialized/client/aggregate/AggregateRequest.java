@@ -42,7 +42,7 @@ public class AggregateRequest {
   public static class Builder {
 
     private UUID aggregateId;
-    private List<Event<?>> events = new ArrayList<>();
+    private final List<Event<?>> events = new ArrayList<>();
     private UUID tenantId;
     private Long expectedVersion;
 

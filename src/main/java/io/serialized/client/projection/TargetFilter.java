@@ -2,7 +2,7 @@ package io.serialized.client.projection;
 
 public class TargetFilter {
 
-  private String filter;
+  private final String filter;
 
   public TargetFilter(String filter) {
     this.filter = filter;
