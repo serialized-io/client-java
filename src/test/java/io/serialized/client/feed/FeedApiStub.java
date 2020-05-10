@@ -11,8 +11,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.OptionalInt;
-import java.util.OptionalLong;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -22,7 +20,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 @Consumes(APPLICATION_JSON)
 public class FeedApiStub {
 
-  private FeedApiCallback callback;
+  private final FeedApiCallback callback;
 
   public FeedApiStub(FeedApiCallback callback) {
     this.callback = callback;
@@ -51,11 +49,11 @@ public class FeedApiStub {
   @GET
   @Path("{feedName}")
   public Response feedEntries(@PathParam("feedName") String feedName,
-                              @QueryParam("before") @DefaultValue("0") OptionalLong before,
-                              @QueryParam("since") @DefaultValue("0") OptionalLong since,
-                              @QueryParam("limit") @DefaultValue("1000") @Min(1) @Max(1000) OptionalInt limit) {
+                              @QueryParam("before") @DefaultValue("0") long before,
+                              @QueryParam("since") @DefaultValue("0") long since,
+                              @QueryParam("limit") @DefaultValue("1000") @Min(1) @Max(1000) int limit) {
 
-    QueryParams queryParams = new QueryParams(limit.getAsInt(), since.getAsLong(), before.getAsLong());
+    QueryParams queryParams = new QueryParams(limit, since, before);
     Object responseBody = callback.feedEntriesLoaded(feedName, queryParams);
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
@@ -67,7 +65,7 @@ public class FeedApiStub {
     return Response.ok(APPLICATION_JSON_TYPE).header("Serialized-SequenceNumber-Current", sequenceNumber).build();
   }
 
-  public class QueryParams {
+  public static class QueryParams {
 
     private final Integer limit;
     private final Long since;
