@@ -6,7 +6,7 @@ public class EventSelector {
 
   private final String selector;
 
-  private EventSelector(String selector) {
+  public EventSelector(String selector) {
     this.selector = selector;
   }
 
