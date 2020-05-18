@@ -23,17 +23,12 @@ public class AggregateClient<T> {
   private final HttpUrl apiRoot;
   private final StateBuilder<T> stateBuilder;
   private final String aggregateType;
-  /**
-   * Enables optimistic concurrency for aggregate updates.
-   */
-  private final boolean useOptimisticConcurrencyOnUpdate;
 
   private AggregateClient(Builder<T> builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
     this.apiRoot = builder.apiRoot;
     this.aggregateType = builder.aggregateType;
     this.stateBuilder = builder.stateBuilder;
-    this.useOptimisticConcurrencyOnUpdate = builder.useOptimisticConcurrencyOnUpdate;
   }
 
   public static <T> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
@@ -67,7 +62,7 @@ public class AggregateClient<T> {
    * Update the aggregate.
    * <p>
    * The update will be performed using optimistic concurrency check depending on the
-   * {@link #useOptimisticConcurrencyOnUpdate} configuration flag.
+   * {@link AggregateUpdate#useOptimisticConcurrencyOnUpdate} setting.
    *
    * @param aggregateId The ID of the aggregate.
    * @param update      Function that executes business logic and returns the resulting domain events.
@@ -80,7 +75,7 @@ public class AggregateClient<T> {
    * Update the aggregate.
    * <p>
    * The update will be performed using optimistic concurrency check depending on the
-   * {@link #useOptimisticConcurrencyOnUpdate} configuration flag.
+   * {@link AggregateUpdate#useOptimisticConcurrencyOnUpdate} setting.
    *
    * @param aggregateId The ID of the aggregate.
    * @param update      Function that executes business logic and returns the resulting domain events.
@@ -88,7 +83,7 @@ public class AggregateClient<T> {
   public void update(UUID aggregateId, AggregateUpdate<T> update) {
     LoadAggregateResponse aggregateResponse = loadState(aggregateId);
     T state = stateBuilder.buildState(aggregateResponse.events);
-    Long expectedVersion = getExpectedVersion(aggregateResponse);
+    Long expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
     List<Event<?>> events = update.apply(state);
     storeBatch(aggregateId, new EventBatch(events, expectedVersion));
   }
@@ -97,7 +92,7 @@ public class AggregateClient<T> {
    * Update the aggregate.
    * <p>
    * The update will be performed using optimistic concurrency check depending on the
-   * {@link #useOptimisticConcurrencyOnUpdate} configuration flag.
+   * {@link AggregateUpdate#useOptimisticConcurrencyOnUpdate} configuration flag.
    *
    * @param aggregateId The ID of the aggregate.
    * @param tenantId    The ID of the tenant.
@@ -106,7 +101,7 @@ public class AggregateClient<T> {
   public void update(UUID aggregateId, UUID tenantId, AggregateUpdate<T> update) {
     LoadAggregateResponse aggregateResponse = loadState(aggregateId, tenantId);
     T state = stateBuilder.buildState(aggregateResponse.events);
-    Long expectedVersion = getExpectedVersion(aggregateResponse);
+    Long expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
     List<Event<?>> events = update.apply(state);
     storeBatch(aggregateId, tenantId, new EventBatch(events, expectedVersion));
   }
@@ -164,10 +159,6 @@ public class AggregateClient<T> {
         throw e;
       }
     }
-  }
-
-  private Long getExpectedVersion(LoadAggregateResponse aggregateResponse) {
-    return useOptimisticConcurrencyOnUpdate ? aggregateResponse.aggregateVersion : null;
   }
 
   private AggregateDelete<T> getDeleteToken(HttpUrl.Builder urlBuilder) {
@@ -242,8 +233,6 @@ public class AggregateClient<T> {
     private final String aggregateType;
     private final Map<String, Class> eventTypes = new HashMap<>();
 
-    private boolean useOptimisticConcurrencyOnUpdate = true;
-
     Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
       this.aggregateType = aggregateType;
       this.apiRoot = config.apiRoot();
@@ -259,11 +248,6 @@ public class AggregateClient<T> {
     public <E> Builder<T> registerHandler(String eventType, Class<E> eventClass, EventHandler<T, E> handler) {
       this.eventTypes.put(eventType, eventClass);
       stateBuilder.withHandler(eventClass, handler);
-      return this;
-    }
-
-    public Builder<T> useOptimisticConcurrencyOnUpdate(boolean useOptimisticConcurrencyOnUpdate) {
-      this.useOptimisticConcurrencyOnUpdate = useOptimisticConcurrencyOnUpdate;
       return this;
     }
 
