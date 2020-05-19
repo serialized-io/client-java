@@ -89,7 +89,6 @@ public class ProjectionDefinition {
       return addHandler(builder.build());
     }
 
-    // TODO: Move to constructor
     public ProjectionDefinition build() {
       Validate.isTrue(!handlers.isEmpty(), "'handlers' must not be empty");
       Validate.notEmpty(projectionName, "'projectionName' must be set");
@@ -137,7 +136,6 @@ public class ProjectionDefinition {
       return this;
     }
 
-    // TODO: Move to constructor
     public ProjectionDefinition build() {
       Validate.isTrue(!handlers.isEmpty(), "'handlers' must not be empty");
       Validate.notEmpty(projectionName, "'projectionName' must be set");

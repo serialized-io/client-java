@@ -15,7 +15,7 @@ import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 public class ProjectionHandler {
 
   private String eventType;
-  private List<Function> functions = new ArrayList<>();
+  private final List<Function> functions = new ArrayList<>();
   private URI functionUri;
   private String idField;
 
@@ -98,12 +98,12 @@ public class ProjectionHandler {
       return this;
     }
 
-    // TODO: Move to constructor!
     public ProjectionHandler build() {
       Validate.notEmpty(eventType, "'eventType' must be set");
+
       ProjectionHandler projectionHandler = new ProjectionHandler();
       projectionHandler.eventType = this.eventType;
-      projectionHandler.functions = this.functions;
+      projectionHandler.functions.addAll(this.functions);
       projectionHandler.functionUri = this.functionUri;
       projectionHandler.idField = this.idField;
       return projectionHandler;

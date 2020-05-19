@@ -92,7 +92,6 @@ public class Function {
       return this;
     }
 
-    // TODO: Move to constructor.
     public Function build() {
       Function function = new Function();
       function.function = this.function;
