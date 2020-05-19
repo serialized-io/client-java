@@ -57,4 +57,41 @@ public class Event {
     return ToStringBuilder.reflectionToString(this, SHORT_PREFIX_STYLE);
   }
 
+  public static class Builder {
+
+    private final String eventType;
+    private String eventId;
+    private Map<String, Object> data;
+    private String encryptedData;
+
+    public Builder(String eventType) {
+      this.eventType = eventType;
+    }
+
+    public Builder withEventId(String eventId) {
+      this.eventId = eventId;
+      return this;
+    }
+
+    public Builder withData(Map<String, Object> data) {
+      this.data = data;
+      return this;
+    }
+
+    public Builder withEncryptedData(String encryptedData) {
+      this.encryptedData = encryptedData;
+      return this;
+    }
+
+    public Event build() {
+      Event event = new Event();
+      event.eventType = this.eventType;
+      event.eventId = this.eventId;
+      event.data = this.data;
+      event.encryptedData = this.encryptedData;
+      return event;
+    }
+
+  }
+
 }
