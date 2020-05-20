@@ -34,6 +34,7 @@ import java.util.UUID;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
+import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
@@ -196,7 +197,7 @@ public class JerseyClientIT {
         "expectedVersion", "0"
     );
 
-    when(aggregateApiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(200);
+    when(aggregateApiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(OK);
 
     Response response = client.target(apiRoot)
         .path("aggregates")

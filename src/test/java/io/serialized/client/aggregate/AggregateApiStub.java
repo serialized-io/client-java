@@ -88,9 +88,9 @@ public class AggregateApiStub {
 
   public interface AggregateApiCallback {
 
-    int eventsStored(UUID aggregateId, EventBatch eventBatch);
+    Response.Status eventsStored(UUID aggregateId, EventBatch eventBatch);
 
-    int eventsStored(UUID aggregateId, EventBatch eventBatch, UUID tenantId);
+    Response.Status eventsStored(UUID aggregateId, EventBatch eventBatch, UUID tenantId);
 
     Object aggregateLoaded(String aggregateType, UUID aggregateId);
 

@@ -32,6 +32,8 @@ import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -64,7 +66,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(200);
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     OrderState orderState = new OrderState();
     Order order = new Order(orderState);
@@ -80,7 +82,7 @@ public class AggregateClientIT {
 
     AggregateClient<Object> orderClient = aggregateClient(aggregateType, Object.class, getConfig()).build();
 
-    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(200);
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     Event event = newEvent("order-placed").data("orderId", orderId, "customerId", UUID.randomUUID()).build();
 
@@ -96,7 +98,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(409);
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(CONFLICT);
 
     OrderState orderState = new OrderState();
     Order order = new Order(orderState);
@@ -117,7 +119,7 @@ public class AggregateClientIT {
         .build();
 
     when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
-    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(200);
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     orderClient.update(orderId, orderState -> new Order(orderState).cancel());
   }
@@ -161,7 +163,7 @@ public class AggregateClientIT {
         .build();
 
     when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
-    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(409);
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(CONFLICT);
 
     assertThrows(ConcurrencyException.class, () ->
         orderClient.update(orderId, orderState -> new Order(orderState).cancel())
@@ -207,7 +209,7 @@ public class AggregateClientIT {
     AggregateClient<OrderState> orderClient = getOrderClient("order");
 
     UUID aggregateId = UUID.randomUUID();
-    when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(200);
+    when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(OK);
 
     orderClient.save(AggregateRequest.saveRequest().withAggregateId(aggregateId).withEvents(singletonList(orderPlaced("order-123", 1234L))).build());
 
@@ -230,7 +232,7 @@ public class AggregateClientIT {
     UUID aggregateId = UUID.randomUUID();
     UUID tenantId = UUID.randomUUID();
     List<Event<?>> events = singletonList(orderPlaced("order-123", 1234L));
-    when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class), any(UUID.class))).thenReturn(200);
+    when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class), any(UUID.class))).thenReturn(OK);
 
     AggregateRequest aggregateRequest = AggregateRequest.saveRequest().withTenantId(tenantId).withAggregateId(aggregateId).withEvents(events).build();
     orderClient.save(aggregateRequest);
