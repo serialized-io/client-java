@@ -155,30 +155,31 @@ public class AggregateClientIT {
     AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .registerHandler(OrderCanceled.class, OrderState::handleOrderCanceled)
-        .withStateCache(stateCache)
         .build();
 
     when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     int eventsStored = orderClient.update(orderId, new AggregateUpdate<OrderState>() {
+
       @Override
-      public List<Event<?>> apply(OrderState state) {
-        return new Order(state).cancel();
+      public Optional<StateCache<OrderState>> stateCache() {
+        return Optional.of(stateCache);
       }
 
       @Override
-      public boolean useStateCache() {
-        return true;
+      public List<Event<?>> apply(OrderState state) {
+        return new Order(state).cancel();
       }
     });
 
     assertThat(eventsStored).isEqualTo(1);
 
     eventsStored = orderClient.update(orderId, new AggregateUpdate<OrderState>() {
+
       @Override
-      public boolean useStateCache() {
-        return true;
+      public Optional<StateCache<OrderState>> stateCache() {
+        return Optional.of(stateCache);
       }
 
       @Override

@@ -1,5 +1,7 @@
 package io.serialized.client.aggregate;
 
+import io.serialized.client.aggregate.cache.StateCache;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -8,8 +10,8 @@ public interface AggregateUpdate<T> {
 
   List<Event<?>> apply(T state);
 
-  default boolean useStateCache() {
-    return false;
+  default Optional<StateCache<T>> stateCache() {
+    return Optional.empty();
   }
 
   /**

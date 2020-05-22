@@ -26,14 +26,12 @@ public class AggregateClient<T> {
   private final HttpUrl apiRoot;
   private final StateBuilder<T> stateBuilder;
   private final String aggregateType;
-  private final StateCache<T> stateCache;
 
   private AggregateClient(Builder<T> builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
     this.apiRoot = builder.apiRoot;
     this.aggregateType = builder.aggregateType;
     this.stateBuilder = builder.stateBuilder;
-    this.stateCache = builder.stateCache;
   }
 
   public static <T> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
@@ -92,7 +90,8 @@ public class AggregateClient<T> {
   private int updateInternal(UUID aggregateId, AggregateUpdate<T> update) {
     assertValidUpdateConfig(update);
 
-    if (update.useStateCache()) {
+    if (update.stateCache().isPresent()) {
+      StateCache<T> stateCache = update.stateCache().get();
       Optional<VersionedState<T>> cachedState = update.tenantId()
           .map(tenantId -> stateCache.get(aggregateId, tenantId))
           .orElseGet(() -> stateCache.get(aggregateId));
@@ -131,7 +130,7 @@ public class AggregateClient<T> {
   }
 
   private void assertValidUpdateConfig(AggregateUpdate<T> update) {
-    if (update.useStateCache() && !update.useOptimisticConcurrencyOnUpdate()) {
+    if (update.stateCache().isPresent() && !update.useOptimisticConcurrencyOnUpdate()) {
       throw new IllegalArgumentException("Cannot use stateCache with optimisticConcurrencyOnUpdate disabled");
     }
   }
@@ -256,9 +255,6 @@ public class AggregateClient<T> {
     private final String aggregateType;
     private final Map<String, Class> eventTypes = new HashMap<>();
 
-    private StateCache<T> stateCache = new StateCache<T>() {
-    };
-
     Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
       this.aggregateType = aggregateType;
       this.apiRoot = config.apiRoot();
@@ -277,14 +273,8 @@ public class AggregateClient<T> {
       return this;
     }
 
-    public <E> Builder<T> withStateCache(StateCache<T> stateCache) {
-      this.stateCache = stateCache;
-      return this;
-    }
-
     public AggregateClient<T> build() {
       Validate.notNull(aggregateType, "'aggregateType' must be set");
-      Validate.notNull(stateCache, "'stateCache' cannot be null");
       objectMapper.registerModule(EventDeserializer.module(eventTypes));
       return new AggregateClient<>(this);
     }
