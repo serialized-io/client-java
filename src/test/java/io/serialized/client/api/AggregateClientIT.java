@@ -10,9 +10,13 @@ import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.aggregate.AggregateApiStub;
 import io.serialized.client.aggregate.AggregateClient;
 import io.serialized.client.aggregate.AggregateRequest;
+import io.serialized.client.aggregate.AggregateUpdate;
 import io.serialized.client.aggregate.Event;
 import io.serialized.client.aggregate.EventBatch;
+import io.serialized.client.aggregate.cache.StateCache;
+import io.serialized.client.aggregate.cache.VersionedState;
 import io.serialized.client.aggregate.order.Order;
+import io.serialized.client.aggregate.order.OrderCanceled;
 import io.serialized.client.aggregate.order.OrderPlaced;
 import io.serialized.client.aggregate.order.OrderState;
 import io.serialized.client.aggregate.order.OrderStatus;
@@ -24,7 +28,10 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
 import static io.serialized.client.aggregate.Event.newEvent;
@@ -39,9 +46,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -121,7 +130,68 @@ public class AggregateClientIT {
     when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
-    orderClient.update(orderId, orderState -> new Order(orderState).cancel());
+    assertThat(orderClient.update(orderId, orderState -> new Order(orderState).cancel())).isEqualTo(1);
+  }
+
+  @Test
+  public void testUpdateUsingStateCache() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    final Map<UUID, VersionedState<OrderState>> stateMap = new ConcurrentHashMap<>();
+    StateCache<OrderState> stateCache = new StateCache<OrderState>() {
+
+      @Override
+      public void put(UUID aggregateId, VersionedState<OrderState> versionedState) {
+        stateMap.put(aggregateId, versionedState);
+      }
+
+      @Override
+      public Optional<VersionedState<OrderState>> get(UUID aggregateId) {
+        return Optional.ofNullable(stateMap.get(aggregateId));
+      }
+    };
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .registerHandler(OrderCanceled.class, OrderState::handleOrderCanceled)
+        .withStateCache(stateCache)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
+
+    int eventsStored = orderClient.update(orderId, new AggregateUpdate<OrderState>() {
+      @Override
+      public List<Event<?>> apply(OrderState state) {
+        return new Order(state).cancel();
+      }
+
+      @Override
+      public boolean useStateCache() {
+        return true;
+      }
+    });
+
+    assertThat(eventsStored).isEqualTo(1);
+
+    eventsStored = orderClient.update(orderId, new AggregateUpdate<OrderState>() {
+      @Override
+      public boolean useStateCache() {
+        return true;
+      }
+
+      @Override
+      public List<Event<?>> apply(OrderState state) {
+        Order order = new Order(state);
+        return order.cancel();
+      }
+    });
+
+    assertThat(eventsStored).isEqualTo(0);
+
+    verify(apiCallback, times(1)).aggregateLoaded(anyString(), any(UUID.class));
+    verify(apiCallback, times(1)).eventsStored(any(UUID.class), any(EventBatch.class));
   }
 
   @Test
@@ -181,11 +251,12 @@ public class AggregateClientIT {
 
     when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
 
-    orderClient.update(orderId, orderState -> {
+    int eventsStored = orderClient.update(orderId, orderState -> {
       assertThat(orderState.status()).isEqualTo(OrderStatus.PLACED);
       return emptyList();
     });
 
+    assertThat(eventsStored).isEqualTo(0);
   }
 
   @Test

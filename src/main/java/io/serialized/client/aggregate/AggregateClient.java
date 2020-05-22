@@ -5,6 +5,8 @@ import io.serialized.client.ApiException;
 import io.serialized.client.ConcurrencyException;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.SerializedOkHttpClient;
+import io.serialized.client.aggregate.cache.StateCache;
+import io.serialized.client.aggregate.cache.VersionedState;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -13,6 +15,7 @@ import org.apache.commons.lang3.Validate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static io.serialized.client.aggregate.StateBuilder.stateBuilder;
@@ -23,12 +26,14 @@ public class AggregateClient<T> {
   private final HttpUrl apiRoot;
   private final StateBuilder<T> stateBuilder;
   private final String aggregateType;
+  private final StateCache<T> stateCache;
 
   private AggregateClient(Builder<T> builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
     this.apiRoot = builder.apiRoot;
     this.aggregateType = builder.aggregateType;
     this.stateBuilder = builder.stateBuilder;
+    this.stateCache = builder.stateCache;
   }
 
   public static <T> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
@@ -51,11 +56,9 @@ public class AggregateClient<T> {
       } else {
         client.post(url, request.eventBatch());
       }
-
     } catch (ApiException e) {
       handleConcurrencyException(e);
     }
-
   }
 
   /**
@@ -66,9 +69,25 @@ public class AggregateClient<T> {
    *
    * @param aggregateId The ID of the aggregate.
    * @param update      Function that executes business logic and returns the resulting domain events.
+   * @return Number of events stored in batch
    */
-  public void update(String aggregateId, AggregateUpdate<T> update) {
-    update(UUID.fromString(aggregateId), update);
+  public int update(String aggregateId, AggregateUpdate<T> update) {
+    return update(UUID.fromString(aggregateId), update);
+  }
+
+  /**
+   * Update the aggregate.
+   * <p>
+   * The update will be performed using optimistic concurrency check depending on the
+   * {@link AggregateUpdate#useOptimisticConcurrencyOnUpdate} setting.
+   *
+   * @param aggregateId The ID of the aggregate.
+   * @param tenantId    The ID of the tenant.
+   * @param update      Function that executes business logic and returns the resulting domain events.
+   * @return Number of events stored in batch
+   */
+  public int update(String aggregateId, String tenantId, AggregateUpdate<T> update) {
+    return update(UUID.fromString(aggregateId), UUID.fromString(tenantId), update);
   }
 
   /**
@@ -79,13 +98,10 @@ public class AggregateClient<T> {
    *
    * @param aggregateId The ID of the aggregate.
    * @param update      Function that executes business logic and returns the resulting domain events.
+   * @return Number of events stored in batch
    */
-  public void update(UUID aggregateId, AggregateUpdate<T> update) {
-    LoadAggregateResponse aggregateResponse = loadState(aggregateId);
-    T state = stateBuilder.buildState(aggregateResponse.events);
-    Long expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
-    List<Event<?>> events = update.apply(state);
-    storeBatch(aggregateId, new EventBatch(events, expectedVersion));
+  public int update(UUID aggregateId, AggregateUpdate<T> update) {
+    return updateInternal(aggregateId, update, null);
   }
 
   /**
@@ -97,17 +113,62 @@ public class AggregateClient<T> {
    * @param aggregateId The ID of the aggregate.
    * @param tenantId    The ID of the tenant.
    * @param update      Function that executes business logic and returns the resulting domain events.
+   * @return Number of events stored in batch
    */
-  public void update(UUID aggregateId, UUID tenantId, AggregateUpdate<T> update) {
-    LoadAggregateResponse aggregateResponse = loadState(aggregateId, tenantId);
-    T state = stateBuilder.buildState(aggregateResponse.events);
-    Long expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
-    List<Event<?>> events = update.apply(state);
-    storeBatch(aggregateId, tenantId, new EventBatch(events, expectedVersion));
+  public int update(UUID aggregateId, UUID tenantId, AggregateUpdate<T> update) {
+    return updateInternal(aggregateId, update, tenantId);
+  }
+
+  private int updateInternal(UUID aggregateId, AggregateUpdate<T> update, UUID tenantId) {
+    assertValidUpdateConfig(update);
+
+    if (update.useStateCache()) {
+      Optional<VersionedState<T>> cachedState = Optional.ofNullable(tenantId)
+          .map(id -> stateCache.get(aggregateId, tenantId))
+          .orElseGet(() -> stateCache.get(aggregateId));
+
+      final List<Event<?>> events;
+      final long currentVersion;
+
+      if (cachedState.isPresent()) {
+        VersionedState<T> versionedState = cachedState.get();
+        currentVersion = versionedState.version();
+        events = update.apply(versionedState.state());
+      } else {
+        LoadAggregateResponse aggregateResponse = loadState(aggregateId, tenantId);
+        currentVersion = aggregateResponse.aggregateVersion;
+        events = update.apply(stateBuilder.buildState(aggregateResponse.events));
+      }
+
+      if (!events.isEmpty()) {
+        storeBatch(aggregateId, tenantId, new EventBatch(events, currentVersion));
+        if (tenantId == null) {
+          stateCache.put(aggregateId, new VersionedState<>(stateBuilder.buildState(events), currentVersion + 1));
+        } else {
+          stateCache.put(aggregateId, tenantId, new VersionedState<>(stateBuilder.buildState(events), currentVersion + 1));
+        }
+      }
+      return events.size();
+
+    } else {
+      LoadAggregateResponse aggregateResponse = loadState(aggregateId, tenantId);
+      T state = stateBuilder.buildState(aggregateResponse.events);
+      Long expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
+      List<Event<?>> events = update.apply(state);
+      storeBatch(aggregateId, tenantId, new EventBatch(events, expectedVersion));
+      return events.size();
+    }
+
+  }
+
+  private void assertValidUpdateConfig(AggregateUpdate<T> update) {
+    if (update.useStateCache() && !update.useOptimisticConcurrencyOnUpdate()) {
+      throw new IllegalArgumentException("Cannot use stateCache with optimisticConcurrencyOnUpdate disabled");
+    }
   }
 
   public AggregateDelete<T> deleteByType() {
-    return getDeleteToken(getAggregateTypeUrl());
+    return getDeleteToken(getAggregateTypeUrl(), null);
   }
 
   public AggregateDelete<T> deleteByType(UUID tenantId) {
@@ -115,7 +176,7 @@ public class AggregateClient<T> {
   }
 
   public AggregateDelete<T> deleteById(UUID aggregateId) {
-    return getDeleteToken(getAggregateUrl(aggregateId));
+    return getDeleteToken(getAggregateUrl(aggregateId), null);
   }
 
   public AggregateDelete<T> deleteById(UUID aggregateId, UUID tenantId) {
@@ -161,12 +222,12 @@ public class AggregateClient<T> {
     }
   }
 
-  private AggregateDelete<T> getDeleteToken(HttpUrl.Builder urlBuilder) {
-    return extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class));
-  }
-
   private AggregateDelete<T> getDeleteToken(HttpUrl.Builder urlBuilder, UUID tenantId) {
-    return extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class, tenantId));
+    if (tenantId == null) {
+      return extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class));
+    } else {
+      return extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class, tenantId));
+    }
   }
 
   private AggregateDelete<T> extractDeleteToken(HttpUrl.Builder urlBuilder, Map<String, String> deleteResponse) {
@@ -175,24 +236,12 @@ public class AggregateClient<T> {
     return new AggregateDelete<>(client, deleteAggregateUrl);
   }
 
-  private LoadAggregateResponse loadState(UUID aggregateId) {
-    HttpUrl url = getAggregateUrl(aggregateId).build();
-    return client.get(url, LoadAggregateResponse.class);
-  }
-
   private LoadAggregateResponse loadState(UUID aggregateId, UUID tenantId) {
     HttpUrl url = getAggregateUrl(aggregateId).build();
-    return client.get(url, LoadAggregateResponse.class, tenantId);
-  }
-
-  private void storeBatch(UUID aggregateId, EventBatch eventBatch) {
-    if (eventBatch.events().isEmpty()) return;
-
-    try {
-      HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
-      client.post(url, eventBatch);
-    } catch (ApiException e) {
-      handleConcurrencyException(e);
+    if (tenantId == null) {
+      return client.get(url, LoadAggregateResponse.class);
+    } else {
+      return client.get(url, LoadAggregateResponse.class, tenantId);
     }
   }
 
@@ -201,7 +250,11 @@ public class AggregateClient<T> {
 
     try {
       HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
-      client.post(url, eventBatch, tenantId);
+      if (tenantId == null) {
+        client.post(url, eventBatch);
+      } else {
+        client.post(url, eventBatch, tenantId);
+      }
     } catch (ApiException e) {
       handleConcurrencyException(e);
     }
@@ -233,6 +286,9 @@ public class AggregateClient<T> {
     private final String aggregateType;
     private final Map<String, Class> eventTypes = new HashMap<>();
 
+    private StateCache<T> stateCache = new StateCache<T>() {
+    };
+
     Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
       this.aggregateType = aggregateType;
       this.apiRoot = config.apiRoot();
@@ -251,8 +307,14 @@ public class AggregateClient<T> {
       return this;
     }
 
+    public <E> Builder<T> withStateCache(StateCache<T> stateCache) {
+      this.stateCache = stateCache;
+      return this;
+    }
+
     public AggregateClient<T> build() {
       Validate.notNull(aggregateType, "'aggregateType' must be set");
+      Validate.notNull(stateCache, "'stateCache' cannot be null");
       objectMapper.registerModule(EventDeserializer.module(eventTypes));
       return new AggregateClient<>(this);
     }
