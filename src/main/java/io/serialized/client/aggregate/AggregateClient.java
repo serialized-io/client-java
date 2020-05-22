@@ -135,19 +135,19 @@ public class AggregateClient<T> {
     }
   }
 
-  public AggregateDelete<T> deleteByType() {
+  public AggregateDeleteConfirmation deleteByType() {
     return getDeleteToken(getAggregateTypeUrl(), null);
   }
 
-  public AggregateDelete<T> deleteByType(UUID tenantId) {
+  public AggregateDeleteConfirmation deleteByType(UUID tenantId) {
     return getDeleteToken(getAggregateTypeUrl(), tenantId);
   }
 
-  public AggregateDelete<T> deleteById(UUID aggregateId) {
+  public AggregateDeleteConfirmation deleteById(UUID aggregateId) {
     return getDeleteToken(getAggregateUrl(aggregateId), null);
   }
 
-  public AggregateDelete<T> deleteById(UUID aggregateId, UUID tenantId) {
+  public AggregateDeleteConfirmation deleteById(UUID aggregateId, UUID tenantId) {
     return getDeleteToken(getAggregateUrl(aggregateId), tenantId);
   }
 
@@ -190,7 +190,7 @@ public class AggregateClient<T> {
     }
   }
 
-  private AggregateDelete<T> getDeleteToken(HttpUrl.Builder urlBuilder, UUID tenantId) {
+  private AggregateDeleteConfirmation getDeleteToken(HttpUrl.Builder urlBuilder, UUID tenantId) {
     if (tenantId == null) {
       return extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class));
     } else {
@@ -198,10 +198,10 @@ public class AggregateClient<T> {
     }
   }
 
-  private AggregateDelete<T> extractDeleteToken(HttpUrl.Builder urlBuilder, Map<String, String> deleteResponse) {
+  private AggregateDeleteConfirmation extractDeleteToken(HttpUrl.Builder urlBuilder, Map<String, String> deleteResponse) {
     String deleteToken = deleteResponse.get("deleteToken");
     HttpUrl deleteAggregateUrl = urlBuilder.addQueryParameter("deleteToken", deleteToken).build();
-    return new AggregateDelete<>(client, deleteAggregateUrl);
+    return new AggregateDeleteConfirmation(client, deleteAggregateUrl);
   }
 
   private LoadAggregateResponse loadState(UUID aggregateId, Optional<UUID> tenantId) {
