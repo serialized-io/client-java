@@ -1,6 +1,8 @@
 package io.serialized.client.aggregate;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface AggregateUpdate<T> {
 
@@ -15,6 +17,10 @@ public interface AggregateUpdate<T> {
    */
   default boolean useOptimisticConcurrencyOnUpdate() {
     return true;
+  }
+
+  default Optional<UUID> tenantId() {
+    return Optional.empty();
   }
 
 }
