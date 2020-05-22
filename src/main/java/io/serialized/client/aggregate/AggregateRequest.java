@@ -19,6 +19,14 @@ public class AggregateRequest {
     this.expectedVersion = builder.expectedVersion;
   }
 
+  public Optional<UUID> tenantId() {
+    return Optional.ofNullable(tenantId);
+  }
+
+  public EventBatch eventBatch() {
+    return new EventBatch(this.events, expectedVersion);
+  }
+
   public static Builder saveRequest() {
     return new Builder(0L);
   }
@@ -29,14 +37,6 @@ public class AggregateRequest {
 
   public static Builder appendRequest() {
     return new Builder(null);
-  }
-
-  public Optional<UUID> tenantId() {
-    return Optional.ofNullable(tenantId);
-  }
-
-  public EventBatch eventBatch() {
-    return new EventBatch(this.events, expectedVersion);
   }
 
   public static class Builder {

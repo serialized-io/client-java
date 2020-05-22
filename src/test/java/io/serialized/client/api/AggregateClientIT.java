@@ -34,6 +34,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
+import static io.serialized.client.aggregate.AggregateDelete.deleteRequest;
 import static io.serialized.client.aggregate.Event.newEvent;
 import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -93,7 +94,7 @@ public class AggregateClientIT {
 
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
-    Event event = newEvent("order-placed").data("orderId", orderId, "customerId", UUID.randomUUID()).build();
+    Event<?> event = newEvent("order-placed").data("orderId", orderId, "customerId", UUID.randomUUID()).build();
 
     orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvent(event).build());
   }
@@ -205,7 +206,7 @@ public class AggregateClientIT {
 
     when(apiCallback.aggregateDeleteRequested(aggregateType, orderId)).thenReturn(ImmutableMap.of("deleteToken", deleteToken));
 
-    orderClient.deleteById(orderId).confirm();
+    orderClient.delete(deleteRequest().withAggregateId(orderId).build()).confirm();
 
     verify(apiCallback).aggregateDeletePerformed(aggregateType, orderId, deleteToken.toString());
   }
@@ -219,7 +220,7 @@ public class AggregateClientIT {
 
     when(apiCallback.aggregateTypeDeleteRequested(aggregateType)).thenReturn(ImmutableMap.of("deleteToken", deleteToken));
 
-    orderClient.deleteByType().confirm();
+    orderClient.delete(deleteRequest().build()).confirm();
 
     verify(apiCallback).aggregateTypeDeletePerformed(aggregateType, deleteToken.toString());
   }
@@ -278,7 +279,7 @@ public class AggregateClientIT {
   @Test
   public void testStoreEvents() {
 
-    AggregateClient<OrderState> orderClient = getOrderClient("order");
+    AggregateClient<OrderState> orderClient = getOrderClient();
 
     UUID aggregateId = UUID.randomUUID();
     when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(OK);
@@ -291,7 +292,7 @@ public class AggregateClientIT {
     EventBatch eventsStored = eventsStoredCaptor.getValue();
     List<Event<?>> events = eventsStored.events();
     assertThat(events).hasSize(1);
-    Event event = events.get(0);
+    Event<?> event = events.get(0);
     assertThat(event.eventType()).isEqualTo(OrderPlaced.class.getSimpleName());
     assertNotNull(event.data());
   }
@@ -299,7 +300,7 @@ public class AggregateClientIT {
   @Test
   public void testStoreEventsForTenant() {
 
-    AggregateClient<OrderState> orderClient = getOrderClient("order");
+    AggregateClient<OrderState> orderClient = getOrderClient();
 
     UUID aggregateId = UUID.randomUUID();
     UUID tenantId = UUID.randomUUID();
@@ -319,8 +320,8 @@ public class AggregateClientIT {
     assertNotNull(event.data());
   }
 
-  private AggregateClient<OrderState> getOrderClient(String order) {
-    return aggregateClient(order, OrderState.class, getConfig())
+  private AggregateClient<OrderState> getOrderClient() {
+    return aggregateClient("order", OrderState.class, getConfig())
         .registerHandler("order-placed", OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
   }

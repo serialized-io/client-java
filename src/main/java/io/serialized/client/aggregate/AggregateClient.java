@@ -135,20 +135,19 @@ public class AggregateClient<T> {
     }
   }
 
-  public AggregateDeleteConfirmation deleteByType() {
-    return getDeleteToken(getAggregateTypeUrl(), null);
-  }
-
-  public AggregateDeleteConfirmation deleteByType(UUID tenantId) {
-    return getDeleteToken(getAggregateTypeUrl(), tenantId);
-  }
-
-  public AggregateDeleteConfirmation deleteById(UUID aggregateId) {
-    return getDeleteToken(getAggregateUrl(aggregateId), null);
-  }
-
-  public AggregateDeleteConfirmation deleteById(UUID aggregateId, UUID tenantId) {
-    return getDeleteToken(getAggregateUrl(aggregateId), tenantId);
+  /**
+   * Deletes all aggregate instances for current type or a single aggregate instance by its ID.
+   *
+   * @param delete Request
+   * @return Confirmation for client to confirm.
+   * @see AggregateDeleteConfirmation#confirm()
+   */
+  public AggregateDeleteConfirmation delete(AggregateDelete delete) {
+    if (delete.aggregateId == null) {
+      return getDeleteToken(getAggregateTypeUrl(), delete.tenantId);
+    } else {
+      return getDeleteToken(getAggregateUrl(delete.aggregateId), delete.tenantId);
+    }
   }
 
   /**
