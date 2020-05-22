@@ -152,33 +152,17 @@ public class AggregateClient<T> {
   /**
    * Check if an aggregate exists.
    *
-   * @param aggregateId ID of aggregate to check.
+   * @param exists Request
    * @return True if aggregate with ID exists, false if not.
    */
-  public boolean exists(UUID aggregateId) {
+  public boolean exists(AggregateExists exists) {
     try {
-      HttpUrl url = getAggregateUrl(aggregateId).build();
-      return client.head(url, Response::code) == 200;
-    } catch (ApiException e) {
-      if (e.statusCode() == 404) {
-        return false;
+      HttpUrl url = getAggregateUrl(exists.aggregateId).build();
+      if (exists.tenantId == null) {
+        return client.head(url, Response::code) == 200;
       } else {
-        throw e;
+        return client.head(url, Response::code, exists.tenantId) == 200;
       }
-    }
-  }
-
-  /**
-   * Check if an aggregate exists for the given tenant.
-   *
-   * @param aggregateId ID of aggregate to check.
-   * @param tenantId    ID of tenant.
-   * @return True if aggregate with ID exists, false if not.
-   */
-  public boolean exists(UUID aggregateId, UUID tenantId) {
-    try {
-      HttpUrl url = getAggregateUrl(aggregateId).build();
-      return client.head(url, Response::code, tenantId) == 200;
     } catch (ApiException e) {
       if (e.statusCode() == 404) {
         return false;

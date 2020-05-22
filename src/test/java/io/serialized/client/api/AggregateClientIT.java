@@ -9,6 +9,7 @@ import io.serialized.client.ConcurrencyException;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.aggregate.AggregateApiStub;
 import io.serialized.client.aggregate.AggregateClient;
+import io.serialized.client.aggregate.AggregateExists;
 import io.serialized.client.aggregate.AggregateRequest;
 import io.serialized.client.aggregate.AggregateUpdate;
 import io.serialized.client.aggregate.Event;
@@ -278,8 +279,8 @@ public class AggregateClientIT {
 
     when(apiCallback.aggregateChecked(aggregateType, orderId)).thenReturn(true);
 
-    assertTrue(orderClient.exists(orderId));
-    assertFalse(orderClient.exists(UUID.randomUUID()));
+    assertTrue(orderClient.exists(AggregateExists.existsRequest().withAggregateId(orderId).build()));
+    assertFalse(orderClient.exists(AggregateExists.existsRequest().withAggregateId(UUID.randomUUID()).build()));
   }
 
   @Test
