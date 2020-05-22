@@ -5,18 +5,10 @@ import java.util.UUID;
 
 public interface StateCache<T> {
 
-  default void put(UUID aggregateId, VersionedState<T> versionedState) {
-  }
+  void put(UUID aggregateId, VersionedState<T> versionedState);
 
-  default void put(UUID aggregateId, UUID tenantId, VersionedState<T> versionedState) {
-  }
+  Optional<VersionedState<T>> get(UUID aggregateId);
 
-  default Optional<VersionedState<T>> get(UUID aggregateId) {
-    return Optional.empty();
-  }
-
-  default Optional<VersionedState<T>> get(UUID aggregateId, UUID tenantId) {
-    return Optional.empty();
-  }
+  void invalidate(UUID aggregateId);
 
 }

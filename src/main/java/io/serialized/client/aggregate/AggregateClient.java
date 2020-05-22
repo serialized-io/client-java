@@ -92,9 +92,7 @@ public class AggregateClient<T> {
 
     if (update.stateCache().isPresent()) {
       StateCache<T> stateCache = update.stateCache().get();
-      Optional<VersionedState<T>> cachedState = update.tenantId()
-          .map(tenantId -> stateCache.get(aggregateId, tenantId))
-          .orElseGet(() -> stateCache.get(aggregateId));
+      Optional<VersionedState<T>> cachedState = stateCache.get(aggregateId);
 
       final List<Event<?>> events;
       final long currentVersion;
@@ -109,15 +107,16 @@ public class AggregateClient<T> {
         events = update.apply(stateBuilder.buildState(aggregateResponse.events));
       }
 
-      int eventStored = storeBatch(aggregateId, update.tenantId(), new EventBatch(events, currentVersion));
-      if (eventStored > 0) {
-        if (update.tenantId().isPresent()) {
-          stateCache.put(aggregateId, update.tenantId().get(), new VersionedState<>(stateBuilder.buildState(events), currentVersion + 1));
-        } else {
+      try {
+        int eventStored = storeBatch(aggregateId, update.tenantId(), new EventBatch(events, currentVersion));
+        if (eventStored > 0) {
           stateCache.put(aggregateId, new VersionedState<>(stateBuilder.buildState(events), currentVersion + 1));
         }
+        return eventStored;
+      } catch (ConcurrencyException e) {
+        stateCache.invalidate(aggregateId);
+        throw e;
       }
-      return eventStored;
 
     } else {
       LoadAggregateResponse aggregateResponse = loadState(aggregateId, update.tenantId());

@@ -151,6 +151,12 @@ public class AggregateClientIT {
       public Optional<VersionedState<OrderState>> get(UUID aggregateId) {
         return Optional.ofNullable(stateMap.get(aggregateId));
       }
+
+      @Override
+      public void invalidate(UUID aggregateId) {
+        stateMap.remove(aggregateId);
+      }
+
     };
 
     AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
