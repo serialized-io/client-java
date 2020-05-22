@@ -140,23 +140,22 @@ public class AggregateClient<T> {
         events = update.apply(stateBuilder.buildState(aggregateResponse.events));
       }
 
-      if (!events.isEmpty()) {
-        storeBatch(aggregateId, tenantId, new EventBatch(events, currentVersion));
+      int eventStored = storeBatch(aggregateId, tenantId, new EventBatch(events, currentVersion));
+      if (eventStored > 0) {
         if (tenantId == null) {
           stateCache.put(aggregateId, new VersionedState<>(stateBuilder.buildState(events), currentVersion + 1));
         } else {
           stateCache.put(aggregateId, tenantId, new VersionedState<>(stateBuilder.buildState(events), currentVersion + 1));
         }
       }
-      return events.size();
+      return eventStored;
 
     } else {
       LoadAggregateResponse aggregateResponse = loadState(aggregateId, tenantId);
       T state = stateBuilder.buildState(aggregateResponse.events);
       Long expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
       List<Event<?>> events = update.apply(state);
-      storeBatch(aggregateId, tenantId, new EventBatch(events, expectedVersion));
-      return events.size();
+      return storeBatch(aggregateId, tenantId, new EventBatch(events, expectedVersion));
     }
 
   }
@@ -245,8 +244,8 @@ public class AggregateClient<T> {
     }
   }
 
-  private void storeBatch(UUID aggregateId, UUID tenantId, EventBatch eventBatch) {
-    if (eventBatch.events().isEmpty()) return;
+  private int storeBatch(UUID aggregateId, UUID tenantId, EventBatch eventBatch) {
+    if (eventBatch.events().isEmpty()) return 0;
 
     try {
       HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
@@ -258,6 +257,7 @@ public class AggregateClient<T> {
     } catch (ApiException e) {
       handleConcurrencyException(e);
     }
+    return eventBatch.events().size();
   }
 
   private void handleConcurrencyException(ApiException e) {
