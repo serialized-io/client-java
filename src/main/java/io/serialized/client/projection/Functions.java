@@ -46,6 +46,10 @@ public class Functions {
     return new Function.Builder("set");
   }
 
+  public static Function.Builder unset() {
+    return new Function.Builder("unset");
+  }
+
   public static Function.Builder merge() {
     return new Function.Builder("merge");
   }
