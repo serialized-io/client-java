@@ -9,8 +9,21 @@ import static java.util.stream.Collectors.toList;
 public class FeedResponse {
 
   private List<FeedEntry> entries;
-  private boolean hasMore;
   private long currentSequenceNumber;
+  private boolean hasMore;
+
+  public FeedResponse() {
+  }
+
+  public FeedResponse(List<FeedEntry> entries) {
+    this.entries = entries;
+  }
+
+  public FeedResponse(List<FeedEntry> entries, long currentSequenceNumber, boolean hasMore) {
+    this.entries = entries;
+    this.currentSequenceNumber = currentSequenceNumber;
+    this.hasMore = hasMore;
+  }
 
   /**
    * @return List of all events from all batches.
@@ -27,17 +40,17 @@ public class FeedResponse {
   }
 
   /**
-   * @return True if there are more events available in the feed.
-   */
-  public boolean hasMore() {
-    return hasMore;
-  }
-
-  /**
    * @return Current sequence number at feed head.
    */
   public long currentSequenceNumber() {
     return currentSequenceNumber;
+  }
+
+  /**
+   * @return True if there are more events available in the feed.
+   */
+  public boolean hasMore() {
+    return hasMore;
   }
 
 }

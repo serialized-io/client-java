@@ -9,6 +9,13 @@ public class TenantsResponse {
 
   private List<Tenant> tenants;
 
+  public TenantsResponse() {
+  }
+
+  public TenantsResponse(List<Tenant> tenants) {
+    this.tenants = tenants;
+  }
+
   public List<Tenant> tenants() {
     return tenants == null ? emptyList() : unmodifiableList(tenants);
   }

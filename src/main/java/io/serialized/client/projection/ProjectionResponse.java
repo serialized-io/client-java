@@ -12,6 +12,15 @@ public class ProjectionResponse<T> {
   private long updatedAt;
   private T data;
 
+  public ProjectionResponse() {
+  }
+
+  public ProjectionResponse(String projectionId, long updatedAt, T data) {
+    this.projectionId = projectionId;
+    this.updatedAt = updatedAt;
+    this.data = data;
+  }
+
   public String projectionId() {
     return projectionId;
   }

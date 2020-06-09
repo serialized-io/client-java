@@ -9,6 +9,13 @@ public class ReactionsResponse {
 
   private List<Reaction> reactions;
 
+  public ReactionsResponse() {
+  }
+
+  public ReactionsResponse(List<Reaction> reactions) {
+    this.reactions = reactions;
+  }
+
   public List<Reaction> reactions() {
     return reactions == null ? emptyList() : unmodifiableList(reactions);
   }

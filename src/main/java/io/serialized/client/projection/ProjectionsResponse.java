@@ -11,6 +11,18 @@ public class ProjectionsResponse<T> {
 
   private boolean hasMore;
 
+  public ProjectionsResponse() {
+  }
+
+  public ProjectionsResponse(List<ProjectionResponse<T>> projections) {
+    this.projections = projections;
+  }
+
+  public ProjectionsResponse(List<ProjectionResponse<T>> projections, boolean hasMore) {
+    this.projections = projections;
+    this.hasMore = hasMore;
+  }
+
   public List<ProjectionResponse<T>> projections() {
     return projections == null ? emptyList() : unmodifiableList(projections);
   }

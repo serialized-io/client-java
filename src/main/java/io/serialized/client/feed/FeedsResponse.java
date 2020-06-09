@@ -9,6 +9,13 @@ public class FeedsResponse {
 
   private List<Feed> feeds;
 
+  public FeedsResponse() {
+  }
+
+  public FeedsResponse(List<Feed> feeds) {
+    this.feeds = feeds;
+  }
+
   public List<Feed> feeds() {
     return feeds == null ? emptyList() : unmodifiableList(feeds);
   }
