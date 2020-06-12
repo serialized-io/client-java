@@ -9,7 +9,6 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.Validate;
 
 import java.net.URI;
-import java.util.function.Supplier;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -21,10 +20,10 @@ public class SerializedClientConfig {
   public static final String HTTPS_API_SERIALIZED_IO = "https://api.serialized.io/";
 
   private final OkHttpClient httpClient;
-  private final Supplier<ObjectMapper> objectMapper;
+  private final ObjectMapper objectMapper;
   private final HttpUrl apiRoot;
 
-  private SerializedClientConfig(OkHttpClient httpClient, Supplier<ObjectMapper> objectMapper, HttpUrl apiRoot) {
+  private SerializedClientConfig(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.apiRoot = apiRoot;
@@ -39,7 +38,7 @@ public class SerializedClientConfig {
   }
 
   public ObjectMapper objectMapper() {
-    return objectMapper.get();
+    return objectMapper;
   }
 
   public HttpUrl apiRoot() {
@@ -52,7 +51,7 @@ public class SerializedClientConfig {
     private String accessKey;
     private String secretAccessKey;
 
-    private final Supplier<ObjectMapper> objectMapper = () -> new ObjectMapper()
+    private final ObjectMapper objectMapper = new ObjectMapper()
         .configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
         .configure(FAIL_ON_EMPTY_BEANS, false)
         .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
