@@ -7,40 +7,40 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
-class SerializedClientConfigTest {
+public class SerializedClientConfigTest {
 
   @Test
-  void addModuleToObjectMapper() {
-    SerializedClientConfig config = SerializedClientConfig.serializedConfig()
+  public void addModuleToObjectMapper() {
+    SerializedClientConfig.Builder configBuilder = SerializedClientConfig.serializedConfig()
         .accessKey(UUID.randomUUID().toString())
-        .secretAccessKey(UUID.randomUUID().toString())
-        .build();
+        .secretAccessKey(UUID.randomUUID().toString());
 
-    assertThat(config.objectMapper().getRegisteredModuleIds().size()).isEqualTo(0);
+    assertThat(configBuilder.build().objectMapper().getRegisteredModuleIds().size()).isEqualTo(0);
+
     Module module = dummyModule();
-    config.objectMapper().registerModule(module);
+    configBuilder.configureObjectMapper(om -> om.registerModule(module));
 
-    assertThat(config.objectMapper().getRegisteredModuleIds().size()).isEqualTo(1);
+    assertThat(configBuilder.build().objectMapper().getRegisteredModuleIds().size()).isEqualTo(1);
   }
 
   private Module dummyModule() {
     return new Module() {
-        @Override
-        public String getModuleName() {
-          return "some module";
-        }
+      @Override
+      public String getModuleName() {
+        return "some module";
+      }
 
-        @Override
-        public Version version() {
-          return Version.unknownVersion();
-        }
+      @Override
+      public Version version() {
+        return Version.unknownVersion();
+      }
 
-        @Override
-        public void setupModule(SetupContext setupContext) {
+      @Override
+      public void setupModule(SetupContext setupContext) {
 
-        }
-      };
+      }
+    };
   }
+
 }

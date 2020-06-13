@@ -9,6 +9,8 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.Validate;
 
 import java.net.URI;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -20,10 +22,10 @@ public class SerializedClientConfig {
   public static final String HTTPS_API_SERIALIZED_IO = "https://api.serialized.io/";
 
   private final OkHttpClient httpClient;
-  private final ObjectMapper objectMapper;
+  private final Supplier<ObjectMapper> objectMapper;
   private final HttpUrl apiRoot;
 
-  private SerializedClientConfig(OkHttpClient httpClient, ObjectMapper objectMapper, HttpUrl apiRoot) {
+  private SerializedClientConfig(OkHttpClient httpClient, Supplier<ObjectMapper> objectMapper, HttpUrl apiRoot) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.apiRoot = apiRoot;
@@ -38,7 +40,7 @@ public class SerializedClientConfig {
   }
 
   public ObjectMapper objectMapper() {
-    return objectMapper;
+    return objectMapper.get();
   }
 
   public HttpUrl apiRoot() {
@@ -72,6 +74,11 @@ public class SerializedClientConfig {
       return this;
     }
 
+    public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
+      consumer.accept(objectMapper);
+      return this;
+    }
+
     public SerializedClientConfig build() {
       Validate.notNull(rootApiUrl, "'rootApiUrl' must be set");
       Validate.notEmpty(accessKey, "'accessKey' must be set");
@@ -84,7 +91,8 @@ public class SerializedClientConfig {
               .addHeader("Serialized-Secret-Access-Key", secretAccessKey)
               .build()))
           .build();
-      return new SerializedClientConfig(client, objectMapper, apiRoot);
+
+      return new SerializedClientConfig(client, () -> objectMapper, apiRoot);
     }
   }
 
