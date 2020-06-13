@@ -8,6 +8,7 @@ import okhttp3.OkHttpClient;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class TenantClient {
 
@@ -48,6 +49,11 @@ public class TenantClient {
       this.httpClient = config.httpClient();
       this.objectMapper = config.objectMapper();
       this.apiRoot = config.apiRoot();
+    }
+
+    public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
+      consumer.accept(objectMapper);
+      return this;
     }
 
     public TenantClient build() {

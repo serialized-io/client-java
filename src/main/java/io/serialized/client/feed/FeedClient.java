@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -163,6 +164,11 @@ public class FeedClient implements Closeable {
       this.httpClient = config.httpClient();
       this.objectMapper = config.objectMapper();
       this.apiRoot = config.apiRoot();
+    }
+
+    public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
+      consumer.accept(objectMapper);
+      return this;
     }
 
     public FeedClient build() {

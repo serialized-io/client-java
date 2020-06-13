@@ -11,6 +11,7 @@ import okhttp3.OkHttpClient;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ProjectionClient {
 
@@ -140,6 +141,11 @@ public class ProjectionClient {
       this.httpClient = config.httpClient();
       this.objectMapper = config.objectMapper();
       this.apiRoot = config.apiRoot();
+    }
+
+    public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
+      consumer.accept(objectMapper);
+      return this;
     }
 
     public ProjectionClient build() {

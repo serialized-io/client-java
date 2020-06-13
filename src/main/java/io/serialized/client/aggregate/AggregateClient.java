@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static io.serialized.client.aggregate.StateBuilder.stateBuilder;
 
@@ -252,6 +253,11 @@ public class AggregateClient<T> {
     public <E> Builder<T> registerHandler(String eventType, Class<E> eventClass, EventHandler<T, E> handler) {
       this.eventTypes.put(eventType, eventClass);
       stateBuilder.withHandler(eventClass, handler);
+      return this;
+    }
+
+    public Builder<T> configureObjectMapper(Consumer<ObjectMapper> consumer) {
+      consumer.accept(objectMapper);
       return this;
     }
 
