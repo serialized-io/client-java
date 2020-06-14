@@ -9,6 +9,7 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.Validate;
 
 import java.net.URI;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
@@ -52,7 +53,7 @@ public class SerializedClientConfig {
     private String accessKey;
     private String secretAccessKey;
 
-    private final Supplier<ObjectMapper> objectMapper = () -> new ObjectMapper()
+    private final ObjectMapper objectMapper = new ObjectMapper()
         .configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
         .configure(FAIL_ON_EMPTY_BEANS, false)
         .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
@@ -73,6 +74,11 @@ public class SerializedClientConfig {
       return this;
     }
 
+    public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
+      consumer.accept(objectMapper);
+      return this;
+    }
+
     public SerializedClientConfig build() {
       Validate.notNull(rootApiUrl, "'rootApiUrl' must be set");
       Validate.notEmpty(accessKey, "'accessKey' must be set");
@@ -85,7 +91,8 @@ public class SerializedClientConfig {
               .addHeader("Serialized-Secret-Access-Key", secretAccessKey)
               .build()))
           .build();
-      return new SerializedClientConfig(client, objectMapper, apiRoot);
+
+      return new SerializedClientConfig(client, () -> objectMapper, apiRoot);
     }
   }
 
