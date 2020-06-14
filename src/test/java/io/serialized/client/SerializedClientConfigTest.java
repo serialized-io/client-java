@@ -16,12 +16,12 @@ public class SerializedClientConfigTest {
         .accessKey(UUID.randomUUID().toString())
         .secretAccessKey(UUID.randomUUID().toString());
 
-    assertThat(configBuilder.build().objectMapper().getRegisteredModuleIds().size()).isEqualTo(0);
+    assertThat(configBuilder.build().objectMapper().getRegisteredModuleIds()).isEmpty();
 
     Module module = dummyModule();
     configBuilder.configureObjectMapper(om -> om.registerModule(module));
 
-    assertThat(configBuilder.build().objectMapper().getRegisteredModuleIds().size()).isEqualTo(1);
+    assertThat(configBuilder.build().objectMapper().getRegisteredModuleIds()).hasSize(1);
   }
 
   private Module dummyModule() {
