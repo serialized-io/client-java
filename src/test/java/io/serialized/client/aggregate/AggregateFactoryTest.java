@@ -22,7 +22,7 @@ public class AggregateFactoryTest {
     AggregateFactory<Order, OrderState> orderFactory = newFactory(Order::new, orderStateBuilder);
     Order order = orderFactory.fromCommands(aggregate -> aggregate.placeOrder(orderId, 1000));
 
-    assertThat(order.placeOrder(orderId, 1000)).isEqualTo(0);
+    assertThat(order.placeOrder(orderId, 1000)).isEmpty();
     assertThat(order.cancel()).hasSize(1);
   }
 
