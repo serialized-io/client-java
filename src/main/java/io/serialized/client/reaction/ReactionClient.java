@@ -1,5 +1,7 @@
 package io.serialized.client.reaction;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.SerializedOkHttpClient;
@@ -8,6 +10,11 @@ import okhttp3.OkHttpClient;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.function.Consumer;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
 
 public class ReactionClient {
 
@@ -146,19 +153,29 @@ public class ReactionClient {
 
   public static class Builder {
 
+    private final ObjectMapper objectMapper = new ObjectMapper()
+        .disable(FAIL_ON_UNKNOWN_PROPERTIES)
+        .disable(FAIL_ON_EMPTY_BEANS)
+        .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+        .setSerializationInclusion(NON_NULL);
+
     private final OkHttpClient httpClient;
-    private final ObjectMapper objectMapper;
     private final HttpUrl apiRoot;
 
     public Builder(SerializedClientConfig config) {
       this.httpClient = config.httpClient();
-      this.objectMapper = config.objectMapper();
       this.apiRoot = config.apiRoot();
+    }
+
+    public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
+      consumer.accept(objectMapper);
+      return this;
     }
 
     public ReactionClient build() {
       return new ReactionClient(this);
     }
+
   }
 
 }

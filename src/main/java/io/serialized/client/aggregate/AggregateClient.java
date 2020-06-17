@@ -1,5 +1,7 @@
 package io.serialized.client.aggregate;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.client.ApiException;
 import io.serialized.client.ConcurrencyException;
@@ -17,7 +19,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
 import static io.serialized.client.aggregate.StateBuilder.stateBuilder;
 
 public class AggregateClient<T> {
@@ -229,9 +235,14 @@ public class AggregateClient<T> {
 
   public static class Builder<T> {
 
+    private final ObjectMapper objectMapper = new ObjectMapper()
+        .disable(FAIL_ON_UNKNOWN_PROPERTIES)
+        .disable(FAIL_ON_EMPTY_BEANS)
+        .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+        .setSerializationInclusion(NON_NULL);
+
     private final HttpUrl apiRoot;
     private final OkHttpClient httpClient;
-    private final ObjectMapper objectMapper;
     private final StateBuilder<T> stateBuilder;
 
     private final String aggregateType;
@@ -241,7 +252,6 @@ public class AggregateClient<T> {
       this.aggregateType = aggregateType;
       this.apiRoot = config.apiRoot();
       this.httpClient = config.httpClient();
-      this.objectMapper = config.objectMapper();
       this.stateBuilder = stateBuilder(stateClass);
     }
 
@@ -252,6 +262,11 @@ public class AggregateClient<T> {
     public <E> Builder<T> registerHandler(String eventType, Class<E> eventClass, EventHandler<T, E> handler) {
       this.eventTypes.put(eventType, eventClass);
       stateBuilder.withHandler(eventClass, handler);
+      return this;
+    }
+
+    public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
+      consumer.accept(objectMapper);
       return this;
     }
 

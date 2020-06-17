@@ -1,20 +1,11 @@
 package io.serialized.client;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.Validate;
 
 import java.net.URI;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
 
 public class SerializedClientConfig {
 
@@ -22,12 +13,10 @@ public class SerializedClientConfig {
   public static final String HTTPS_API_SERIALIZED_IO = "https://api.serialized.io/";
 
   private final OkHttpClient httpClient;
-  private final Supplier<ObjectMapper> objectMapper;
   private final HttpUrl apiRoot;
 
-  private SerializedClientConfig(OkHttpClient httpClient, Supplier<ObjectMapper> objectMapper, HttpUrl apiRoot) {
+  private SerializedClientConfig(OkHttpClient httpClient, HttpUrl apiRoot) {
     this.httpClient = httpClient;
-    this.objectMapper = objectMapper;
     this.apiRoot = apiRoot;
   }
 
@@ -39,10 +28,6 @@ public class SerializedClientConfig {
     return httpClient;
   }
 
-  public ObjectMapper objectMapper() {
-    return objectMapper.get();
-  }
-
   public HttpUrl apiRoot() {
     return apiRoot;
   }
@@ -52,12 +37,6 @@ public class SerializedClientConfig {
     private URI rootApiUrl = URI.create(HTTPS_API_SERIALIZED_IO);
     private String accessKey;
     private String secretAccessKey;
-
-    private final ObjectMapper objectMapper = new ObjectMapper()
-        .configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .configure(FAIL_ON_EMPTY_BEANS, false)
-        .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
-        .setSerializationInclusion(NON_NULL);
 
     public Builder rootApiUrl(String rootApiUrl) {
       this.rootApiUrl = URI.create(rootApiUrl);
@@ -74,11 +53,6 @@ public class SerializedClientConfig {
       return this;
     }
 
-    public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
-      consumer.accept(objectMapper);
-      return this;
-    }
-
     public SerializedClientConfig build() {
       Validate.notNull(rootApiUrl, "'rootApiUrl' must be set");
       Validate.notEmpty(accessKey, "'accessKey' must be set");
@@ -92,7 +66,7 @@ public class SerializedClientConfig {
               .build()))
           .build();
 
-      return new SerializedClientConfig(client, () -> objectMapper, apiRoot);
+      return new SerializedClientConfig(client, apiRoot);
     }
   }
 
