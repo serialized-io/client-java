@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.serialized.client.EventTypeMatcher.containsEventType;
 import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
 import static io.serialized.client.aggregate.AggregateDelete.deleteRequest;
 import static io.serialized.client.aggregate.Event.newEvent;
@@ -48,7 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -84,6 +86,8 @@ public class AggregateClientIT {
     List<Event<?>> events = order.placeOrder(orderId, 123L);
 
     orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build());
+
+    verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("OrderPlaced")));
   }
 
   @Test
@@ -98,6 +102,8 @@ public class AggregateClientIT {
     Event<?> event = newEvent("order-placed").data("orderId", orderId, "customerId", UUID.randomUUID()).build();
 
     orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvent(event).build());
+
+    verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("order-placed")));
   }
 
   @Test
@@ -133,6 +139,8 @@ public class AggregateClientIT {
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     assertThat(orderClient.update(orderId, orderState -> new Order(orderState).cancel())).isEqualTo(1);
+
+    verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("OrderCanceled")));
   }
 
   @Test
@@ -200,7 +208,7 @@ public class AggregateClientIT {
     assertThat(eventsStored).isEqualTo(0);
 
     verify(apiCallback, times(1)).aggregateLoaded(anyString(), any(UUID.class));
-    verify(apiCallback, times(1)).eventsStored(any(UUID.class), any(EventBatch.class));
+    verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("OrderCanceled")));
   }
 
   @Test
@@ -333,15 +341,11 @@ public class AggregateClientIT {
         .build();
   }
 
-  private SerializedClientConfig.Builder getConfigBuilder() {
+  private SerializedClientConfig getConfig() {
     return SerializedClientConfig.serializedConfig()
         .rootApiUrl(dropwizard.baseUri() + "/api-stub/")
         .accessKey("aaaaa")
-        .secretAccessKey("bbbbb");
-  }
-
-  private SerializedClientConfig getConfig() {
-    return getConfigBuilder().build();
+        .secretAccessKey("bbbbb").build();
   }
 
   private String getResource(String resource) throws IOException {
