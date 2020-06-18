@@ -7,7 +7,7 @@
       "eventId": "127b80b5-4a05-4774-b870-1c9a2e2a27a3",
       "eventType": "OrderPlaced",
       "data": {
-        "customerId": "some-test-id-1",
+        "orderId": "12345678-4a05-4774-b870-1c9a2e2a27a3",
         "orderAmount": 12345
       }
     }
