@@ -30,23 +30,25 @@ public class StateBuilder<T> {
 
   public T buildState(List<? extends Event> events) {
     try {
-      AtomicReference<T> data = new AtomicReference<>(stateClass.newInstance());
-      events.forEach(e -> {
-        String simpleName = e.data().getClass().getSimpleName();
-        EventHandler<T, ?> handler = handlers.get(simpleName);
-
-        if (handler == null) {
-          throw new IllegalStateException("No matching handler for event type: " + simpleName);
-        }
-
-        T handle = (T) handler.handle(data.get(), e);
-        data.set(handle);
-          }
-      );
-      return data.get();
+      return buildState(stateClass.newInstance(), events);
     } catch (InstantiationException | IllegalAccessException e) {
       throw new RuntimeException("Failed to build State", e);
     }
+  }
+
+  public T buildState(T currentState, List<? extends Event> events) {
+    AtomicReference<T> data = new AtomicReference<>(currentState);
+    events.forEach(e -> {
+          String simpleName = e.data().getClass().getSimpleName();
+          EventHandler<T, ?> handler = handlers.get(simpleName);
+          if (handler == null) {
+            throw new IllegalStateException("No matching handler for event type: " + simpleName);
+          }
+          T handle = (T) handler.handle(data.get(), e);
+          data.set(handle);
+        }
+    );
+    return data.get();
   }
 
 }

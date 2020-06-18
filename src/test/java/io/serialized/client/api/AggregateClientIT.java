@@ -18,6 +18,7 @@ import io.serialized.client.aggregate.cache.StateCache;
 import io.serialized.client.aggregate.cache.VersionedState;
 import io.serialized.client.aggregate.order.Order;
 import io.serialized.client.aggregate.order.OrderCanceled;
+import io.serialized.client.aggregate.order.OrderDeleted;
 import io.serialized.client.aggregate.order.OrderPlaced;
 import io.serialized.client.aggregate.order.OrderState;
 import io.serialized.client.aggregate.order.OrderStatus;
@@ -135,7 +136,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/placed_order.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     assertThat(orderClient.update(orderId, orderState -> new Order(orderState).cancel())).isEqualTo(1);
@@ -171,9 +172,10 @@ public class AggregateClientIT {
     AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .registerHandler(OrderCanceled.class, OrderState::handleOrderCanceled)
+        .registerHandler(OrderDeleted.class, OrderState::handleOrderDeleted)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/placed_order.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     int eventsStored = orderClient.update(orderId, new AggregateUpdate<OrderState>() {
@@ -191,6 +193,16 @@ public class AggregateClientIT {
 
     assertThat(eventsStored).isEqualTo(1);
 
+    ArgumentCaptor<EventBatch> firstCaptor = ArgumentCaptor.forClass(EventBatch.class);
+    verify(apiCallback).eventsStored(eq(orderId), firstCaptor.capture());
+
+    EventBatch eventsCaptured = firstCaptor.getValue();
+    assertThat(eventsCaptured.events()).hasSize(1);
+    Event<?> event = eventsCaptured.events().get(0);
+    assertThat(event.eventType()).isEqualTo(OrderCanceled.class.getSimpleName());
+    Map data = (Map) event.data();
+    assertThat(data).containsKey("orderId");
+
     eventsStored = orderClient.update(orderId, new AggregateUpdate<OrderState>() {
 
       @Override
@@ -201,14 +213,23 @@ public class AggregateClientIT {
       @Override
       public List<Event<?>> apply(OrderState state) {
         Order order = new Order(state);
-        return order.cancel();
+        return order.deleteOrder();
       }
     });
 
-    assertThat(eventsStored).isEqualTo(0);
+    assertThat(eventsStored).isEqualTo(1);
 
     verify(apiCallback, times(1)).aggregateLoaded(anyString(), any(UUID.class));
-    verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("OrderCanceled")));
+
+    ArgumentCaptor<EventBatch> secondCaptor = ArgumentCaptor.forClass(EventBatch.class);
+    verify(apiCallback, times(2)).eventsStored(eq(orderId), secondCaptor.capture());
+
+    eventsCaptured = secondCaptor.getValue();
+    assertThat(eventsCaptured.events()).hasSize(1);
+    event = eventsCaptured.events().get(0);
+    assertThat(event.eventType()).isEqualTo(OrderDeleted.class.getSimpleName());
+    data = (Map) event.data();
+    assertThat(data).containsKey("orderId");
   }
 
   @Test
@@ -249,7 +270,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/placed_order.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(CONFLICT);
 
     assertThrows(ConcurrencyException.class, () ->
@@ -266,7 +287,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/load_aggregate.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/placed_order.json"));
 
     int eventsStored = orderClient.update(orderId, orderState -> {
       assertThat(orderState.status()).isEqualTo(OrderStatus.PLACED);
