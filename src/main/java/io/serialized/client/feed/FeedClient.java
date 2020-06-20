@@ -58,6 +58,9 @@ public class FeedClient implements Closeable {
   public FeedResponse execute(GetFeedRequest request, long since) {
     HttpUrl.Builder urlBuilder = url(request.feedName);
     Optional.ofNullable(request.limit).ifPresent(limit -> urlBuilder.addQueryParameter("limit", String.valueOf(limit)));
+    Optional.ofNullable(request.partitionCount).ifPresent(pCount -> urlBuilder.addQueryParameter("partitionCount", String.valueOf(pCount)));
+    Optional.ofNullable(request.partitionNumber).ifPresent(pNumber -> urlBuilder.addQueryParameter("partitionNumber", String.valueOf(pNumber)));
+
     HttpUrl url = urlBuilder.addQueryParameter("since", String.valueOf(since)).build();
 
     if (request.hasTenantId()) {

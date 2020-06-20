@@ -1,5 +1,7 @@
 package io.serialized.client.feed;
 
+import org.apache.commons.lang3.Validate;
+
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.ValueRange;
@@ -14,6 +16,8 @@ public class GetFeedRequest {
   public final Duration pollDelay;
   public final boolean eagerFetching;
   public final UUID tenantId;
+  public final Integer partitionCount;
+  public final Integer partitionNumber;
 
   private GetFeedRequest(Builder builder) {
     this.feedName = builder.feedName;
@@ -21,6 +25,8 @@ public class GetFeedRequest {
     this.pollDelay = builder.pollDelay;
     this.eagerFetching = builder.eagerFetching;
     this.tenantId = builder.tenantId;
+    this.partitionCount = builder.partitionCount;
+    this.partitionNumber = builder.partitionNumber;
   }
 
   public boolean hasTenantId() {
@@ -36,6 +42,8 @@ public class GetFeedRequest {
     private Duration pollDelay = Duration.ofSeconds(1);
     private boolean eagerFetching = true;
     private UUID tenantId;
+    private Integer partitionCount;
+    private Integer partitionNumber;
 
     public Builder withFeed(String feedName) {
       this.feedName = feedName;
@@ -75,6 +83,25 @@ public class GetFeedRequest {
         throw new IllegalArgumentException(format("Poll delay must be within %d and %d seconds",
             SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.getMinimum(), SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.getMaximum()));
       }
+    }
+
+    /**
+     * Partitioned feeding enables parallel processing of events.
+     * The partitioning is internally based on the hashCode of the aggregateId.
+     *
+     * @param partitionCount  The expected total number of partitions, i.e. the total number of consumers feeding in parallel.
+     * @param partitionNumber The number of the partition to request.
+     *                        Eg. if the {@link #partitionCount} is set to '2' the partition '0' and '1' can be fetched by two feeding consumer respectively.
+     */
+    public Builder withPartitioning(int partitionCount, int partitionNumber) {
+      Validate.isTrue(partitionCount > 1, "The total number of partitions must be greater than 1");
+      Validate.isTrue(partitionNumber >= 0, "The partition number cannot be negative");
+      Validate.isTrue(partitionNumber < partitionCount,
+          "The partition number is expected to be between 0 and (partitionCount - 1), in this case: " + (partitionCount - 1));
+
+      this.partitionCount = partitionCount;
+      this.partitionNumber = partitionNumber;
+      return this;
     }
 
     public GetFeedRequest build() {
