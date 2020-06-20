@@ -266,6 +266,9 @@ public class AggregateClient<T> {
       return this;
     }
 
+    /**
+     * Allows object mapper customization.
+     */
     public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
       consumer.accept(objectMapper);
       return this;

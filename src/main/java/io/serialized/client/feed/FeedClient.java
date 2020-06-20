@@ -178,6 +178,9 @@ public class FeedClient implements Closeable {
       this.apiRoot = config.apiRoot();
     }
 
+    /**
+     * Allows object mapper customization.
+     */
     public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
       consumer.accept(objectMapper);
       return this;

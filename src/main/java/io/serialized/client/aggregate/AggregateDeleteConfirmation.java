@@ -13,6 +13,9 @@ public class AggregateDeleteConfirmation {
     this.url = url;
   }
 
+  /**
+   * Confirm and perform the actual delete.
+   */
   public void confirm() {
     client.delete(url);
   }
