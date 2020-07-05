@@ -167,6 +167,7 @@ public class ReactionDefinition {
     private Map<String, Object> httpHeaders;
     private URI targetUri;
     private String body;
+    private String signingSecret;
     private Map<String, String> valueMap;
 
     public String actionType() {
@@ -185,16 +186,21 @@ public class ReactionDefinition {
       return body;
     }
 
+    public String signingSecret() {
+      return signingSecret;
+    }
+
     public Map<String, String> valueMap() {
       return valueMap;
     }
 
-    static Action newAction(String actionType, URI targetUri, Map<String, Object> httpHeaders, String body, Map<String, String> valueMap) {
+    static Action newAction(String actionType, URI targetUri, Map<String, Object> httpHeaders, String signingSecret, String body, Map<String, String> valueMap) {
       Action action = new Action();
       action.actionType = actionType;
       action.targetUri = targetUri;
       action.httpHeaders = httpHeaders;
       action.body = body;
+      action.signingSecret = signingSecret;
       action.valueMap = valueMap;
       return action;
     }

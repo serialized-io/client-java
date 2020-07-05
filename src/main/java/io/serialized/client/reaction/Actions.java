@@ -38,9 +38,15 @@ public class Actions {
 
     private final URI targetUri;
     private final Map<String, Object> httpHeaders = new LinkedHashMap<>();
+    private String signingSecret;
 
     HttpActionBuilder(URI targetUri) {
       this.targetUri = targetUri;
+    }
+
+    public HttpActionBuilder signingSecret(String signingSecret) {
+      this.signingSecret = signingSecret;
+      return this;
     }
 
     public HttpActionBuilder addHeader(String key, String value) {
@@ -54,7 +60,7 @@ public class Actions {
     }
 
     public ReactionDefinition.Action build() {
-      return newAction("HTTP_POST", targetUri, httpHeaders, null, null);
+      return newAction("HTTP_POST", targetUri, httpHeaders, signingSecret, null, null);
     }
   }
 
@@ -73,7 +79,7 @@ public class Actions {
     }
 
     public ReactionDefinition.Action build() {
-      return newAction("SLACK_POST", webHookUrl, emptyMap(), text, null);
+      return newAction("SLACK_POST", webHookUrl, emptyMap(), null, text, null);
     }
   }
 
@@ -95,7 +101,7 @@ public class Actions {
     }
 
     public ReactionDefinition.Action build() {
-      return newAction("IFTTT_POST", webHookUrl, emptyMap(), null, valueMap);
+      return newAction("IFTTT_POST", webHookUrl, emptyMap(), null, null, valueMap);
     }
   }
 
@@ -117,7 +123,7 @@ public class Actions {
     }
 
     public ReactionDefinition.Action build() {
-      return newAction("AUTOMATE_POST", webHookUrl, emptyMap(), null, valueMap);
+      return newAction("AUTOMATE_POST", webHookUrl, emptyMap(), null, null, valueMap);
     }
   }
 
@@ -139,7 +145,7 @@ public class Actions {
     }
 
     public ReactionDefinition.Action build() {
-      return newAction("ZAPIER_POST", webHookUrl, emptyMap(), null, valueMap);
+      return newAction("ZAPIER_POST", webHookUrl, emptyMap(), null, null, valueMap);
     }
   }
 
