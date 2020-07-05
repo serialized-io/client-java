@@ -18,6 +18,7 @@ public class ProjectionDefinition {
   private String feedName;
   private boolean aggregated;
   private String idField;
+  private String signingSecret;
   private List<ProjectionHandler> handlers;
 
   public static SingleProjectionBuilder singleProjection(String projectionName) {
@@ -38,6 +39,10 @@ public class ProjectionDefinition {
 
   public String idField() {
     return idField;
+  }
+
+  public String signingSecret() {
+    return signingSecret;
   }
 
   public List<ProjectionHandler> handlers() {
@@ -68,6 +73,7 @@ public class ProjectionDefinition {
     private final List<ProjectionHandler> handlers = new ArrayList<>();
     private final String projectionName;
     private String feedName;
+    private String signingSecret;
 
     AggregatedProjectionBuilder(String projectionName) {
       this.projectionName = projectionName;
@@ -75,6 +81,11 @@ public class ProjectionDefinition {
 
     public AggregatedProjectionBuilder feed(String feedName) {
       this.feedName = feedName;
+      return this;
+    }
+
+    public AggregatedProjectionBuilder signingSecret(String signingSecret) {
+      this.signingSecret = signingSecret;
       return this;
     }
 
@@ -99,6 +110,7 @@ public class ProjectionDefinition {
       definition.feedName = feedName;
       definition.aggregated = true;
       definition.handlers = handlers;
+      definition.signingSecret = signingSecret;
       return definition;
     }
 
@@ -110,6 +122,7 @@ public class ProjectionDefinition {
     private final String projectionName;
     private String feedName;
     private String idField;
+    private String signingSecret;
 
     SingleProjectionBuilder(String projectionName) {
       this.projectionName = projectionName;
@@ -117,6 +130,11 @@ public class ProjectionDefinition {
 
     public SingleProjectionBuilder feed(String feedName) {
       this.feedName = feedName;
+      return this;
+    }
+
+    public SingleProjectionBuilder signingSecret(String signingSecret) {
+      this.signingSecret = signingSecret;
       return this;
     }
 
@@ -147,6 +165,7 @@ public class ProjectionDefinition {
       definition.aggregated = false;
       definition.idField = idField;
       definition.handlers = handlers;
+      definition.signingSecret = signingSecret;
       return definition;
     }
 
