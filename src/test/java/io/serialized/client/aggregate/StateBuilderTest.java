@@ -12,6 +12,7 @@ import java.util.UUID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class StateBuilderTest {
 
@@ -46,6 +47,19 @@ public class StateBuilderTest {
     List<Event<?>> events2 = singletonList(OrderCanceled.orderCanceled(UUID.randomUUID().toString()));
     OrderState endState = orderStateBuilder.buildState(initialState, events2);
     assertThat(endState.status()).isEqualTo(OrderStatus.CANCELED);
+  }
+
+  @Test
+  public void testNoMatchingHandler() {
+
+    StateBuilder<OrderState> orderStateBuilder = StateBuilder.stateBuilder(OrderState.class);
+    List<Event<?>> events1 = singletonList(OrderPlaced.orderPlaced(UUID.randomUUID().toString(), 1000));
+
+    Exception exception = assertThrows(IllegalStateException.class, () ->
+        orderStateBuilder.buildState(events1)
+    );
+
+    assertThat(exception.getMessage()).isEqualTo("No matching handler for event type: OrderPlaced");
   }
 
 }
