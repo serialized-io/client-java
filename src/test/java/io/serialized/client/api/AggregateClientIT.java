@@ -298,6 +298,23 @@ public class AggregateClientIT {
   }
 
   @Test
+  public void testLoadAggregateStateMissingHandler() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/placed_order.json"));
+
+    Exception exception = assertThrows(IllegalStateException.class, () ->
+        orderClient.update(orderId, orderState -> emptyList())
+    );
+
+    assertThat(exception.getMessage()).isEqualTo("No matching handler for event type: OrderPlaced");
+  }
+
+  @Test
   public void testAggregateExist() {
     UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
     String aggregateType = "order";

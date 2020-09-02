@@ -39,10 +39,9 @@ public class StateBuilder<T> {
   public T buildState(T currentState, List<? extends Event> events) {
     AtomicReference<T> data = new AtomicReference<>(currentState);
     events.forEach(e -> {
-          String simpleName = e.data().getClass().getSimpleName();
-          EventHandler<T, ?> handler = handlers.get(simpleName);
+          EventHandler<T, ?> handler = handlers.get(e.eventType());
           if (handler == null) {
-            throw new IllegalStateException("No matching handler for event type: " + simpleName);
+            throw new IllegalStateException("No matching handler for event type: " + e.eventType());
           }
           T handle = (T) handler.handle(data.get(), e);
           data.set(handle);
