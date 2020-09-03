@@ -10,12 +10,12 @@ public class Functions {
     return new Function.Builder("clearref").build();
   }
 
-  public static Function delete() {
-    return new Function.Builder("delete").build();
-  }
-
   public static Function clear() {
     return new Function.Builder("clear").build();
+  }
+
+  public static Function.Builder delete() {
+    return new Function.Builder("delete");
   }
 
   public static Function.Builder setref() {
