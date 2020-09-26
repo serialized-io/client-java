@@ -14,6 +14,7 @@ import io.serialized.client.aggregate.AggregateRequest;
 import io.serialized.client.aggregate.AggregateUpdate;
 import io.serialized.client.aggregate.Event;
 import io.serialized.client.aggregate.EventBatch;
+import io.serialized.client.aggregate.RetryStrategy;
 import io.serialized.client.aggregate.cache.StateCache;
 import io.serialized.client.aggregate.cache.VersionedState;
 import io.serialized.client.aggregate.order.Order;
@@ -276,6 +277,27 @@ public class AggregateClientIT {
     assertThrows(ConcurrencyException.class, () ->
         orderClient.update(orderId, orderState -> new Order(orderState).cancel())
     );
+  }
+
+  @Test
+  public void testRetryOnConcurrencyExceptionDuringUpdate() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .registerHandler(OrderCanceled.class, OrderState::handleOrderCanceled)
+        .withRetryStrategy(new RetryStrategy.Builder().withRetryCount(3).withSleepMs(10).build())
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(CONFLICT);
+
+    assertThrows(ConcurrencyException.class, () ->
+        orderClient.update(orderId, orderState -> new Order(orderState).cancel())
+    );
+
+    verify(apiCallback, times(4)).eventsStored(eq(orderId), any(EventBatch.class));
   }
 
   @Test

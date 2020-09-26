@@ -18,6 +18,7 @@ import static okhttp3.RequestBody.create;
 public class SerializedOkHttpClient {
 
   public static final String SERIALIZED_TENANT_ID = "Serialized-Tenant-Id";
+
   private final OkHttpClient httpClient;
   private final ObjectMapper objectMapper;
 

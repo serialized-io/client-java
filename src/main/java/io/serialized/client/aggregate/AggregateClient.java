@@ -32,12 +32,14 @@ public class AggregateClient<T> {
   private final HttpUrl apiRoot;
   private final StateBuilder<T> stateBuilder;
   private final String aggregateType;
+  private final RetryStrategy retryStrategy;
 
   private AggregateClient(Builder<T> builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
     this.apiRoot = builder.apiRoot;
     this.aggregateType = builder.aggregateType;
     this.stateBuilder = builder.stateBuilder;
+    this.retryStrategy = builder.retryStrategy;
   }
 
   public static <T> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
@@ -90,7 +92,28 @@ public class AggregateClient<T> {
    * @return Number of events stored in batch
    */
   public int update(UUID aggregateId, AggregateUpdate<T> update) {
-    return updateInternal(aggregateId, update);
+
+    ApiException lastException = new ApiException(409, "Conflict");
+
+    for (int i = 0; i <= retryStrategy.getRetryCount(); i++) {
+      try {
+        return updateInternal(aggregateId, update);
+      } catch (ApiException apiException) {
+        if (apiException.statusCode() == 409) {
+          lastException = apiException;
+          try {
+            Thread.sleep(retryStrategy.getSleepMs());
+          } catch (InterruptedException ie) {
+            // ignore
+          }
+        } else {
+          throw apiException;
+        }
+      }
+    }
+
+    throw lastException;
+
   }
 
   private int updateInternal(UUID aggregateId, AggregateUpdate<T> update) {
@@ -249,6 +272,8 @@ public class AggregateClient<T> {
     private final String aggregateType;
     private final Map<String, Class> eventTypes = new HashMap<>();
 
+    private RetryStrategy retryStrategy = RetryStrategy.DEFAULT;
+
     Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
       this.aggregateType = aggregateType;
       this.apiRoot = config.apiRoot();
@@ -266,10 +291,15 @@ public class AggregateClient<T> {
       return this;
     }
 
+    public <E> Builder<T> withRetryStrategy(RetryStrategy retryStrategy) {
+      this.retryStrategy = retryStrategy;
+      return this;
+    }
+
     /**
      * Allows object mapper customization.
      */
-    public Builder configureObjectMapper(Consumer<ObjectMapper> consumer) {
+    public <E> Builder<T> configureObjectMapper(Consumer<ObjectMapper> consumer) {
       consumer.accept(objectMapper);
       return this;
     }
