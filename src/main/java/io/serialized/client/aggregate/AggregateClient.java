@@ -93,21 +93,17 @@ public class AggregateClient<T> {
    */
   public int update(UUID aggregateId, AggregateUpdate<T> update) {
 
-    ApiException lastException = new ApiException(409, "Conflict");
+    ConcurrencyException lastException = new ConcurrencyException(409, "Conflict");
 
     for (int i = 0; i <= retryStrategy.getRetryCount(); i++) {
       try {
         return updateInternal(aggregateId, update);
-      } catch (ApiException apiException) {
-        if (apiException.statusCode() == 409) {
-          lastException = apiException;
-          try {
-            Thread.sleep(retryStrategy.getSleepMs());
-          } catch (InterruptedException ie) {
-            // ignore
-          }
-        } else {
-          throw apiException;
+      } catch (ConcurrencyException concurrencyException) {
+        lastException = concurrencyException;
+        try {
+          Thread.sleep(retryStrategy.getSleepMs());
+        } catch (InterruptedException ie) {
+          // ignore
         }
       }
     }
