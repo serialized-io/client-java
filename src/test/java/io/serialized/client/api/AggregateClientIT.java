@@ -15,6 +15,7 @@ import io.serialized.client.aggregate.AggregateUpdate;
 import io.serialized.client.aggregate.Event;
 import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.aggregate.RetryStrategy;
+import io.serialized.client.aggregate.UpdateStrategy;
 import io.serialized.client.aggregate.cache.StateCache;
 import io.serialized.client.aggregate.cache.VersionedState;
 import io.serialized.client.aggregate.order.Order;
@@ -334,6 +335,37 @@ public class AggregateClientIT {
     );
 
     assertThat(exception.getMessage()).isEqualTo("No matching handler for event type: OrderPlaced");
+  }
+
+  @Test
+  public void testLoadAggregateStateMissingHandlerIsIgnored() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .withUpdateStrategy(new UpdateStrategy.Builder().withFailOnMissingHandler(false).build())
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/placed_order.json"));
+
+    assertThat(orderClient.update(orderId, orderState -> emptyList())).isEqualTo(0);
+  }
+
+  @Test
+  public void testLoadAggregateStateMissingHandlerIsIgnoredByType() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .withUpdateStrategy(new UpdateStrategy.Builder()
+            .withFailOnMissingHandler(true)
+            .withIgnoredEventTypes("OrderPlaced")
+            .build())
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId)).thenReturn(getResource("/aggregate/placed_order.json"));
+
+    assertThat(orderClient.update(orderId, orderState -> emptyList())).isEqualTo(0);
   }
 
   @Test

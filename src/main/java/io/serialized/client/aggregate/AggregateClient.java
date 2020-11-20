@@ -269,6 +269,7 @@ public class AggregateClient<T> {
     private final Map<String, Class> eventTypes = new HashMap<>();
 
     private RetryStrategy retryStrategy = RetryStrategy.DEFAULT;
+    private UpdateStrategy updateStrategy = UpdateStrategy.DEFAULT;
 
     Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
       this.aggregateType = aggregateType;
@@ -292,6 +293,11 @@ public class AggregateClient<T> {
       return this;
     }
 
+    public <E> Builder<T> withUpdateStrategy(UpdateStrategy updateStrategy) {
+      this.updateStrategy = updateStrategy;
+      return this;
+    }
+
     /**
      * Allows object mapper customization.
      */
@@ -303,6 +309,8 @@ public class AggregateClient<T> {
     public AggregateClient<T> build() {
       Validate.notNull(aggregateType, "'aggregateType' must be set");
       objectMapper.registerModule(EventDeserializer.module(eventTypes));
+      stateBuilder.setFailOnMissingHandler(updateStrategy.failOnMissingHandler());
+      stateBuilder.setIgnoredEventTypes(updateStrategy.ignoredEventTypes());
       return new AggregateClient<>(this);
     }
   }
