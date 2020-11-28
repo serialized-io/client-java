@@ -5,6 +5,10 @@ import org.apache.commons.lang3.Validate;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.ValueRange;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import static java.lang.String.format;
@@ -18,6 +22,7 @@ public class GetFeedRequest {
   public final UUID tenantId;
   public final Integer partitionCount;
   public final Integer partitionNumber;
+  public final Set<String> types;
 
   private GetFeedRequest(Builder builder) {
     this.feedName = builder.feedName;
@@ -27,6 +32,7 @@ public class GetFeedRequest {
     this.tenantId = builder.tenantId;
     this.partitionCount = builder.partitionCount;
     this.partitionNumber = builder.partitionNumber;
+    this.types = Collections.unmodifiableSet(builder.types);
   }
 
   public boolean hasTenantId() {
@@ -37,14 +43,26 @@ public class GetFeedRequest {
 
     private static final ValueRange SUBSCRIPTION_POLL_DELAY_VALUE_RANGE = ValueRange.of(1, 60);
 
+    private final Set<String> types = new LinkedHashSet<>();
     private Integer limit;
-    private String feedName;
+    private String feedName = "_all";
     private Duration pollDelay = Duration.ofSeconds(1);
     private boolean eagerFetching = true;
     private UUID tenantId;
     private Integer partitionCount;
     private Integer partitionNumber;
 
+    /**
+     * @param types Aggregate types to filter (include) when requesting the _all feed.
+     */
+    public Builder withTypes(String... types) {
+      this.types.addAll(Arrays.asList(types));
+      return this;
+    }
+
+    /**
+     * @param feedName Name of feed to request
+     */
     public Builder withFeed(String feedName) {
       this.feedName = feedName;
       return this;
@@ -105,9 +123,12 @@ public class GetFeedRequest {
     }
 
     public GetFeedRequest build() {
+      Validate.notNull(feedName, "'feedName' must be set");
+      if (!feedName.equals("_all")) {
+        Validate.isTrue(types.isEmpty(), "type filter is only applicable when requesting the _all feed");
+      }
       return new GetFeedRequest(this);
     }
-
   }
 
 }

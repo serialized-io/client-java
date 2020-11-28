@@ -11,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.util.Set;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -41,8 +42,8 @@ public class FeedApiStub {
 
   @GET
   @Path("_all")
-  public Response getAllFeed() {
-    Object feed = callback.allFeedLoaded();
+  public Response getAllFeed(@QueryParam("filterType") Set<String> filterTypes) {
+    Object feed = callback.allFeedLoaded(filterTypes);
     return Response.ok(APPLICATION_JSON_TYPE).entity(feed).build();
   }
 
@@ -100,7 +101,7 @@ public class FeedApiStub {
 
     long currentGlobalSequenceNumberRequested();
 
-    Object allFeedLoaded();
+    Object allFeedLoaded(Set<String> filterTypes);
 
   }
 

@@ -2,6 +2,7 @@ package io.serialized.client.api;
 
 import io.dropwizard.testing.junit5.DropwizardClientExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
+import io.dropwizard.util.Sets;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.feed.Feed;
 import io.serialized.client.feed.FeedApiStub;
@@ -23,10 +24,11 @@ import static io.serialized.client.feed.FeedRequests.getFromFeed;
 import static io.serialized.client.feed.FeedRequests.getSequenceNumber;
 import static io.serialized.client.feed.FeedRequests.listFeeds;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -77,9 +79,22 @@ public class FeedClientIT {
 
     FeedClient feedClient = getFeedClient();
 
-    when(apiCallback.allFeedLoaded()).thenReturn(getResource("/feed/allFeed.json"));
+    when(apiCallback.allFeedLoaded(emptySet())).thenReturn(getResource("/feed/allFeed.json"));
 
     FeedResponse feedResponse = feedClient.execute(getFromAll().build(), 0);
+
+    assertThat(feedResponse.entries()).hasSize(1);
+    assertThat(feedResponse.events()).hasSize(1);
+  }
+
+  @Test
+  public void allFeedEntriesFilteredOnType() throws IOException {
+
+    FeedClient feedClient = getFeedClient();
+
+    when(apiCallback.allFeedLoaded(Sets.of("payment"))).thenReturn(getResource("/feed/allFeed.json"));
+
+    FeedResponse feedResponse = feedClient.execute(getFromAll().withTypes("payment").build(), 0);
 
     assertThat(feedResponse.entries()).hasSize(1);
     assertThat(feedResponse.events()).hasSize(1);

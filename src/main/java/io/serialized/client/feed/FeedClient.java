@@ -61,6 +61,10 @@ public class FeedClient implements Closeable {
     Optional.ofNullable(request.partitionCount).ifPresent(pCount -> urlBuilder.addQueryParameter("partitionCount", String.valueOf(pCount)));
     Optional.ofNullable(request.partitionNumber).ifPresent(pNumber -> urlBuilder.addQueryParameter("partitionNumber", String.valueOf(pNumber)));
 
+    for (String type : request.types) {
+      urlBuilder.addQueryParameter("filterType", type);
+    }
+
     HttpUrl url = urlBuilder.addQueryParameter("since", String.valueOf(since)).build();
 
     if (request.hasTenantId()) {

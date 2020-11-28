@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptySet;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -303,7 +304,7 @@ public class JerseyClientIT {
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
     Client client = ClientBuilder.newClient();
 
-    when(feedApiCallback.allFeedLoaded()).thenReturn(getResource("/feed/allFeed.json"));
+    when(feedApiCallback.allFeedLoaded(emptySet())).thenReturn(getResource("/feed/allFeed.json"));
 
     Map response = client.target(apiRoot)
         .path("feeds")
