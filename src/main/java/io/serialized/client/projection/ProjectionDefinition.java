@@ -20,6 +20,7 @@ public class ProjectionDefinition {
   private String idField;
   private String signingSecret;
   private List<ProjectionHandler> handlers;
+  private List<String> indexedFields;
 
   public static SingleProjectionBuilder singleProjection(String projectionName) {
     return new SingleProjectionBuilder(projectionName);
@@ -49,6 +50,10 @@ public class ProjectionDefinition {
     return unmodifiableList(handlers);
   }
 
+  public List<String> indexedFields() {
+    return indexedFields != null ? unmodifiableList(indexedFields) : null;
+  }
+
   public String projectionName() {
     return projectionName;
   }
@@ -74,6 +79,7 @@ public class ProjectionDefinition {
     private final String projectionName;
     private String feedName;
     private String signingSecret;
+    private List<String> indexedFields;
 
     AggregatedProjectionBuilder(String projectionName) {
       this.projectionName = projectionName;
@@ -100,6 +106,11 @@ public class ProjectionDefinition {
       return addHandler(builder.build());
     }
 
+    public AggregatedProjectionBuilder withIndexedFields(List<String> indexedFields) {
+      this.indexedFields = indexedFields;
+      return this;
+    }
+
     public ProjectionDefinition build() {
       Validate.isTrue(!handlers.isEmpty(), "'handlers' must not be empty");
       Validate.notEmpty(projectionName, "'projectionName' must be set");
@@ -111,6 +122,7 @@ public class ProjectionDefinition {
       definition.aggregated = true;
       definition.handlers = handlers;
       definition.signingSecret = signingSecret;
+      definition.indexedFields = indexedFields;
       return definition;
     }
 
@@ -123,6 +135,7 @@ public class ProjectionDefinition {
     private String feedName;
     private String idField;
     private String signingSecret;
+    private List<String> indexedFields;
 
     SingleProjectionBuilder(String projectionName) {
       this.projectionName = projectionName;
@@ -154,6 +167,11 @@ public class ProjectionDefinition {
       return this;
     }
 
+    public SingleProjectionBuilder withIndexedFields(List<String> indexedFields) {
+      this.indexedFields = indexedFields;
+      return this;
+    }
+
     public ProjectionDefinition build() {
       Validate.isTrue(!handlers.isEmpty(), "'handlers' must not be empty");
       Validate.notEmpty(projectionName, "'projectionName' must be set");
@@ -166,6 +184,7 @@ public class ProjectionDefinition {
       definition.idField = idField;
       definition.handlers = handlers;
       definition.signingSecret = signingSecret;
+      definition.indexedFields = indexedFields;
       return definition;
     }
 
