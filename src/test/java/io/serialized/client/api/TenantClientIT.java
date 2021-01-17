@@ -70,6 +70,17 @@ public class TenantClientIT {
   }
 
   @Test
+  public void testUpdateTenant() {
+
+    TenantClient tenantClient = getTenantClient();
+
+    UUID tenantId = UUID.randomUUID();
+    Tenant tenant = Tenant.newTenant(tenantId).reference("ref1").build();
+    tenantClient.updateTenant(tenant);
+    verify(apiCallback, times(1)).tenantUpdated(tenant);
+  }
+
+  @Test
   public void testListTenants() throws IOException {
 
     TenantClient tenantClient = getTenantClient();

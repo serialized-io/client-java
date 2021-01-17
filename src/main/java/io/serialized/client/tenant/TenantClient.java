@@ -45,6 +45,11 @@ public class TenantClient {
     client.delete(url);
   }
 
+  public void updateTenant(Tenant tenant) {
+    HttpUrl url = apiRoot.newBuilder().addPathSegment("tenants").addPathSegment(tenant.tenantId()).build();
+    client.put(url, tenant);
+  }
+
   public static class Builder {
 
     private final ObjectMapper objectMapper = new ObjectMapper()
