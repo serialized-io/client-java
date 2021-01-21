@@ -18,6 +18,7 @@ public class GetFeedRequest {
   public final String feedName;
   public final Integer limit;
   public final Duration pollDelay;
+  public final Duration waitTime;
   public final boolean eagerFetching;
   public final UUID tenantId;
   public final Integer partitionCount;
@@ -28,6 +29,7 @@ public class GetFeedRequest {
     this.feedName = builder.feedName;
     this.limit = builder.limit;
     this.pollDelay = builder.pollDelay;
+    this.waitTime = builder.waitTime;
     this.eagerFetching = builder.eagerFetching;
     this.tenantId = builder.tenantId;
     this.partitionCount = builder.partitionCount;
@@ -43,10 +45,13 @@ public class GetFeedRequest {
 
     private static final ValueRange SUBSCRIPTION_POLL_DELAY_VALUE_RANGE = ValueRange.of(1, 60);
 
+    private static final ValueRange WAIT_TIME_VALUE_RANGE = ValueRange.of(0, 60);
+
     private final Set<String> types = new LinkedHashSet<>();
     private Integer limit;
     private String feedName = "_all";
     private Duration pollDelay = Duration.ofSeconds(1);
+    private Duration waitTime = Duration.ofSeconds(0);
     private boolean eagerFetching = true;
     private UUID tenantId;
     private Integer partitionCount;
@@ -100,6 +105,21 @@ public class GetFeedRequest {
       } else {
         throw new IllegalArgumentException(format("Poll delay must be within %d and %d seconds",
             SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.getMinimum(), SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.getMaximum()));
+      }
+    }
+
+    /**
+     * @param waitTime If set to greater than 0, long polling will be enabled and each poll request will
+     *                 hang either until a new entry was added to the feed or until the request times out.
+     *                 Value must be between 0s and 60s, default is 0s.
+     */
+    public Builder withWaitTime(Duration waitTime) {
+      if (WAIT_TIME_VALUE_RANGE.isValidValue(waitTime.get(ChronoUnit.SECONDS))) {
+        this.waitTime = waitTime;
+        return this;
+      } else {
+        throw new IllegalArgumentException(format("waitTime must be within %d and %d seconds",
+            WAIT_TIME_VALUE_RANGE.getMinimum(), WAIT_TIME_VALUE_RANGE.getMaximum()));
       }
     }
 
