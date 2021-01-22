@@ -6,6 +6,7 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.Validate;
 
 import java.net.URI;
+import java.util.function.Consumer;
 
 public class SerializedClientConfig {
 
@@ -34,6 +35,8 @@ public class SerializedClientConfig {
 
   public static class Builder {
 
+    private final OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
+
     private URI rootApiUrl = URI.create(HTTPS_API_SERIALIZED_IO);
     private String accessKey;
     private String secretAccessKey;
@@ -53,13 +56,21 @@ public class SerializedClientConfig {
       return this;
     }
 
+    /**
+     * Allows HTTP client customization.
+     */
+    public Builder configureHttpClient(Consumer<OkHttpClient.Builder> consumer) {
+      consumer.accept(httpClientBuilder);
+      return this;
+    }
+
     public SerializedClientConfig build() {
       Validate.notNull(rootApiUrl, "'rootApiUrl' must be set");
       Validate.notEmpty(accessKey, "'accessKey' must be set");
       Validate.notEmpty(secretAccessKey, "'secretAccessKey' must be set");
 
       HttpUrl apiRoot = HttpUrl.get(rootApiUrl);
-      OkHttpClient client = new OkHttpClient.Builder()
+      OkHttpClient client = httpClientBuilder
           .addInterceptor(chain -> chain.proceed(chain.request().newBuilder()
               .addHeader("Serialized-Access-Key", accessKey)
               .addHeader("Serialized-Secret-Access-Key", secretAccessKey)
