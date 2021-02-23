@@ -167,7 +167,7 @@ public class FeedClientIT {
     AtomicLong lastProcessedEntry = new AtomicLong();
 
     GetFeedRequest request = getFromFeed(feedName).withLimit(10).build();
-    feedClient.execute(request, 3, feedEntry -> {
+    feedClient.execute(request, 3).entries().forEach(feedEntry -> {
       entries.incrementAndGet();
       events.addAndGet(feedEntry.events().size());
       assertNotNull(feedEntry.aggregateId());

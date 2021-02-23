@@ -19,18 +19,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.logging.Level.WARNING;
 
 public class FeedClient implements Closeable {
 
   private static final String SEQUENCE_NUMBER_HEADER = "Serialized-SequenceNumber-Current";
+
+  private final Logger logger = Logger.getLogger(getClass().getName());
 
   private final SerializedOkHttpClient client;
   private final HttpUrl apiRoot;
@@ -76,31 +80,15 @@ public class FeedClient implements Closeable {
   }
 
   /**
-   * Executes a poll starting at given sequence number.
-   *
-   * @param since            Sequence number to start feeding from. Zero (0) starts from the beginning.
-   * @param feedEntryHandler Handler invoked for each received entry
-   */
-  public void execute(GetFeedRequest request, long since, FeedEntryHandler feedEntryHandler) {
-    FeedResponse response;
-    long offset = since;
-
-    do {
-      response = execute(request, offset);
-      for (FeedEntry feedEntry : response.entries()) {
-        feedEntryHandler.handle(feedEntry);
-        offset = feedEntry.sequenceNumber();
-      }
-    } while (request.eagerFetching && response.hasMore());
-  }
-
-  /**
-   * Starts subscribing to the feed starting at the beginning.
+   * Starts subscribing to the feed starting from the beginning.
+   * The default in-memory sequence number tracker will be used.
    *
    * @param feedEntryHandler Handler invoked for each received entry
+   * @see SequenceNumberTracker
+   * @see InMemorySequenceNumberTracker
    */
   public void subscribe(GetFeedRequest request, FeedEntryHandler feedEntryHandler) {
-    subscribe(request, 0, feedEntryHandler);
+    subscribe(request, new InMemorySequenceNumberTracker(), feedEntryHandler);
   }
 
   /**
@@ -108,26 +96,36 @@ public class FeedClient implements Closeable {
    *
    * @param feedEntryHandler Handler invoked for each received entry
    */
-  public void subscribe(GetFeedRequest request, long since, FeedEntryHandler feedEntryHandler) {
+  public void subscribe(GetFeedRequest request, SequenceNumberTracker sequenceNumberTracker, FeedEntryHandler feedEntryHandler) {
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-    final AtomicLong offset = new AtomicLong(since);
     executor.scheduleWithFixedDelay(() -> {
+
       FeedResponse response;
 
-      do {
-        response = execute(request, offset.get());
-        for (FeedEntry feedEntry : response.entries()) {
-          try {
-            feedEntryHandler.handle(feedEntry);
-            offset.set(feedEntry.sequenceNumber());
-          } catch (RetryException e) {
-            // Retry requested
+      try {
+        do {
+          response = execute(request, sequenceNumberTracker.lastConsumedSequenceNumber());
+          for (FeedEntry feedEntry : response.entries()) {
+            try {
+              feedEntryHandler.handle(feedEntry);
+              sequenceNumberTracker.updateLastConsumedSequenceNumber(feedEntry.sequenceNumber());
+            } catch (RetryException e) {
+              // Retry requested
+            }
           }
-        }
-      } while (request.eagerFetching && response.hasMore());
+        } while (request.eagerFetching && response.hasMore());
+      } catch (Exception e) {
+        logger.log(WARNING, format("Error polling event feed: %s", e.getMessage()), e);
 
-    }, request.pollDelay.getSeconds(), request.pollDelay.getSeconds(), TimeUnit.SECONDS);
+        try {
+          Thread.sleep(1000); // sleep before retrying
+        } catch (InterruptedException io) {
+          // ignore
+        }
+      }
+
+    }, 1, 1, TimeUnit.MILLISECONDS);
     executors.add(executor);
   }
 
