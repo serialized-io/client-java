@@ -17,7 +17,6 @@ public class GetFeedRequest {
 
   public final String feedName;
   public final Integer limit;
-  public final Duration pollDelay;
   public final Duration waitTime;
   public final boolean eagerFetching;
   public final UUID tenantId;
@@ -28,7 +27,6 @@ public class GetFeedRequest {
   private GetFeedRequest(Builder builder) {
     this.feedName = builder.feedName;
     this.limit = builder.limit;
-    this.pollDelay = builder.pollDelay;
     this.waitTime = builder.waitTime;
     this.eagerFetching = builder.eagerFetching;
     this.tenantId = builder.tenantId;
@@ -43,15 +41,12 @@ public class GetFeedRequest {
 
   public static class Builder {
 
-    private static final ValueRange SUBSCRIPTION_POLL_DELAY_VALUE_RANGE = ValueRange.of(1, 60);
-
     private static final ValueRange WAIT_TIME_VALUE_RANGE = ValueRange.of(0, 60);
 
     private final Set<String> types = new LinkedHashSet<>();
     private Integer limit;
     private String feedName = "_all";
-    private Duration pollDelay = Duration.ofSeconds(1);
-    private Duration waitTime = Duration.ofSeconds(0);
+    private Duration waitTime = Duration.ofSeconds(20);
     private boolean eagerFetching = true;
     private UUID tenantId;
     private Integer partitionCount;
@@ -93,19 +88,6 @@ public class GetFeedRequest {
     public Builder withEagerFetching(boolean eagerFetching) {
       this.eagerFetching = eagerFetching;
       return this;
-    }
-
-    /**
-     * @param pollDelay Desired delay between feed polls. Must be between 1s and 60s. Default is 1s.
-     */
-    public Builder withSubscriptionPollDelay(Duration pollDelay) {
-      if (SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.isValidValue(pollDelay.get(ChronoUnit.SECONDS))) {
-        this.pollDelay = pollDelay;
-        return this;
-      } else {
-        throw new IllegalArgumentException(format("Poll delay must be within %d and %d seconds",
-            SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.getMinimum(), SUBSCRIPTION_POLL_DELAY_VALUE_RANGE.getMaximum()));
-      }
     }
 
     /**
