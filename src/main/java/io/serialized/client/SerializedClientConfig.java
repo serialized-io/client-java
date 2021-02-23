@@ -8,6 +8,8 @@ import org.apache.commons.lang3.Validate;
 import java.net.URI;
 import java.util.function.Consumer;
 
+import static java.time.Duration.ofSeconds;
+
 public class SerializedClientConfig {
 
   public static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
@@ -35,7 +37,9 @@ public class SerializedClientConfig {
 
   public static class Builder {
 
-    private final OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
+    private final OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
+        .connectTimeout(ofSeconds(10))
+        .readTimeout(ofSeconds(60));
 
     private URI rootApiUrl = URI.create(HTTPS_API_SERIALIZED_IO);
     private String accessKey;

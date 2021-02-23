@@ -14,7 +14,7 @@ public class SerializedClientConfigTest {
         .secretAccessKey("bbbbb")
         .build();
 
-    assertThat(defaultConfig.httpClient().readTimeoutMillis()).isEqualTo(10_000);
+    assertThat(defaultConfig.httpClient().readTimeoutMillis()).isEqualTo(60_000);
     assertThat(defaultConfig.httpClient().writeTimeoutMillis()).isEqualTo(10_000);
     assertThat(defaultConfig.httpClient().connectTimeoutMillis()).isEqualTo(10_000);
     assertThat(defaultConfig.httpClient().callTimeoutMillis()).isEqualTo(0);
