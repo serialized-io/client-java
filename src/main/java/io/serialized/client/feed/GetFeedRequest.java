@@ -46,7 +46,7 @@ public class GetFeedRequest {
     private final Set<String> types = new LinkedHashSet<>();
     private Integer limit;
     private String feedName = "_all";
-    private Duration waitTime = Duration.ofSeconds(20);
+    private Duration waitTime = Duration.ofSeconds(0);
     private boolean eagerFetching = true;
     private UUID tenantId;
     private Integer partitionCount;

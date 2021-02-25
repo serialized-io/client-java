@@ -97,6 +97,7 @@ public class FeedClient implements Closeable {
    * @param feedEntryHandler Handler invoked for each received entry
    */
   public void subscribe(GetFeedRequest request, SequenceNumberTracker sequenceNumberTracker, FeedEntryHandler feedEntryHandler) {
+    Validate.isTrue(request.waitTime.getSeconds() > 0, "'waitTime' in request cannot be zero when subscribing to a feed");
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     executor.scheduleWithFixedDelay(() -> {
