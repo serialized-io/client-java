@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.apache.commons.lang3.Validate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ public class AggregateClient<T> {
   private final StateBuilder<T> stateBuilder;
   private final String aggregateType;
   private final RetryStrategy retryStrategy;
+  private final int limit;
 
   private AggregateClient(Builder<T> builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
@@ -40,6 +42,7 @@ public class AggregateClient<T> {
     this.aggregateType = builder.aggregateType;
     this.stateBuilder = builder.stateBuilder;
     this.retryStrategy = builder.retryStrategy;
+    this.limit = builder.limit;
   }
 
   public static <T> Builder<T> aggregateClient(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
@@ -213,12 +216,28 @@ public class AggregateClient<T> {
   }
 
   private LoadAggregateResponse loadState(UUID aggregateId, Optional<UUID> tenantId) {
-    HttpUrl url = getAggregateUrl(aggregateId).build();
+
+    HttpUrl.Builder builder = getAggregateUrl(aggregateId).addQueryParameter("limit", String.valueOf(limit));
+
+    int since = 0;
+    LoadAggregateResponse response = new LoadAggregateResponse();
+
     if (tenantId.isPresent()) {
-      return client.get(url, LoadAggregateResponse.class, tenantId.get());
+      do {
+        HttpUrl url = builder.setQueryParameter("since", String.valueOf(since)).build();
+        response.merge(client.get(url, LoadAggregateResponse.class, tenantId.get()));
+        since += limit;
+      } while (response.hasMore);
+
     } else {
-      return client.get(url, LoadAggregateResponse.class);
+      do {
+        HttpUrl url = builder.setQueryParameter("since", String.valueOf(since)).build();
+        response.merge(client.get(url, LoadAggregateResponse.class));
+        since += limit;
+      } while (response.hasMore);
     }
+
+    return response;
   }
 
   private int storeBatch(UUID aggregateId, Optional<UUID> tenantId, EventBatch eventBatch) {
@@ -270,6 +289,7 @@ public class AggregateClient<T> {
 
     private RetryStrategy retryStrategy = RetryStrategy.DEFAULT;
     private UpdateStrategy updateStrategy = UpdateStrategy.DEFAULT;
+    private int limit = 1000;
 
     Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
       this.aggregateType = aggregateType;
@@ -305,6 +325,16 @@ public class AggregateClient<T> {
     }
 
     /**
+     * Limits the number of returned versions (event batches) on aggregate load (during update).
+     *
+     * @param limit The limit. Default is 1000 (maximum number according to the API).
+     */
+    public <E> Builder<T> withLimit(int limit) {
+      this.limit = limit;
+      return this;
+    }
+
+    /**
      * Allows object mapper customization.
      */
     public <E> Builder<T> configureObjectMapper(Consumer<ObjectMapper> consumer) {
@@ -327,6 +357,19 @@ public class AggregateClient<T> {
     String aggregateType;
     long aggregateVersion;
     List<Event<?>> events;
+    boolean hasMore;
+
+    public void merge(LoadAggregateResponse response) {
+      this.aggregateId = response.aggregateId;
+      this.aggregateType = response.aggregateType;
+      this.aggregateVersion = response.aggregateVersion;
+      if (events == null) {
+        this.events = new ArrayList<>(response.events);
+      } else {
+        this.events.addAll(response.events);
+      }
+      this.hasMore = response.hasMore;
+    }
 
   }
 

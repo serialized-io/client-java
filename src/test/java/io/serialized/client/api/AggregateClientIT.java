@@ -321,6 +321,29 @@ public class AggregateClientIT {
   }
 
   @Test
+  public void testLoadAggregateStateWithLimit() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .withLimit(2)
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .registerHandler(OrderCanceled.class, OrderState::handleOrderCanceled)
+        .registerHandler(OrderDeleted.class, OrderState::handleOrderDeleted)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 2)).thenReturn(getResource("/aggregate/shipped_order1.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 2, 2)).thenReturn(getResource("/aggregate/shipped_order2.json"));
+
+    int eventsStored = orderClient.update(orderId, orderState -> {
+      assertThat(orderState.status()).isEqualTo(OrderStatus.DELETED);
+      return emptyList();
+    });
+
+    assertThat(eventsStored).isEqualTo(0);
+  }
+
+  @Test
   public void testLoadAggregateStateMissingHandler() throws IOException {
     UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
     String aggregateType = "order";

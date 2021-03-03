@@ -1,0 +1,24 @@
+{
+  "aggregateId": "723ecfce-14e9-4889-98d5-a3d0ad54912f",
+  "aggregateType": "order",
+  "aggregateVersion": 2,
+  "events": [
+    {
+      "eventId": "11111111-4a05-4774-b870-1c9a2e2a27a3",
+      "eventType": "OrderPlaced",
+      "data": {
+        "orderId": "12345678-4a05-4774-b870-1c9a2e2a27a3",
+        "orderAmount": 12345
+      }
+    },
+    {
+      "eventId": "22222222-4a05-4774-b870-1c9a2e2a27a3",
+      "eventType": "OrderCanceled",
+      "data": {
+        "orderId": "12345678-4a05-4774-b870-1c9a2e2a27a3",
+        "cancellationNumber": 1234567890
+      }
+    }
+  ],
+  "hasMore": true
+}
