@@ -4,7 +4,7 @@
 
   <groupId>io.serialized</groupId>
   <artifactId>serialized-client</artifactId>
-  <version>7.0.2-SNAPSHOT</version>
+  <version>7.0.2</version>
   <packaging>jar</packaging>
 
   <name>Serialized Java Client</name>
@@ -28,7 +28,7 @@
     <url>https://github.com/serialized-io/client-java</url>
     <connection>scm:git:git://github.com/serialized-io/client-java.git</connection>
     <developerConnection>scm:git:git@github.com:serialized-io/client-java.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>serialized-client-7.0.2</tag>
   </scm>
 
   <distributionManagement>
