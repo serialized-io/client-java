@@ -70,7 +70,7 @@ public class JerseyClientIT {
   public void testLoadAggregate() {
 
     UUID aggregateId = UUID.fromString("99415be8-6819-4470-860c-c2933558d8d3");
-    when(aggregateApiCallback.aggregateLoaded("order", aggregateId)).thenReturn(ImmutableMap.of("apa", "banan"));
+    when(aggregateApiCallback.aggregateLoaded("order", aggregateId, 0, 1000)).thenReturn(ImmutableMap.of("apa", "banan"));
 
     UriBuilder apiRoot = UriBuilder.fromUri(dropwizardRule.baseUri()).path("api-stub");
     Client client = ClientBuilder.newClient();

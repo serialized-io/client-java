@@ -278,10 +278,16 @@ public class AggregateClient<T> {
       this.stateBuilder = stateBuilder(stateClass);
     }
 
+    /**
+     * Registers which handler should be invoked during aggregate load/hydration.
+     */
     public <E> Builder<T> registerHandler(Class<E> eventClass, EventHandler<T, E> handler) {
       return registerHandler(eventClass.getSimpleName(), eventClass, handler);
     }
 
+    /**
+     * Registers which handler should be invoked during aggregate load/hydration.
+     */
     public <E> Builder<T> registerHandler(String eventType, Class<E> eventClass, EventHandler<T, E> handler) {
       this.eventTypes.put(eventType, eventClass);
       stateBuilder.withHandler(eventClass, handler);

@@ -4,6 +4,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.HeaderParam;
@@ -50,8 +51,12 @@ public class AggregateApiStub {
 
   @GET
   @Path("{aggregateType}/{aggregateId}")
-  public Response loadAggregate(@PathParam("aggregateType") String aggregateType, @PathParam("aggregateId") String aggregateId) {
-    Object responseBody = callback.aggregateLoaded(aggregateType, UUID.fromString(aggregateId));
+  public Response loadAggregate(@PathParam("aggregateType") String aggregateType,
+                                @PathParam("aggregateId") String aggregateId,
+                                @QueryParam("since") @DefaultValue("0") int since,
+                                @QueryParam("limit") @DefaultValue("1000") int limit) {
+
+    Object responseBody = callback.aggregateLoaded(aggregateType, UUID.fromString(aggregateId), since, limit);
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 
@@ -92,7 +97,7 @@ public class AggregateApiStub {
 
     Response.Status eventsStored(UUID aggregateId, EventBatch eventBatch, UUID tenantId);
 
-    Object aggregateLoaded(String aggregateType, UUID aggregateId);
+    Object aggregateLoaded(String aggregateType, UUID aggregateId, int since, int limit);
 
     boolean aggregateChecked(String aggregateType, UUID aggregateId);
 
