@@ -1,5 +1,6 @@
 package io.serialized.client.api;
 
+import io.dropwizard.jersey.errors.ErrorMessage;
 import io.dropwizard.testing.junit5.DropwizardClientExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.dropwizard.util.Sets;
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,6 +30,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -85,6 +89,24 @@ public class FeedClientIT {
 
     assertThat(feedResponse.entries()).hasSize(1);
     assertThat(feedResponse.events()).hasSize(1);
+  }
+
+  @Test
+  public void allFeedEntries_ServiceUnavailable() {
+
+    FeedClient feedClient = getFeedClient();
+
+    Response.Status status = Response.Status.SERVICE_UNAVAILABLE;
+    Response response = Response.status(status).entity(new ErrorMessage(status.getStatusCode(), "Error")).build();
+
+    when(apiCallback.allFeedLoaded(emptySet())).thenThrow(new WebApplicationException(response));
+
+    Exception exception = assertThrows(Exception.class, () ->
+        feedClient.execute(getFromAll().build(), 0)
+    );
+
+    assertThat(exception.getMessage()).isEqualTo("{\"code\":503,\"message\":\"Error\"}");
+
   }
 
   @Test
