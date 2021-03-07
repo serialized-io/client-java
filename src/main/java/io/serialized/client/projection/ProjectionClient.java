@@ -13,6 +13,7 @@ import okhttp3.OkHttpClient;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
@@ -96,17 +97,17 @@ public class ProjectionClient {
     }
   }
 
-  private HttpUrl.Builder pathForDefinitions() {
-    return apiRoot.newBuilder()
-        .addPathSegment("projections")
-        .addPathSegment("definitions");
-  }
+  public long count(ProjectionRequest request) {
+    HttpUrl.Builder builder = pathForProjections(request.projectionName, request.projectionType).addPathSegment("_count");
+    Optional.ofNullable(request.reference).ifPresent(reference -> builder.addQueryParameter("reference", request.reference));
 
-  private HttpUrl.Builder pathForProjections(String projectionName, ProjectionType type) {
-    return apiRoot.newBuilder()
-        .addPathSegment("projections")
-        .addPathSegment(type.name().toLowerCase())
-        .addPathSegment(projectionName);
+    HttpUrl url = builder.build();
+
+    if (request.hasTenantId()) {
+      return ((Number) client.get(url, Map.class, request.tenantId).get("count")).longValue();
+    } else {
+      return ((Number) client.get(url, Map.class).get("count")).longValue();
+    }
   }
 
   public <T> ProjectionResponse<T> query(ProjectionQuery query) {
@@ -135,6 +136,19 @@ public class ProjectionClient {
     } else {
       return client.get(url, javaType);
     }
+  }
+
+  private HttpUrl.Builder pathForDefinitions() {
+    return apiRoot.newBuilder()
+        .addPathSegment("projections")
+        .addPathSegment("definitions");
+  }
+
+  private HttpUrl.Builder pathForProjections(String projectionName, ProjectionType type) {
+    return apiRoot.newBuilder()
+        .addPathSegment("projections")
+        .addPathSegment(type.name().toLowerCase())
+        .addPathSegment(projectionName);
   }
 
   public static class Builder {

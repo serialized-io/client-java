@@ -102,8 +102,26 @@ public class ProjectionApiStub {
   }
 
   @GET
+  @Path("single/{projectionName}/_count")
+  public Response getSingleProjectionCount(@PathParam("projectionName") String projectionName,
+                                           @HeaderParam(SERIALIZED_TENANT_ID) String tenantId,
+                                           @QueryParam("reference") String reference) {
+
+    if (StringUtils.isNotBlank(tenantId)) {
+      Object responseBody = callback.singleProjectionCount(projectionName, reference, UUID.fromString(tenantId));
+      return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+    } else {
+      Object responseBody = callback.singleProjectionCount(projectionName, reference);
+      return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
+    }
+  }
+
+  @GET
   @Path("single/{projectionName}/{id}")
-  public Response getSingleProjection(@PathParam("projectionName") String projectionName, @PathParam("id") String id, @HeaderParam(SERIALIZED_TENANT_ID) String tenantId) {
+  public Response getSingleProjection(@PathParam("projectionName") String projectionName,
+                                      @PathParam("id") String id,
+                                      @HeaderParam(SERIALIZED_TENANT_ID) String tenantId) {
+
     if (StringUtils.isNotBlank(tenantId)) {
       Object responseBody = callback.singleProjectionFetched(projectionName, id, UUID.fromString(tenantId));
       return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
@@ -134,6 +152,10 @@ public class ProjectionApiStub {
     Object overviewFetched();
 
     Object aggregatedProjectionFetched(String projectionName);
+
+    Object singleProjectionCount(String projectionName, String reference);
+
+    Object singleProjectionCount(String projectionName, String reference, UUID tenantId);
 
     Object singleProjectionsFetched(String projectionName, String reference, String sort, int skip, int limit);
 

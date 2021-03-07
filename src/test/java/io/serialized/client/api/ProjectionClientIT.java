@@ -11,6 +11,7 @@ import io.serialized.client.projection.ProjectionClient;
 import io.serialized.client.projection.ProjectionDefinition;
 import io.serialized.client.projection.ProjectionDefinitions;
 import io.serialized.client.projection.ProjectionHandler;
+import io.serialized.client.projection.ProjectionRequest;
 import io.serialized.client.projection.ProjectionRequests;
 import io.serialized.client.projection.ProjectionResponse;
 import io.serialized.client.projection.ProjectionsResponse;
@@ -330,6 +331,36 @@ public class ProjectionClientIT {
     assertThat(projection.projectionId()).isEqualTo(projectionId);
     assertThat(projection.updatedAt()).isEqualTo(1505754083976L);
     assertThat(projection.data().orderAmount).isEqualTo(12345L);
+  }
+
+  @Test
+  public void testCountSingleProjection() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    String projectionName = "orders";
+
+    when(apiCallback.singleProjectionCount(projectionName, null)).thenReturn(getResource("/projection/getSingleProjectionCount.json"));
+
+    ProjectionRequest request = ProjectionRequests.single("orders").build();
+    long projectionCount = projectionClient.count(request);
+
+    assertThat(projectionCount).isEqualTo(1234L);
+  }
+
+  @Test
+  public void testCountSingleProjectionWithReference() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    String projectionName = "orders";
+
+    when(apiCallback.singleProjectionCount(projectionName, "ref")).thenReturn(getResource("/projection/getSingleProjectionCount.json"));
+
+    ProjectionRequest request = ProjectionRequests.single("orders").withReference("ref").build();
+    long projectionCount = projectionClient.count(request);
+
+    assertThat(projectionCount).isEqualTo(1234L);
   }
 
   @Test
