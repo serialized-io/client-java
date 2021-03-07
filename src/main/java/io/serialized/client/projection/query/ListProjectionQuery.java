@@ -49,38 +49,38 @@ public class ListProjectionQuery implements ProjectionQuery {
       this.projectionName = projectionName;
     }
 
-    public Builder skip(int skip) {
+    public Builder withSkip(int skip) {
       this.skip = skip;
       return this;
     }
 
-    public Builder limit(int limit) {
+    public Builder withLimit(int limit) {
       this.limit = limit;
       return this;
     }
 
-    public Builder sortDescending(String field) {
+    public Builder withSortDescending(String field) {
       this.sort = "-" + field;
       return this;
     }
 
-    public Builder sortAscending(String field) {
+    public Builder withSortAscending(String field) {
       this.sort = field;
+      return this;
+    }
+
+    public Builder withSort(String string) {
+      this.sort = string;
+      return this;
+    }
+
+    public Builder withReference(String reference) {
+      this.reference = reference;
       return this;
     }
 
     public Builder withTenantId(UUID tenantId) {
       this.tenantId = tenantId;
-      return this;
-    }
-
-    public Builder sort(String string) {
-      this.sort = string;
-      return this;
-    }
-
-    public Builder reference(String reference) {
-      this.reference = reference;
       return this;
     }
 

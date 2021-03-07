@@ -325,7 +325,7 @@ public class ProjectionClientIT {
 
     ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(
         single("orders")
-            .id(projectionId)
+            .withId(projectionId)
             .build(OrderBalanceProjection.class));
 
     assertThat(projection.projectionId()).isEqualTo(projectionId);
@@ -375,7 +375,7 @@ public class ProjectionClientIT {
 
     ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(
         single("orders")
-            .id(projectionId)
+            .withId(projectionId)
             .withTenantId(tenantId)
             .build(OrderBalanceProjection.class));
 
@@ -395,7 +395,7 @@ public class ProjectionClientIT {
         .thenReturn(getResource("/projection/listSingleProjections.json"));
 
     ProjectionsResponse<Map> projections = projectionClient.query(
-        list("orders").skip(5).limit(10).sortDescending("createdAt").reference(reference)
+        list("orders").withSkip(5).withLimit(10).withSortDescending("createdAt").withReference(reference)
             .build(Map.class));
 
     assertThat(projections.projections()).hasSize(1);

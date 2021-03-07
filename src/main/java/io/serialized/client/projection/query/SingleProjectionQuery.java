@@ -49,17 +49,17 @@ public class SingleProjectionQuery implements ProjectionQuery {
       this.projectionName = projectionName;
     }
 
-    public Builder id(String projectionId) {
+    public Builder withId(String projectionId) {
       this.projectionId = projectionId;
       return this;
     }
 
-    public Builder id(UUID projectionId) {
+    public Builder withId(UUID projectionId) {
       this.projectionId = projectionId.toString();
       return this;
     }
 
-    public Builder awaitCreation(Duration duration) {
+    public Builder withAwaitCreation(Duration duration) {
       this.duration = duration;
       return this;
     }
