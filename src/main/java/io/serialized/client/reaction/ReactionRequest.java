@@ -1,5 +1,6 @@
 package io.serialized.client.reaction;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public class ReactionRequest {
@@ -12,8 +13,8 @@ public class ReactionRequest {
     this.tenantId = builder.tenantId;
   }
 
-  public boolean hasTenantId() {
-    return tenantId != null;
+  public Optional<UUID> tenantId() {
+    return Optional.ofNullable(this.tenantId);
   }
 
   public static class Builder {

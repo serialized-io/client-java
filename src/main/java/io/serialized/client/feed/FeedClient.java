@@ -72,7 +72,7 @@ public class FeedClient implements Closeable {
 
     HttpUrl url = urlBuilder.addQueryParameter("since", String.valueOf(since)).build();
 
-    if (request.hasTenantId()) {
+    if (request.tenantId().isPresent()) {
       return client.get(url, FeedResponse.class, request.tenantId);
     } else {
       return client.get(url, FeedResponse.class);
@@ -136,7 +136,7 @@ public class FeedClient implements Closeable {
   public List<Feed> execute(ListFeedsRequest request) {
     HttpUrl url = apiRoot.newBuilder().addPathSegment("feeds").build();
 
-    if (request.hasTenantId()) {
+    if (request.tenantId().isPresent()) {
       return client.get(url, FeedsResponse.class, request.tenantId).feeds();
     } else {
       return client.get(url, FeedsResponse.class).feeds();
@@ -154,7 +154,7 @@ public class FeedClient implements Closeable {
     HttpUrl url = url(request.feedName).build();
     Function<Response, Long> func = response -> Long.parseLong(requireNonNull(response.header(SEQUENCE_NUMBER_HEADER)));
 
-    if (request.hasTenantId()) {
+    if (request.tenantId().isPresent()) {
       return client.head(url, func, request.tenantId);
     } else {
       return client.head(url, func);

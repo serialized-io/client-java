@@ -2,6 +2,7 @@ package io.serialized.client.projection;
 
 import org.apache.commons.lang3.Validate;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public class ProjectionRequest {
@@ -18,8 +19,8 @@ public class ProjectionRequest {
     this.reference = builder.reference;
   }
 
-  public boolean hasTenantId() {
-    return tenantId != null;
+  public Optional<UUID> tenantId() {
+    return Optional.ofNullable(this.tenantId);
   }
 
   public static class Builder {

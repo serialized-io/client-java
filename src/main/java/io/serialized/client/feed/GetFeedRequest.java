@@ -8,6 +8,7 @@ import java.time.temporal.ValueRange;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -35,8 +36,8 @@ public class GetFeedRequest {
     this.types = Collections.unmodifiableSet(builder.types);
   }
 
-  public boolean hasTenantId() {
-    return tenantId != null;
+  public Optional<UUID> tenantId() {
+    return Optional.ofNullable(this.tenantId);
   }
 
   public static class Builder {

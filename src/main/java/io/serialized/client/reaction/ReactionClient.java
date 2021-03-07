@@ -101,7 +101,7 @@ public class ReactionClient {
    */
   public ReactionsResponse listReactions(ReactionRequest request) {
     HttpUrl url = pathForReactions(request.type).build();
-    if (request.hasTenantId()) {
+    if (request.tenantId().isPresent()) {
       return client.get(url, ReactionsResponse.class, request.tenantId);
     } else {
       return client.get(url, ReactionsResponse.class);
@@ -113,7 +113,7 @@ public class ReactionClient {
    */
   public void triggerReaction(TriggerReactionRequest request) {
     HttpUrl url = pathForReaction(request.type, request.reactionId).build();
-    if (request.hasTenantId()) {
+    if (request.tenantId().isPresent()) {
       client.post(url, "", request.tenantId);
     } else {
       client.post(url, "");
@@ -125,7 +125,7 @@ public class ReactionClient {
    */
   public void deleteReaction(DeleteReactionRequest request) {
     HttpUrl url = pathForReaction(request.type, request.reactionId).build();
-    if (request.hasTenantId()) {
+    if (request.tenantId().isPresent()) {
       client.delete(url, request.tenantId);
     } else {
       client.delete(url);

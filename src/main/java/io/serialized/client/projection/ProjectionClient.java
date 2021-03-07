@@ -90,7 +90,7 @@ public class ProjectionClient {
    */
   public void delete(ProjectionRequest request) {
     HttpUrl url = pathForProjections(request.projectionName, request.projectionType).build();
-    if (request.hasTenantId()) {
+    if (request.tenantId().isPresent()) {
       client.delete(url, request.tenantId);
     } else {
       client.delete(url);
@@ -103,7 +103,7 @@ public class ProjectionClient {
 
     HttpUrl url = builder.build();
 
-    if (request.hasTenantId()) {
+    if (request.tenantId().isPresent()) {
       return ((Number) client.get(url, Map.class, request.tenantId).get("count")).longValue();
     } else {
       return ((Number) client.get(url, Map.class).get("count")).longValue();
