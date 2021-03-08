@@ -2,6 +2,7 @@ package io.serialized.client.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.google.common.collect.ImmutableSet;
 import io.dropwizard.testing.junit5.DropwizardClientExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.SerializedClientConfig;
@@ -23,6 +24,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
@@ -37,6 +39,7 @@ import static io.serialized.client.projection.query.ProjectionQueries.aggregated
 import static io.serialized.client.projection.query.ProjectionQueries.list;
 import static io.serialized.client.projection.query.ProjectionQueries.single;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -391,12 +394,29 @@ public class ProjectionClientIT {
 
     String projectionName = "orders";
     String reference = "externalId";
-    when(apiCallback.singleProjectionsFetched(projectionName, reference, "-createdAt", 5, 10))
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), reference, "-createdAt", 5, 10))
         .thenReturn(getResource("/projection/listSingleProjections.json"));
 
     ProjectionsResponse<Map> projections = projectionClient.query(
         list("orders").withSkip(5).withLimit(10).withSortDescending("createdAt").withReference(reference)
             .build(Map.class));
+
+    assertThat(projections.projections()).hasSize(1);
+    assertThat(projections.hasMore()).isEqualTo(false);
+  }
+
+  @Test
+  public void testListSingleProjectionsWithIdFilter() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    String projectionName = "orders";
+    Set<String> ids = ImmutableSet.of("22c3780f-6dcb-440f-8532-6693be83f21c");
+
+    when(apiCallback.singleProjectionsFetched(projectionName, ids, null, "createdAt", 0, 100))
+        .thenReturn(getResource("/projection/listSingleProjections.json"));
+
+    ProjectionsResponse<Map> projections = projectionClient.query(list("orders").withIds(ids).build(Map.class));
 
     assertThat(projections.projections()).hasSize(1);
     assertThat(projections.hasMore()).isEqualTo(false);

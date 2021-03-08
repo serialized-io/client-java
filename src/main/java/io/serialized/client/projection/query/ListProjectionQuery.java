@@ -44,6 +44,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     private String sort;
     private String reference;
     private UUID tenantId;
+    private Iterable<String> ids;
 
     public Builder(String projectionName) {
       this.projectionName = projectionName;
@@ -79,6 +80,11 @@ public class ListProjectionQuery implements ProjectionQuery {
       return this;
     }
 
+    public Builder withIds(Iterable<String> ids) {
+      this.ids = ids;
+      return this;
+    }
+
     public Builder withTenantId(UUID tenantId) {
       this.tenantId = tenantId;
       return this;
@@ -94,6 +100,7 @@ public class ListProjectionQuery implements ProjectionQuery {
       Optional.ofNullable(limit).ifPresent(limit -> projections.addQueryParameter("limit", String.valueOf(limit)));
       Optional.ofNullable(sort).ifPresent(limit -> projections.addQueryParameter("sort", sort));
       Optional.ofNullable(reference).ifPresent(reference -> projections.addQueryParameter("reference", reference));
+      Optional.ofNullable(ids).ifPresent(ids -> ids.forEach(id -> projections.addQueryParameter("id", id)));
 
       return projections.build();
     }

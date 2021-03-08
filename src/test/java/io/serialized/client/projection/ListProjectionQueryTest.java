@@ -1,5 +1,6 @@
 package io.serialized.client.projection;
 
+import com.google.common.collect.ImmutableList;
 import okhttp3.HttpUrl;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +35,14 @@ public class ListProjectionQueryTest {
     assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
     assertThat(httpUrl.queryParameter("skip")).isEqualTo("5");
     assertThat(httpUrl.queryParameter("sort")).isNull();
+  }
+
+  @Test
+  public void listWithIds() {
+    ImmutableList<String> ids = ImmutableList.of("a", "b", "c");
+    HttpUrl httpUrl = list("game").withIds(ids).build(Map.class).constructUrl(ROOT_URL);
+    assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
+    assertThat(httpUrl.queryParameterValues("id")).isEqualTo(ids);
   }
 
   @Test
