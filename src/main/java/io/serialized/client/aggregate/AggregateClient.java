@@ -203,16 +203,16 @@ public class AggregateClient<T> {
 
   private AggregateDeleteConfirmation getDeleteToken(HttpUrl.Builder urlBuilder, UUID tenantId) {
     if (tenantId == null) {
-      return extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class));
+      HttpUrl deleteAggregateUrl = extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class));
+      return new AggregateDeleteConfirmation(client, deleteAggregateUrl);
     } else {
-      return extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class, tenantId));
+      HttpUrl deleteAggregateUrl = extractDeleteToken(urlBuilder, client.delete(urlBuilder.build(), Map.class, tenantId));
+      return new AggregateDeleteConfirmation(client, deleteAggregateUrl, tenantId);
     }
   }
 
-  private AggregateDeleteConfirmation extractDeleteToken(HttpUrl.Builder urlBuilder, Map<String, String> deleteResponse) {
-    String deleteToken = deleteResponse.get("deleteToken");
-    HttpUrl deleteAggregateUrl = urlBuilder.addQueryParameter("deleteToken", deleteToken).build();
-    return new AggregateDeleteConfirmation(client, deleteAggregateUrl);
+  private HttpUrl extractDeleteToken(HttpUrl.Builder urlBuilder, Map<String, String> deleteResponse) {
+    return urlBuilder.addQueryParameter("deleteToken", deleteResponse.get("deleteToken")).build();
   }
 
   private LoadAggregateResponse loadState(UUID aggregateId, Optional<UUID> tenantId) {
