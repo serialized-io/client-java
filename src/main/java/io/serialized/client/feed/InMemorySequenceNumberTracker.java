@@ -28,6 +28,7 @@ public class InMemorySequenceNumberTracker implements SequenceNumberTracker {
   @Override
   public void updateLastConsumedSequenceNumber(long sequenceNumber) {
     Validate.isTrue(sequenceNumber >= 0, "Last consumed sequence number cannot be negative!");
+    Validate.isTrue(sequenceNumber > this.sequenceNumber.get(), "Last consumed sequence number must be greater than current!");
     this.sequenceNumber.set(sequenceNumber);
   }
 
