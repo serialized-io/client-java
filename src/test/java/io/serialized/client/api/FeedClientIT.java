@@ -105,7 +105,7 @@ public class FeedClientIT {
         feedClient.execute(getFromAll().build(), 0)
     );
 
-    assertThat(exception.getMessage()).isEqualTo("{\"code\":503,\"message\":\"Error\"}");
+    assertThat(exception.getMessage()).isEqualTo("Service Unavailable");
 
   }
 

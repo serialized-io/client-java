@@ -117,16 +117,18 @@ public class SerializedOkHttpClient {
   private <T> T execute(Request request, Function<Response, T> handler) {
     try (Response res = httpClient.newCall(request).execute()) {
       if (!res.isSuccessful()) {
-        throw new ApiException(res.code(), nullSafeBody(res));
+        final String message;
+        if (res.code() >= 500) {
+          message = res.message();
+        } else {
+          message = res.body() != null ? res.body().string() : res.message();
+        }
+        throw new ApiException(res.code(), message);
       }
       return handler.apply(res);
     } catch (IOException e) {
       throw new ClientException(e);
     }
-  }
-
-  private String nullSafeBody(Response res) throws IOException {
-    return res.body() != null ? res.body().string() : res.message();
   }
 
   private <T> T parseJsonAs(String contents, Class<T> responseClass) {
