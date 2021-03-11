@@ -107,10 +107,18 @@ public class FeedClient implements Closeable {
       try {
         do {
           response = execute(request, sequenceNumberTracker.lastConsumedSequenceNumber());
+
           for (FeedEntry feedEntry : response.entries()) {
             try {
               feedEntryHandler.handle(feedEntry);
-              sequenceNumberTracker.updateLastConsumedSequenceNumber(feedEntry.sequenceNumber());
+
+              try {
+                sequenceNumberTracker.updateLastConsumedSequenceNumber(feedEntry.sequenceNumber());
+              } catch (IllegalArgumentException iae) {
+                logger.log(WARNING, format("Error updating sequence number after processing: %s", feedEntry), iae);
+                throw iae;
+              }
+
             } catch (RetryException e) {
               // Retry requested
             }
