@@ -34,7 +34,7 @@ public class InMemorySequenceNumberTrackerTest {
     Throwable exception = assertThrows(IllegalArgumentException.class,
         () -> sequenceNumberTracker.updateLastConsumedSequenceNumber(-1));
 
-    assertThat(exception.getMessage()).isEqualTo("Last consumed sequence number cannot be negative!");
+    assertThat(exception.getMessage()).isEqualTo("Illegal sequenceNumber [-1] - last consumed sequence number cannot be negative");
   }
 
   @Test
@@ -44,7 +44,7 @@ public class InMemorySequenceNumberTrackerTest {
     Throwable exception = assertThrows(IllegalArgumentException.class,
         () -> sequenceNumberTracker.updateLastConsumedSequenceNumber(10));
 
-    assertThat(exception.getMessage()).isEqualTo("Last consumed sequence number must be greater than current!");
+    assertThat(exception.getMessage()).isEqualTo("Illegal sequenceNumber [10] - last consumed sequence number must be greater than current");
   }
 
   @Test
@@ -54,7 +54,7 @@ public class InMemorySequenceNumberTrackerTest {
     Throwable exception = assertThrows(IllegalArgumentException.class,
         () -> sequenceNumberTracker.updateLastConsumedSequenceNumber(9));
 
-    assertThat(exception.getMessage()).isEqualTo("Last consumed sequence number must be greater than current!");
+    assertThat(exception.getMessage()).isEqualTo("Illegal sequenceNumber [9] - last consumed sequence number must be greater than current");
   }
 
 }
