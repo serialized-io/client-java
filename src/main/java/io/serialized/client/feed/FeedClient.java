@@ -106,7 +106,8 @@ public class FeedClient implements Closeable {
 
       try {
         do {
-          response = execute(request, sequenceNumberTracker.lastConsumedSequenceNumber());
+          long sequenceNumber = sequenceNumberTracker.lastConsumedSequenceNumber();
+          response = execute(request, sequenceNumber);
 
           for (FeedEntry feedEntry : response.entries()) {
             try {
@@ -114,9 +115,9 @@ public class FeedClient implements Closeable {
 
               try {
                 sequenceNumberTracker.updateLastConsumedSequenceNumber(feedEntry.sequenceNumber());
-              } catch (IllegalArgumentException iae) {
-                logger.log(WARNING, format("Error updating sequence number after processing: %s", feedEntry), iae);
-                throw iae;
+              } catch (RuntimeException re) {
+                logger.log(WARNING, format("Error updating sequence number after processing: %s - last polled number was [%d]", feedEntry, sequenceNumber), re);
+                throw re;
               }
 
             } catch (RetryException e) {
@@ -124,8 +125,8 @@ public class FeedClient implements Closeable {
             }
           }
         } while (request.eagerFetching && response.hasMore());
-      } catch (Exception e) {
-        logger.log(WARNING, format("Error polling event feed: %s", e.getMessage()), e);
+      } catch (Exception exception) {
+        logger.log(WARNING, format("Error polling event feed [%s]: %s", request.feedName, exception.getMessage()), exception);
 
         try {
           Thread.sleep(1000); // sleep before retrying
