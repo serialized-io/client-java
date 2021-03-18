@@ -10,15 +10,21 @@ import io.serialized.client.feed.FeedApiStub;
 import io.serialized.client.feed.FeedClient;
 import io.serialized.client.feed.FeedResponse;
 import io.serialized.client.feed.GetFeedRequest;
+import io.serialized.client.feed.InMemorySequenceNumberTracker;
+import io.serialized.client.feed.SequenceNumberTracker;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -204,6 +210,35 @@ public class FeedClientIT {
     assertThat(events.get()).isEqualTo(20);
 
     assertThat(lastProcessedEntry.get()).isEqualTo(13L);
+  }
+
+  @Test
+  public void shouldSubscribe() throws Exception {
+
+    FeedClient feedClient = getFeedClient();
+
+    String feedName = "test";
+
+    ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
+
+    AtomicBoolean firstPoll = new AtomicBoolean(true);
+    when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenAnswer((Answer<String>) invocation -> {
+      if (firstPoll.compareAndSet(true, false)) {
+        return getResource("/feed/feedentries-limit.json");
+      } else {
+        Thread.sleep(1000);
+        return getResource("/feed/feedentries-empty.json");
+      }
+    });
+
+    CountDownLatch latch = new CountDownLatch(10);
+
+    SequenceNumberTracker tracker = new InMemorySequenceNumberTracker();
+    GetFeedRequest request = getFromFeed(feedName).withWaitTime(Duration.ofSeconds(10)).build();
+    feedClient.subscribe(request, tracker, feedEntry -> latch.countDown());
+
+    latch.await();
+    feedClient.close();
   }
 
   private FeedClient getFeedClient() {
