@@ -9,6 +9,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.time.StopWatch;
 
 import java.io.Closeable;
 import java.util.HashSet;
@@ -107,7 +108,15 @@ public class FeedClient implements Closeable {
       try {
         do {
           long sequenceNumber = sequenceNumberTracker.lastConsumedSequenceNumber();
+
+          StopWatch stopWatch = StopWatch.createStarted();
           response = execute(request, sequenceNumber);
+          stopWatch.stop();
+
+          if (response.entries().isEmpty() && stopWatch.getTime(TimeUnit.SECONDS) == 0) {
+            // Sleep if response is empty and returned within a second to prevent spin
+            Thread.sleep(1000);
+          }
 
           for (FeedEntry feedEntry : response.entries()) {
             try {
