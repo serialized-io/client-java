@@ -110,7 +110,7 @@ public class FeedClient implements Closeable {
 
           response = execute(request, sequenceNumber);
 
-          if (response.entries().isEmpty()) {
+          if (response.entries().isEmpty() && response.currentSequenceNumber() > sequenceNumber) {
             sequenceNumberTracker.updateLastConsumedSequenceNumber(response.currentSequenceNumber());
 
           } else {
