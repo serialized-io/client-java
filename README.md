@@ -20,7 +20,7 @@ Add the following to your Maven POM file
 <dependency>
   <groupId>io.serialized</groupId>
   <artifactId>serialized-client</artifactId>
-  <version>7.2.4</version>
+  <version>7.2.5</version>
 </dependency>
 ```
 
