@@ -9,7 +9,6 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.time.StopWatch;
 
 import java.io.Closeable;
 import java.util.HashSet;
@@ -109,28 +108,27 @@ public class FeedClient implements Closeable {
         do {
           long sequenceNumber = sequenceNumberTracker.lastConsumedSequenceNumber();
 
-          StopWatch stopWatch = StopWatch.createStarted();
           response = execute(request, sequenceNumber);
-          stopWatch.stop();
 
-          if (response.entries().isEmpty() && stopWatch.getTime(TimeUnit.SECONDS) == 0) {
-            // Sleep if response is empty and returned within a second to prevent spin
-            Thread.sleep(1000);
-          }
+          if (response.entries().isEmpty()) {
+            sequenceNumberTracker.updateLastConsumedSequenceNumber(response.currentSequenceNumber());
 
-          for (FeedEntry feedEntry : response.entries()) {
-            try {
-              feedEntryHandler.handle(feedEntry);
+          } else {
 
+            for (FeedEntry feedEntry : response.entries()) {
               try {
-                sequenceNumberTracker.updateLastConsumedSequenceNumber(feedEntry.sequenceNumber());
-              } catch (RuntimeException re) {
-                logger.log(WARNING, format("Error updating sequence number after processing: %s - last polled number was [%d]", feedEntry, sequenceNumber), re);
-                throw re;
-              }
+                feedEntryHandler.handle(feedEntry);
 
-            } catch (RetryException e) {
-              // Retry requested
+                try {
+                  sequenceNumberTracker.updateLastConsumedSequenceNumber(feedEntry.sequenceNumber());
+                } catch (RuntimeException re) {
+                  logger.log(WARNING, format("Error updating sequence number after processing: %s - last polled number was [%d]", feedEntry, sequenceNumber), re);
+                  throw re;
+                }
+
+              } catch (RetryException e) {
+                // Retry requested
+              }
             }
           }
         } while (request.eagerFetching && response.hasMore());
