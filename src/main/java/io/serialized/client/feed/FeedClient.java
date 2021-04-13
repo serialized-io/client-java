@@ -110,6 +110,10 @@ public class FeedClient implements Closeable {
 
           response = execute(request, sequenceNumber);
 
+          if (sequenceNumber > sequenceNumberTracker.lastConsumedSequenceNumber()) {
+            return; // Tracker was reset during poll - return to poll again.
+          }
+
           if (response.entries().isEmpty() && response.currentSequenceNumber() > sequenceNumber) {
             sequenceNumberTracker.updateLastConsumedSequenceNumber(response.currentSequenceNumber());
 
