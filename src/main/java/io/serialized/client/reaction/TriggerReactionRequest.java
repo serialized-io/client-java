@@ -10,7 +10,7 @@ public class TriggerReactionRequest {
   public final UUID reactionId;
 
   private TriggerReactionRequest(Builder builder) {
-    this.type = builder.type;
+    this.type = builder.type.getName();
     this.tenantId = builder.tenantId;
     this.reactionId = builder.reactionId;
   }
@@ -21,11 +21,11 @@ public class TriggerReactionRequest {
 
   public static class Builder {
 
-    private final String type;
+    private final ReactionRequests.Type type;
     private UUID tenantId;
     private UUID reactionId;
 
-    public Builder(String type) {
+    public Builder(ReactionRequests.Type type) {
       this.type = type;
     }
 

@@ -9,7 +9,7 @@ public class ReactionRequest {
   public final UUID tenantId;
 
   private ReactionRequest(Builder builder) {
-    this.type = builder.type;
+    this.type = builder.type.getName();
     this.tenantId = builder.tenantId;
   }
 
@@ -19,10 +19,10 @@ public class ReactionRequest {
 
   public static class Builder {
 
-    private final String type;
+    private final ReactionRequests.Type type;
     private UUID tenantId;
 
-    public Builder(String type) {
+    public Builder(ReactionRequests.Type type) {
       this.type = type;
     }
 

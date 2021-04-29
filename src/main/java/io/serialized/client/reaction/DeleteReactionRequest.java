@@ -5,12 +5,11 @@ import java.util.UUID;
 
 public class DeleteReactionRequest {
 
-  public final String type;
+  public final String type = ReactionRequests.Type.SCHEDULED.getName();
   public final UUID tenantId;
   public final UUID reactionId;
 
   private DeleteReactionRequest(Builder builder) {
-    this.type = builder.type;
     this.tenantId = builder.tenantId;
     this.reactionId = builder.reactionId;
   }
@@ -21,7 +20,6 @@ public class DeleteReactionRequest {
 
   public static class Builder {
 
-    private final String type = "scheduled";
     private UUID tenantId;
     private UUID reactionId;
 
