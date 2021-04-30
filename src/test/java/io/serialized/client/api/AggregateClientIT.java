@@ -235,6 +235,90 @@ public class AggregateClientIT {
   }
 
   @Test
+  public void testStateCacheIsInvalidatedOnConcurrencyException() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    final Map<UUID, VersionedState<OrderState>> stateMap = new ConcurrentHashMap<>();
+    StateCache<OrderState> stateCache = new StateCache<OrderState>() {
+
+      @Override
+      public void put(UUID aggregateId, VersionedState<OrderState> versionedState) {
+        stateMap.put(aggregateId, versionedState);
+      }
+
+      @Override
+      public Optional<VersionedState<OrderState>> get(UUID aggregateId) {
+        return Optional.ofNullable(stateMap.get(aggregateId));
+      }
+
+      @Override
+      public void invalidate(UUID aggregateId) {
+        stateMap.remove(aggregateId);
+      }
+
+    };
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .registerHandler(OrderCanceled.class, OrderState::handleOrderCanceled)
+        .registerHandler(OrderDeleted.class, OrderState::handleOrderDeleted)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
+
+    assertThat(stateMap).doesNotContainKey(orderId);
+
+    int eventsStored = orderClient.update(orderId, new AggregateUpdate<OrderState>() {
+
+      @Override
+      public Optional<StateCache<OrderState>> stateCache() {
+        return Optional.of(stateCache);
+      }
+
+      @Override
+      public List<Event<?>> apply(OrderState state) {
+        return new Order(state).cancel();
+      }
+    });
+
+    assertThat(eventsStored).isEqualTo(1);
+    assertThat(stateMap).containsKey(orderId);
+
+    ArgumentCaptor<EventBatch> firstCaptor = ArgumentCaptor.forClass(EventBatch.class);
+    verify(apiCallback).eventsStored(eq(orderId), firstCaptor.capture());
+
+    EventBatch eventsCaptured = firstCaptor.getValue();
+    assertThat(eventsCaptured.events()).hasSize(1);
+    Event<?> event = eventsCaptured.events().get(0);
+    assertThat(event.eventType()).isEqualTo(OrderCanceled.class.getSimpleName());
+    Map data = (Map) event.data();
+    assertThat(data).containsKey("orderId");
+
+    when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(CONFLICT);
+
+    assertThrows(ConcurrencyException.class, () ->
+
+        orderClient.update(orderId, new AggregateUpdate<OrderState>() {
+
+          @Override
+          public Optional<StateCache<OrderState>> stateCache() {
+            return Optional.of(stateCache);
+          }
+
+          @Override
+          public List<Event<?>> apply(OrderState state) {
+            Order order = new Order(state);
+            return order.deleteOrder();
+          }
+        })
+    );
+
+    assertThat(stateMap).doesNotContainKey(orderId);
+  }
+
+  @Test
   public void testDeleteAggregateById() {
     UUID orderId = UUID.fromString("11111111-2222-3333-4444-555555555555");
     UUID deleteToken = UUID.fromString("99999999-9999-9999-9999-999999999999");
