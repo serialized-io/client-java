@@ -21,13 +21,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
 import static io.serialized.client.aggregate.StateBuilder.stateBuilder;
+import static java.lang.String.format;
+import static java.util.logging.Level.INFO;
 
 public class AggregateClient<T> {
+
+  private final Logger logger = Logger.getLogger(getClass().getName());
 
   private final SerializedOkHttpClient client;
   private final HttpUrl apiRoot;
@@ -143,6 +148,7 @@ public class AggregateClient<T> {
         }
         return eventStored;
       } catch (ConcurrencyException e) {
+        logger.log(INFO, format("Concurrency exception detected - invalidating cached entry with ID [%s]", aggregateId.toString()));
         stateCache.invalidate(aggregateId);
         throw e;
       }
