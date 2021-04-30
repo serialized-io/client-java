@@ -42,9 +42,13 @@ public class AggregateApiStub {
                              @NotNull @Valid EventBatch eventBatch) {
 
     if (tenantId == null) {
-      return Response.status(callback.eventsStored(UUID.fromString(aggregateId), eventBatch)).build();
+      return Response.status(callback.eventsStored(UUID.fromString(aggregateId), eventBatch))
+          .type(APPLICATION_JSON_TYPE)
+          .build();
     } else {
-      return Response.status(callback.eventsStored(UUID.fromString(aggregateId), eventBatch, UUID.fromString(tenantId))).build();
+      return Response.status(callback.eventsStored(UUID.fromString(aggregateId), eventBatch, UUID.fromString(tenantId)))
+          .type(APPLICATION_JSON_TYPE)
+          .build();
     }
 
   }
