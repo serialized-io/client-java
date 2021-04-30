@@ -1,8 +1,8 @@
+name: Slack Notification
 on:
   push:
     tags:
       - '*'
-name: Slack Notification
 jobs:
   slackNotification:
     name: Notify on new release
