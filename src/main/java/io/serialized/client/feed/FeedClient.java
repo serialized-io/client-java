@@ -11,10 +11,11 @@ import okhttp3.Response;
 import org.apache.commons.lang3.Validate;
 
 import java.io.Closeable;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,7 +39,7 @@ public class FeedClient implements Closeable {
 
   private final SerializedOkHttpClient client;
   private final HttpUrl apiRoot;
-  private final Set<ExecutorService> executors = new HashSet<>();
+  private final Map<UUID, ExecutorService> executors = new ConcurrentHashMap<>();
 
   private FeedClient(Builder builder) {
     this.client = new SerializedOkHttpClient(builder.httpClient, builder.objectMapper);
@@ -51,7 +52,16 @@ public class FeedClient implements Closeable {
 
   @Override
   public void close() {
-    executors.forEach(ExecutorService::shutdown);
+    executors.values().forEach(ExecutorService::shutdown);
+  }
+
+  /**
+   * Terminates a subscription by shutting down it's executor.
+   *
+   * @param subscriptionId ID of subscription to terminate.
+   */
+  public void close(UUID subscriptionId) {
+    Optional.ofNullable(executors.remove(subscriptionId)).ifPresent(ExecutorService::shutdown);
   }
 
   /**
@@ -84,19 +94,21 @@ public class FeedClient implements Closeable {
    * The default in-memory sequence number tracker will be used.
    *
    * @param feedEntryHandler Handler invoked for each received entry
+   * @return The subscription ID
    * @see SequenceNumberTracker
    * @see InMemorySequenceNumberTracker
    */
-  public void subscribe(GetFeedRequest request, FeedEntryHandler feedEntryHandler) {
-    subscribe(request, new InMemorySequenceNumberTracker(), feedEntryHandler);
+  public UUID subscribe(GetFeedRequest request, FeedEntryHandler feedEntryHandler) {
+    return subscribe(request, new InMemorySequenceNumberTracker(), feedEntryHandler);
   }
 
   /**
    * Starts subscribing to the feed starting at given sequence number.
    *
    * @param feedEntryHandler Handler invoked for each received entry
+   * @return The subscription ID
    */
-  public void subscribe(GetFeedRequest request, SequenceNumberTracker sequenceNumberTracker, FeedEntryHandler feedEntryHandler) {
+  public UUID subscribe(GetFeedRequest request, SequenceNumberTracker sequenceNumberTracker, FeedEntryHandler feedEntryHandler) {
     Validate.isTrue(request.waitTime.getSeconds() > 0, "'waitTime' in request cannot be zero when subscribing to a feed");
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -147,7 +159,10 @@ public class FeedClient implements Closeable {
       }
 
     }, 1, 1, TimeUnit.MILLISECONDS);
-    executors.add(executor);
+
+    UUID subscriptionId = UUID.randomUUID();
+    executors.put(subscriptionId, executor);
+    return subscriptionId;
   }
 
   /**
