@@ -6,7 +6,7 @@ public class TargetSelector {
 
   private final String selector;
 
-  private TargetSelector(String selector) {
+  public TargetSelector(String selector) {
     this.selector = selector;
   }
 
