@@ -300,7 +300,7 @@ public class AggregateClient<T> {
     Builder(String aggregateType, Class<T> stateClass, SerializedClientConfig config) {
       this.aggregateType = aggregateType;
       this.apiRoot = config.apiRoot();
-      this.httpClient = config.httpClient();
+      this.httpClient = config.newHttpClient();
       this.stateBuilder = stateBuilder(stateClass);
     }
 

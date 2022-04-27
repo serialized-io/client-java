@@ -15,11 +15,11 @@ public class SerializedClientConfig {
   public static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
   public static final String HTTPS_API_SERIALIZED_IO = "https://api.serialized.io/";
 
-  private final OkHttpClient httpClient;
+  private final OkHttpClient.Builder httpClientBuilder;
   private final HttpUrl apiRoot;
 
-  private SerializedClientConfig(OkHttpClient httpClient, HttpUrl apiRoot) {
-    this.httpClient = httpClient;
+  private SerializedClientConfig(OkHttpClient.Builder httpClientBuilder, HttpUrl apiRoot) {
+    this.httpClientBuilder = httpClientBuilder;
     this.apiRoot = apiRoot;
   }
 
@@ -27,8 +27,8 @@ public class SerializedClientConfig {
     return new Builder();
   }
 
-  public OkHttpClient httpClient() {
-    return httpClient;
+  public OkHttpClient newHttpClient() {
+    return httpClientBuilder.build();
   }
 
   public HttpUrl apiRoot() {
@@ -74,14 +74,12 @@ public class SerializedClientConfig {
       Validate.notEmpty(secretAccessKey, "'secretAccessKey' must be set");
 
       HttpUrl apiRoot = HttpUrl.get(rootApiUrl);
-      OkHttpClient client = httpClientBuilder
-          .addInterceptor(chain -> chain.proceed(chain.request().newBuilder()
-              .addHeader("Serialized-Access-Key", accessKey)
-              .addHeader("Serialized-Secret-Access-Key", secretAccessKey)
-              .build()))
-          .build();
+      httpClientBuilder.addInterceptor(chain -> chain.proceed(chain.request().newBuilder()
+          .addHeader("Serialized-Access-Key", accessKey)
+          .addHeader("Serialized-Secret-Access-Key", secretAccessKey)
+          .build()));
 
-      return new SerializedClientConfig(client, apiRoot);
+      return new SerializedClientConfig(httpClientBuilder, apiRoot);
     }
   }
 

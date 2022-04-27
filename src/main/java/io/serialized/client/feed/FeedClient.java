@@ -213,7 +213,7 @@ public class FeedClient implements Closeable {
     private final HttpUrl apiRoot;
 
     public Builder(SerializedClientConfig config) {
-      this.httpClient = config.httpClient();
+      this.httpClient = config.newHttpClient();
       this.apiRoot = config.apiRoot();
     }
 
