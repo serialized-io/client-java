@@ -14,10 +14,10 @@ public class SerializedClientConfigTest {
         .secretAccessKey("bbbbb")
         .build();
 
-    assertThat(defaultConfig.httpClient().readTimeoutMillis()).isEqualTo(60_000);
-    assertThat(defaultConfig.httpClient().writeTimeoutMillis()).isEqualTo(10_000);
-    assertThat(defaultConfig.httpClient().connectTimeoutMillis()).isEqualTo(10_000);
-    assertThat(defaultConfig.httpClient().callTimeoutMillis()).isEqualTo(0);
+    assertThat(defaultConfig.newHttpClient().readTimeoutMillis()).isEqualTo(60_000);
+    assertThat(defaultConfig.newHttpClient().writeTimeoutMillis()).isEqualTo(10_000);
+    assertThat(defaultConfig.newHttpClient().connectTimeoutMillis()).isEqualTo(10_000);
+    assertThat(defaultConfig.newHttpClient().callTimeoutMillis()).isEqualTo(0);
   }
 
   @Test
@@ -33,10 +33,10 @@ public class SerializedClientConfigTest {
         })
         .build();
 
-    assertThat(defaultConfig.httpClient().readTimeoutMillis()).isEqualTo(20_000);
-    assertThat(defaultConfig.httpClient().writeTimeoutMillis()).isEqualTo(20_000);
-    assertThat(defaultConfig.httpClient().connectTimeoutMillis()).isEqualTo(20_000);
-    assertThat(defaultConfig.httpClient().callTimeoutMillis()).isEqualTo(20_000);
+    assertThat(defaultConfig.newHttpClient().readTimeoutMillis()).isEqualTo(20_000);
+    assertThat(defaultConfig.newHttpClient().writeTimeoutMillis()).isEqualTo(20_000);
+    assertThat(defaultConfig.newHttpClient().connectTimeoutMillis()).isEqualTo(20_000);
+    assertThat(defaultConfig.newHttpClient().callTimeoutMillis()).isEqualTo(20_000);
   }
 
 }
