@@ -1,7 +1,7 @@
 # Serialized Java Client #
 
 This is the official Java client for Serialized.
-[![Build Status](https://github.com/serialized-io/client-java/actions/workflows/ci.yml/badge.svg)
+![Build Status](https://github.com/serialized-io/client-java/actions/workflows/ci.yml/badge.svg)
 [![Maven Central](https://img.shields.io/maven-central/v/io.serialized/serialized-client.svg)](https://maven-badges.herokuapp.com/maven-central/io.serialized/serialized-client)
 [![](https://tokei.rs/b1/github/serialized-io/client-java)](https://github.com/serialized-io/client-java)
 
