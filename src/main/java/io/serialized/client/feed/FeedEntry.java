@@ -5,6 +5,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.List;
+import java.util.UUID;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -13,7 +14,7 @@ import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 public class FeedEntry {
 
   private long sequenceNumber;
-  private String aggregateId;
+  private UUID aggregateId;
   private long timestamp;
   private String feedName;
   private List<Event> events;
@@ -33,9 +34,9 @@ public class FeedEntry {
   }
 
   /**
-   * @return ID the the aggregate the events in this entry belongs to.
+   * @return ID the aggregate the events in this entry belongs to.
    */
-  public String aggregateId() {
+  public UUID aggregateId() {
     return aggregateId;
   }
 

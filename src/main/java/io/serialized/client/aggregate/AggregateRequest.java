@@ -10,7 +10,7 @@ public class AggregateRequest {
   public final UUID aggregateId;
   public final List<Event<?>> events;
   private final UUID tenantId;
-  private final Long expectedVersion;
+  private final Integer expectedVersion;
 
   private AggregateRequest(Builder builder) {
     this.aggregateId = builder.aggregateId;
@@ -28,10 +28,10 @@ public class AggregateRequest {
   }
 
   public static Builder saveRequest() {
-    return new Builder(0L);
+    return new Builder(0);
   }
 
-  public static Builder appendRequest(long expectedVersion) {
+  public static Builder appendRequest(int expectedVersion) {
     return new Builder(expectedVersion);
   }
 
@@ -44,9 +44,9 @@ public class AggregateRequest {
     private UUID aggregateId;
     private final List<Event<?>> events = new ArrayList<>();
     private UUID tenantId;
-    private Long expectedVersion;
+    private Integer expectedVersion;
 
-    public Builder(Long expectedVersion) {
+    public Builder(Integer expectedVersion) {
       this.expectedVersion = expectedVersion;
     }
 
@@ -78,7 +78,7 @@ public class AggregateRequest {
       return this.withTenantId(UUID.fromString(tenantId));
     }
 
-    public Builder withExpectedVersion(long expectedVersion) {
+    public Builder withExpectedVersion(int expectedVersion) {
       this.expectedVersion = expectedVersion;
       return this;
     }

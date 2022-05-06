@@ -8,12 +8,12 @@ import static java.util.Collections.unmodifiableMap;
 
 public class Event<T> {
 
-  private String eventId;
+  private UUID eventId;
   private String eventType;
   private T data;
   private String encryptedData;
 
-  public String eventId() {
+  public UUID eventId() {
     return eventId;
   }
 
@@ -79,7 +79,7 @@ public class Event<T> {
 
     public Event<T> build() {
       Event<T> event = new Event<>();
-      event.eventId = eventId.toString();
+      event.eventId = eventId;
       event.eventType = eventType;
       event.data = data;
       event.encryptedData = encryptedData;
@@ -166,7 +166,7 @@ public class Event<T> {
 
     public Event build() {
       Event event = new Event<>();
-      event.eventId = eventId.toString();
+      event.eventId = eventId;
       event.eventType = eventType;
       event.data = data;
       event.encryptedData = encryptedData;

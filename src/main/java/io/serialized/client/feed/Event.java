@@ -5,6 +5,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Map;
+import java.util.UUID;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
@@ -12,12 +13,12 @@ import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class Event {
 
-  private String eventId;
+  private UUID eventId;
   private String eventType;
   private Map<String, Object> data;
   private String encryptedData;
 
-  public String eventId() {
+  public UUID eventId() {
     return eventId;
   }
 
@@ -60,7 +61,7 @@ public class Event {
   public static class Builder {
 
     private final String eventType;
-    private String eventId;
+    private UUID eventId;
     private Map<String, Object> data;
     private String encryptedData;
 
@@ -69,6 +70,11 @@ public class Event {
     }
 
     public Builder withEventId(String eventId) {
+      this.eventId = UUID.fromString(eventId);
+      return this;
+    }
+
+    public Builder withEventId(UUID eventId) {
       this.eventId = eventId;
       return this;
     }

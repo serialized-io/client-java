@@ -127,7 +127,7 @@ public class AggregateClient<T> {
       StateCache<T> stateCache = update.stateCache().get();
       Optional<VersionedState<T>> cachedState = stateCache.get(aggregateId);
 
-      final long currentVersion;
+      final int currentVersion;
 
       final T currentState;
       if (cachedState.isPresent()) {
@@ -156,7 +156,7 @@ public class AggregateClient<T> {
     } else {
       LoadAggregateResponse aggregateResponse = loadState(aggregateId, update.tenantId());
       T state = stateBuilder.buildState(aggregateResponse.events);
-      Long expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
+      Integer expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
       List<Event<?>> events = update.apply(state);
       return storeBatch(aggregateId, update.tenantId(), new EventBatch(events, expectedVersion));
     }
@@ -361,7 +361,7 @@ public class AggregateClient<T> {
 
     String aggregateId;
     String aggregateType;
-    long aggregateVersion;
+    int aggregateVersion;
     List<Event<?>> events;
     boolean hasMore;
 

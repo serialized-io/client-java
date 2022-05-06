@@ -55,7 +55,7 @@ public class TenantClientIT {
     verify(apiCallback, times(1)).tenantAdded(captor.capture());
 
     Tenant value = captor.getValue();
-    assertThat(value.tenantId()).isEqualTo(tenantId.toString());
+    assertThat(value.tenantId()).isEqualTo(tenantId);
     assertThat(value.reference()).isEqualTo("my-ref");
   }
 
@@ -89,7 +89,7 @@ public class TenantClientIT {
 
     List<Tenant> tenants = tenantClient.listTenants();
     assertThat(tenants).hasSize(1);
-    assertThat(tenants.get(0).tenantId()).isEqualTo("a8c929ac-b59d-429b-8570-99c9a84f6b2c");
+    assertThat(tenants.get(0).tenantId()).isEqualTo(UUID.fromString("a8c929ac-b59d-429b-8570-99c9a84f6b2c"));
     assertThat(tenants.get(0).tenantNumber()).isEqualTo("1");
     assertThat(tenants.get(0).addedAt()).isEqualTo(1568105144988L);
     assertThat(tenants.get(0).deleted()).isEqualTo(false);
@@ -97,11 +97,11 @@ public class TenantClientIT {
 
   private TenantClient getTenantClient() {
     return TenantClient.tenantClient(
-        SerializedClientConfig.serializedConfig()
-            .rootApiUrl(dropwizard.baseUri() + "/api-stub/")
-            .accessKey("aaaaa")
-            .secretAccessKey("bbbbb")
-            .build())
+            SerializedClientConfig.serializedConfig()
+                .rootApiUrl(dropwizard.baseUri() + "/api-stub/")
+                .accessKey("aaaaa")
+                .secretAccessKey("bbbbb")
+                .build())
         .build();
   }
 
