@@ -75,6 +75,23 @@ public class AggregateClient<T> {
     }
   }
 
+  public void save(AggregateBulkRequest request) {
+
+    try {
+      HttpUrl url = getAggregateTypeUrl().addPathSegment("events").build();
+
+      BulkSaveEvents payload = request.eventBatches();
+      if (request.tenantId().isPresent()) {
+        UUID tenantId = request.tenantId().get();
+        client.post(url, payload, tenantId);
+      } else {
+        client.post(url, payload);
+      }
+    } catch (ApiException e) {
+      handleConcurrencyException(e);
+    }
+  }
+
   /**
    * Update the aggregate.
    * <p>

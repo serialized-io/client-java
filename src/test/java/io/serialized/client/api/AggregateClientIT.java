@@ -12,6 +12,7 @@ import io.serialized.client.aggregate.AggregateClient;
 import io.serialized.client.aggregate.AggregateExists;
 import io.serialized.client.aggregate.AggregateRequest;
 import io.serialized.client.aggregate.AggregateUpdate;
+import io.serialized.client.aggregate.BulkSaveEvents;
 import io.serialized.client.aggregate.Event;
 import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.aggregate.RetryStrategy;
@@ -38,8 +39,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.serialized.client.EventTypeMatcher.containsEventType;
+import static io.serialized.client.aggregate.AggregateBulkRequest.bulkRequest;
 import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
 import static io.serialized.client.aggregate.AggregateDelete.deleteRequest;
+import static io.serialized.client.aggregate.AggregateRequest.saveRequest;
 import static io.serialized.client.aggregate.Event.newEvent;
 import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -88,9 +91,33 @@ public class AggregateClientIT {
     Order order = new Order(orderState);
     List<Event<?>> events = order.placeOrder(orderId, 123L);
 
-    orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build());
+    orderClient.save(saveRequest().withAggregateId(orderId).withEvents(events).build());
 
     verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("OrderPlaced")));
+  }
+
+  @Test
+  public void testSaveBulk() {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .build();
+
+    when(apiCallback.eventBulkStored(any(BulkSaveEvents.class))).thenReturn(OK);
+
+    OrderState orderState = new OrderState();
+    Order order = new Order(orderState);
+    List<Event<?>> events = order.placeOrder(orderId, 123L);
+
+    orderClient.save(
+        bulkRequest()
+            .withAggregateRequest(saveRequest().withAggregateId(orderId).withEvents(events).build())
+            .build()
+    );
+
+    verify(apiCallback, times(1)).eventBulkStored(any(BulkSaveEvents.class));
   }
 
   @Test
@@ -104,7 +131,7 @@ public class AggregateClientIT {
 
     Event<?> event = newEvent("order-placed").data("orderId", orderId, "customerId", UUID.randomUUID()).build();
 
-    orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvent(event).build());
+    orderClient.save(saveRequest().withAggregateId(orderId).withEvent(event).build());
 
     verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("order-placed")));
   }
@@ -125,7 +152,7 @@ public class AggregateClientIT {
     List<Event<?>> events = order.placeOrder(orderId, 123L);
 
     assertThrows(ConcurrencyException.class, () ->
-        orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build())
+        orderClient.save(saveRequest().withAggregateId(orderId).withEvents(events).build())
     );
   }
 
@@ -498,7 +525,7 @@ public class AggregateClientIT {
     UUID aggregateId = UUID.randomUUID();
     when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(OK);
 
-    orderClient.save(AggregateRequest.saveRequest().withAggregateId(aggregateId).withEvents(singletonList(orderPlaced("order-123", 1234L))).build());
+    orderClient.save(saveRequest().withAggregateId(aggregateId).withEvents(singletonList(orderPlaced("order-123", 1234L))).build());
 
     ArgumentCaptor<EventBatch> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatch.class);
     verify(apiCallback).eventsStored(eq(aggregateId), eventsStoredCaptor.capture());
@@ -521,7 +548,7 @@ public class AggregateClientIT {
     List<Event<?>> events = singletonList(orderPlaced("order-123", 1234L));
     when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class), any(UUID.class))).thenReturn(OK);
 
-    AggregateRequest aggregateRequest = AggregateRequest.saveRequest().withTenantId(tenantId).withAggregateId(aggregateId).withEvents(events).build();
+    AggregateRequest aggregateRequest = saveRequest().withTenantId(tenantId).withAggregateId(aggregateId).withEvents(events).build();
     orderClient.save(aggregateRequest);
 
     ArgumentCaptor<EventBatch> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatch.class);

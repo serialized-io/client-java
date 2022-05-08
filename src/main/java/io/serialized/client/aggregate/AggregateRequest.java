@@ -1,6 +1,7 @@
 package io.serialized.client.aggregate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,7 +15,7 @@ public class AggregateRequest {
 
   private AggregateRequest(Builder builder) {
     this.aggregateId = builder.aggregateId;
-    this.events = builder.events;
+    this.events = Collections.unmodifiableList(builder.events);
     this.tenantId = builder.tenantId;
     this.expectedVersion = builder.expectedVersion;
   }
