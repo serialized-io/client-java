@@ -1,0 +1,15 @@
+{
+  "aggregateId": "35b68baa-a891-4c44-af7c-f12743e777c3",
+  "aggregateType": "order",
+  "aggregateVersion": 1,
+  "events": [
+    {
+      "eventId": "4fe39036-ba25-4fc2-92f7-9c007ad3191e",
+      "eventType": "OrderPlaced",
+      "data": {
+        "orderId": "cc5b3033-8205-4b33-a161-796f33548906",
+        "orderAmount": 500
+      }
+    }
+  ]
+}
