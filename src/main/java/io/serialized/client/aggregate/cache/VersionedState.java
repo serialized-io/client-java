@@ -3,9 +3,9 @@ package io.serialized.client.aggregate.cache;
 public class VersionedState<T> {
 
   private final T state;
-  private final long version;
+  private final int version;
 
-  public VersionedState(T state, long version) {
+  public VersionedState(T state, int version) {
     this.state = state;
     this.version = version;
   }
@@ -14,7 +14,7 @@ public class VersionedState<T> {
     return state;
   }
 
-  public long version() {
+  public int version() {
     return version;
   }
 

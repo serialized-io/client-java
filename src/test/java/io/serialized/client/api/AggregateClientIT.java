@@ -12,6 +12,7 @@ import io.serialized.client.aggregate.AggregateClient;
 import io.serialized.client.aggregate.AggregateExists;
 import io.serialized.client.aggregate.AggregateRequest;
 import io.serialized.client.aggregate.AggregateUpdate;
+import io.serialized.client.aggregate.BulkSaveEvents;
 import io.serialized.client.aggregate.Event;
 import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.aggregate.RetryStrategy;
@@ -31,15 +32,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.serialized.client.EventTypeMatcher.containsEventType;
+import static io.serialized.client.aggregate.AggregateBulkRequest.bulkRequest;
 import static io.serialized.client.aggregate.AggregateClient.aggregateClient;
 import static io.serialized.client.aggregate.AggregateDelete.deleteRequest;
+import static io.serialized.client.aggregate.AggregateRequest.saveRequest;
 import static io.serialized.client.aggregate.Event.newEvent;
 import static io.serialized.client.aggregate.order.OrderPlaced.orderPlaced;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -88,9 +93,33 @@ public class AggregateClientIT {
     Order order = new Order(orderState);
     List<Event<?>> events = order.placeOrder(orderId, 123L);
 
-    orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build());
+    orderClient.save(saveRequest().withAggregateId(orderId).withEvents(events).build());
 
     verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("OrderPlaced")));
+  }
+
+  @Test
+  public void testSaveBulk() {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .build();
+
+    when(apiCallback.eventBulkStored(any(BulkSaveEvents.class))).thenReturn(OK);
+
+    OrderState orderState = new OrderState();
+    Order order = new Order(orderState);
+    List<Event<?>> events = order.placeOrder(orderId, 123L);
+
+    orderClient.save(
+        bulkRequest()
+            .withAggregateRequest(saveRequest().withAggregateId(orderId).withEvents(events).build())
+            .build()
+    );
+
+    verify(apiCallback, times(1)).eventBulkStored(any(BulkSaveEvents.class));
   }
 
   @Test
@@ -104,7 +133,7 @@ public class AggregateClientIT {
 
     Event<?> event = newEvent("order-placed").data("orderId", orderId, "customerId", UUID.randomUUID()).build();
 
-    orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvent(event).build());
+    orderClient.save(saveRequest().withAggregateId(orderId).withEvent(event).build());
 
     verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("order-placed")));
   }
@@ -125,7 +154,7 @@ public class AggregateClientIT {
     List<Event<?>> events = order.placeOrder(orderId, 123L);
 
     assertThrows(ConcurrencyException.class, () ->
-        orderClient.save(AggregateRequest.saveRequest().withAggregateId(orderId).withEvents(events).build())
+        orderClient.save(saveRequest().withAggregateId(orderId).withEvents(events).build())
     );
   }
 
@@ -138,12 +167,114 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     assertThat(orderClient.update(orderId, orderState -> new Order(orderState).cancel())).isEqualTo(1);
 
     verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("OrderCanceled")));
+  }
+
+  @Test
+  public void testBulkUpdate() throws IOException {
+    UUID orderId1 = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    UUID orderId2 = UUID.fromString("35b68baa-a891-4c44-af7c-f12743e777c3");
+    Set<UUID> orderIds = new HashSet<>();
+    orderIds.add(orderId1);
+    orderIds.add(orderId2);
+
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId1, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId2, 0, 1000)).thenReturn(getResource("/aggregate/placed_order2.json"));
+
+    when(apiCallback.eventBulkStored(any(BulkSaveEvents.class))).thenReturn(OK);
+
+    assertThat(orderClient.bulkUpdate(orderIds, orderState -> new Order(orderState).cancel())).isEqualTo(2);
+
+    verify(apiCallback, times(1)).eventBulkStored(any(BulkSaveEvents.class));
+  }
+
+  @Test
+  public void testBulkUpdateUsingStateCache() throws IOException {
+    UUID orderId1 = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    UUID orderId2 = UUID.fromString("35b68baa-a891-4c44-af7c-f12743e777c3");
+    String aggregateType = "order";
+    Set<UUID> orderIds = new HashSet<>();
+    orderIds.add(orderId1);
+    orderIds.add(orderId2);
+
+    final Map<UUID, VersionedState<OrderState>> stateMap = new ConcurrentHashMap<>();
+    StateCache<OrderState> stateCache = new StateCache<OrderState>() {
+
+      @Override
+      public void put(UUID aggregateId, VersionedState<OrderState> versionedState) {
+        stateMap.put(aggregateId, versionedState);
+      }
+
+      @Override
+      public Optional<VersionedState<OrderState>> get(UUID aggregateId) {
+        return Optional.ofNullable(stateMap.get(aggregateId));
+      }
+
+      @Override
+      public void invalidate(UUID aggregateId) {
+        stateMap.remove(aggregateId);
+      }
+
+    };
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .registerHandler(OrderCanceled.class, OrderState::handleOrderCanceled)
+        .registerHandler(OrderDeleted.class, OrderState::handleOrderDeleted)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId1, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId2, 0, 1000)).thenReturn(getResource("/aggregate/placed_order2.json"));
+    when(apiCallback.eventBulkStored(any(BulkSaveEvents.class))).thenReturn(OK);
+
+    int eventsStored = orderClient.bulkUpdate(orderIds, new AggregateUpdate<OrderState>() {
+
+      @Override
+      public Optional<StateCache<OrderState>> stateCache() {
+        return Optional.of(stateCache);
+      }
+
+      @Override
+      public List<Event<?>> apply(OrderState state) {
+        return new Order(state).cancel();
+      }
+    });
+
+    assertThat(eventsStored).isEqualTo(2);
+
+
+    // Load from cache
+    eventsStored = orderClient.bulkUpdate(orderIds, new AggregateUpdate<OrderState>() {
+      @Override
+      public Optional<StateCache<OrderState>> stateCache() {
+        return Optional.of(stateCache);
+      }
+
+      @Override
+      public List<Event<?>> apply(OrderState state) {
+        Order order = new Order(state);
+        return order.deleteOrder();
+      }
+    });
+
+    assertThat(eventsStored).isEqualTo(2);
+
+    verify(apiCallback, times(1)).aggregateLoaded("order", orderId1, 0, 1000);
+    verify(apiCallback, times(1)).aggregateLoaded("order", orderId2, 0, 1000);
+
+    ArgumentCaptor<EventBatch> secondCaptor = ArgumentCaptor.forClass(EventBatch.class);
+    verify(apiCallback, times(2)).eventBulkStored(any(BulkSaveEvents.class));
   }
 
   @Test
@@ -177,7 +308,7 @@ public class AggregateClientIT {
         .registerHandler(OrderDeleted.class, OrderState::handleOrderDeleted)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     int eventsStored = orderClient.update(orderId, new AggregateUpdate<OrderState>() {
@@ -265,7 +396,7 @@ public class AggregateClientIT {
         .registerHandler(OrderDeleted.class, OrderState::handleOrderDeleted)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(OK);
 
     assertThat(stateMap).doesNotContainKey(orderId);
@@ -356,7 +487,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(CONFLICT);
 
     assertThrows(ConcurrencyException.class, () ->
@@ -375,7 +506,7 @@ public class AggregateClientIT {
         .withRetryStrategy(new RetryStrategy.Builder().withRetryCount(3).withSleepMs(10).build())
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
     when(apiCallback.eventsStored(eq(orderId), any(EventBatch.class))).thenReturn(CONFLICT);
 
     assertThrows(ConcurrencyException.class, () ->
@@ -394,7 +525,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
 
     int eventsStored = orderClient.update(orderId, orderState -> {
       assertThat(orderState.status()).isEqualTo(OrderStatus.PLACED);
@@ -435,7 +566,7 @@ public class AggregateClientIT {
     AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
 
     Exception exception = assertThrows(IllegalStateException.class, () ->
         orderClient.update(orderId, orderState -> emptyList())
@@ -453,7 +584,7 @@ public class AggregateClientIT {
         .withUpdateStrategy(new UpdateStrategy.Builder().withFailOnMissingHandler(false).build())
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
 
     assertThat(orderClient.update(orderId, orderState -> emptyList())).isEqualTo(0);
   }
@@ -470,7 +601,7 @@ public class AggregateClientIT {
             .build())
         .build();
 
-    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order.json"));
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
 
     assertThat(orderClient.update(orderId, orderState -> emptyList())).isEqualTo(0);
   }
@@ -498,7 +629,7 @@ public class AggregateClientIT {
     UUID aggregateId = UUID.randomUUID();
     when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class))).thenReturn(OK);
 
-    orderClient.save(AggregateRequest.saveRequest().withAggregateId(aggregateId).withEvents(singletonList(orderPlaced("order-123", 1234L))).build());
+    orderClient.save(saveRequest().withAggregateId(aggregateId).withEvents(singletonList(orderPlaced("order-123", 1234L))).build());
 
     ArgumentCaptor<EventBatch> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatch.class);
     verify(apiCallback).eventsStored(eq(aggregateId), eventsStoredCaptor.capture());
@@ -521,7 +652,7 @@ public class AggregateClientIT {
     List<Event<?>> events = singletonList(orderPlaced("order-123", 1234L));
     when(apiCallback.eventsStored(eq(aggregateId), any(EventBatch.class), any(UUID.class))).thenReturn(OK);
 
-    AggregateRequest aggregateRequest = AggregateRequest.saveRequest().withTenantId(tenantId).withAggregateId(aggregateId).withEvents(events).build();
+    AggregateRequest aggregateRequest = saveRequest().withTenantId(tenantId).withAggregateId(aggregateId).withEvents(events).build();
     orderClient.save(aggregateRequest);
 
     ArgumentCaptor<EventBatch> eventsStoredCaptor = ArgumentCaptor.forClass(EventBatch.class);

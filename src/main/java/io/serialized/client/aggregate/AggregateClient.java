@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
@@ -26,6 +27,7 @@ import java.util.logging.Logger;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
+import static io.serialized.client.aggregate.BulkSaveEvents.newBulkSaveEvents;
 import static io.serialized.client.aggregate.StateBuilder.stateBuilder;
 import static java.lang.String.format;
 import static java.util.logging.Level.INFO;
@@ -75,6 +77,23 @@ public class AggregateClient<T> {
     }
   }
 
+  public void save(AggregateBulkRequest request) {
+
+    try {
+      HttpUrl url = getAggregateTypeUrl().addPathSegment("events").build();
+
+      BulkSaveEvents payload = request.eventBatches();
+      if (request.tenantId().isPresent()) {
+        UUID tenantId = request.tenantId().get();
+        client.post(url, payload, tenantId);
+      } else {
+        client.post(url, payload);
+      }
+    } catch (ApiException e) {
+      handleConcurrencyException(e);
+    }
+  }
+
   /**
    * Update the aggregate.
    * <p>
@@ -105,7 +124,7 @@ public class AggregateClient<T> {
 
     for (int i = 0; i <= retryStrategy.getRetryCount(); i++) {
       try {
-        return updateInternal(aggregateId, update);
+        return updateInternal(aggregateId, update, eventBatch -> storeBatch(aggregateId, update.tenantId(), eventBatch));
       } catch (ConcurrencyException concurrencyException) {
         lastException = concurrencyException;
         try {
@@ -120,14 +139,42 @@ public class AggregateClient<T> {
 
   }
 
-  private int updateInternal(UUID aggregateId, AggregateUpdate<T> update) {
+  public int bulkUpdate(Set<UUID> aggregateIds, AggregateUpdate<T> update) {
+
+    ConcurrencyException lastException = new ConcurrencyException(409, "Conflict");
+
+    for (int i = 0; i <= retryStrategy.getRetryCount(); i++) {
+      try {
+        List<EventBatch> batches = new ArrayList<>();
+        for (UUID aggregateId : aggregateIds) {
+          updateInternal(aggregateId, update, eventBatch -> {
+            if (!eventBatch.events().isEmpty()) {
+              batches.add(eventBatch);
+            }
+            return eventBatch.events().size();
+          });
+        }
+        return storeBulk(update.tenantId(), batches);
+      } catch (ConcurrencyException concurrencyException) {
+        lastException = concurrencyException;
+        try {
+          Thread.sleep(retryStrategy.getSleepMs());
+        } catch (InterruptedException ie) {
+          // ignore
+        }
+      }
+    }
+    throw lastException;
+  }
+
+  private int updateInternal(UUID aggregateId, AggregateUpdate<T> update, java.util.function.Function<EventBatch, Integer> onSave) {
     assertValidUpdateConfig(update);
 
     if (update.stateCache().isPresent()) {
       StateCache<T> stateCache = update.stateCache().get();
       Optional<VersionedState<T>> cachedState = stateCache.get(aggregateId);
 
-      final long currentVersion;
+      final int currentVersion;
 
       final T currentState;
       if (cachedState.isPresent()) {
@@ -142,7 +189,7 @@ public class AggregateClient<T> {
 
       try {
         List<Event<?>> events = update.apply(currentState);
-        int eventStored = storeBatch(aggregateId, update.tenantId(), new EventBatch(events, currentVersion));
+        int eventStored = onSave.apply(new EventBatch(events, currentVersion));
         if (eventStored > 0) {
           stateCache.put(aggregateId, new VersionedState<>(stateBuilder.buildState(currentState, events), currentVersion + 1));
         }
@@ -156,9 +203,9 @@ public class AggregateClient<T> {
     } else {
       LoadAggregateResponse aggregateResponse = loadState(aggregateId, update.tenantId());
       T state = stateBuilder.buildState(aggregateResponse.events);
-      Long expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
+      Integer expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
       List<Event<?>> events = update.apply(state);
-      return storeBatch(aggregateId, update.tenantId(), new EventBatch(events, expectedVersion));
+      return onSave.apply(new EventBatch(events, expectedVersion));
     }
 
   }
@@ -262,6 +309,22 @@ public class AggregateClient<T> {
     return eventBatch.events().size();
   }
 
+  private int storeBulk(Optional<UUID> tenantId, List<EventBatch> batches) {
+    if (batches.isEmpty()) return 0;
+
+    try {
+      HttpUrl url = getAggregateTypeUrl().addPathSegment("events").build();
+      if (tenantId.isPresent()) {
+        client.post(url, newBulkSaveEvents(batches), tenantId.get());
+      } else {
+        client.post(url, newBulkSaveEvents(batches));
+      }
+    } catch (ApiException e) {
+      handleConcurrencyException(e);
+    }
+    return batches.stream().map(EventBatch::events).mapToInt(List::size).sum();
+  }
+
   private void handleConcurrencyException(ApiException e) {
     if (e.statusCode() == 409) {
       throw new ConcurrencyException(409, e.getMessage());
@@ -361,7 +424,7 @@ public class AggregateClient<T> {
 
     String aggregateId;
     String aggregateType;
-    long aggregateVersion;
+    int aggregateVersion;
     List<Event<?>> events;
     boolean hasMore;
 

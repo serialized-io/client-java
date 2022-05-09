@@ -46,7 +46,7 @@ public class TenantClient {
   }
 
   public void updateTenant(Tenant tenant) {
-    HttpUrl url = apiRoot.newBuilder().addPathSegment("tenants").addPathSegment(tenant.tenantId()).build();
+    HttpUrl url = apiRoot.newBuilder().addPathSegment("tenants").addPathSegment(tenant.tenantId().toString()).build();
     client.put(url, tenant);
   }
 

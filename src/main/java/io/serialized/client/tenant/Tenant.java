@@ -10,13 +10,13 @@ import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class Tenant {
 
-  private String tenantId;
+  private UUID tenantId;
   private String tenantNumber;
   private long addedAt;
   private String reference;
   private boolean deleted;
 
-  public String tenantId() {
+  public UUID tenantId() {
     return tenantId;
   }
 
@@ -71,7 +71,7 @@ public class Tenant {
 
     public Tenant build() {
       Tenant tenant = new Tenant();
-      tenant.tenantId = tenantId.toString();
+      tenant.tenantId = tenantId;
       tenant.reference = reference;
       return tenant;
     }

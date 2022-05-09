@@ -53,6 +53,24 @@ public class AggregateApiStub {
 
   }
 
+  @POST
+  @Path("{aggregateType}/events")
+  public Response bulkSaveEvents(@HeaderParam(SERIALIZED_TENANT_ID) String tenantId,
+                                 @PathParam("aggregateId") String aggregateId,
+                                 @NotNull @Valid BulkSaveEvents bulk) {
+
+    if (tenantId == null) {
+      return Response.status(callback.eventBulkStored(bulk))
+          .type(APPLICATION_JSON_TYPE)
+          .build();
+    } else {
+      return Response.status(callback.eventBulkStored(bulk, UUID.fromString(tenantId)))
+          .type(APPLICATION_JSON_TYPE)
+          .build();
+    }
+
+  }
+
   @GET
   @Path("{aggregateType}/{aggregateId}")
   public Response loadAggregate(@PathParam("aggregateType") String aggregateType,
@@ -112,6 +130,10 @@ public class AggregateApiStub {
     Map aggregateTypeDeleteRequested(String aggregateType);
 
     void aggregateTypeDeletePerformed(String aggregateType, String deleteToken);
+
+    Response.Status eventBulkStored(BulkSaveEvents bulk);
+
+    Response.Status eventBulkStored(BulkSaveEvents bulk, UUID tenantId);
 
   }
 

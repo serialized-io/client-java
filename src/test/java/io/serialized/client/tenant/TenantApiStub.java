@@ -49,7 +49,7 @@ public class TenantApiStub {
   @PUT
   @Path("{tenantId}")
   public Response updateTenant(@PathParam("tenantId") UUID tenantId, @Valid Tenant tenant) {
-    checkArgument(tenantId.toString().equals(tenant.tenantId()));
+    checkArgument(tenantId.equals(tenant.tenantId()));
     callback.tenantUpdated(tenant);
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
