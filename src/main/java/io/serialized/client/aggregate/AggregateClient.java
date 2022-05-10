@@ -149,7 +149,7 @@ public class AggregateClient<T> {
         for (UUID aggregateId : aggregateIds) {
           updateInternal(aggregateId, update, eventBatch -> {
             if (!eventBatch.events().isEmpty()) {
-              batches.add(eventBatch);
+              batches.add(eventBatch.withAggregateId(aggregateId));
             }
             return eventBatch.events().size();
           });

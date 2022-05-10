@@ -12,7 +12,7 @@ import io.serialized.client.aggregate.AggregateClient;
 import io.serialized.client.aggregate.AggregateExists;
 import io.serialized.client.aggregate.AggregateRequest;
 import io.serialized.client.aggregate.AggregateUpdate;
-import io.serialized.client.aggregate.BulkSaveEvents;
+import io.serialized.client.aggregate.BulkSaveEventsDto;
 import io.serialized.client.aggregate.Event;
 import io.serialized.client.aggregate.EventBatch;
 import io.serialized.client.aggregate.RetryStrategy;
@@ -107,7 +107,7 @@ public class AggregateClientIT {
         .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
         .build();
 
-    when(apiCallback.eventBulkStored(any(BulkSaveEvents.class))).thenReturn(OK);
+    when(apiCallback.eventBulkStored(any(BulkSaveEventsDto.class))).thenReturn(OK);
 
     OrderState orderState = new OrderState();
     Order order = new Order(orderState);
@@ -119,7 +119,7 @@ public class AggregateClientIT {
             .build()
     );
 
-    verify(apiCallback, times(1)).eventBulkStored(any(BulkSaveEvents.class));
+    verify(apiCallback, times(1)).eventBulkStored(any(BulkSaveEventsDto.class));
   }
 
   @Test
@@ -192,11 +192,11 @@ public class AggregateClientIT {
     when(apiCallback.aggregateLoaded(aggregateType, orderId1, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
     when(apiCallback.aggregateLoaded(aggregateType, orderId2, 0, 1000)).thenReturn(getResource("/aggregate/placed_order2.json"));
 
-    when(apiCallback.eventBulkStored(any(BulkSaveEvents.class))).thenReturn(OK);
+    when(apiCallback.eventBulkStored(any(BulkSaveEventsDto.class))).thenReturn(OK);
 
     assertThat(orderClient.bulkUpdate(orderIds, orderState -> new Order(orderState).cancel())).isEqualTo(2);
 
-    verify(apiCallback, times(1)).eventBulkStored(any(BulkSaveEvents.class));
+    verify(apiCallback, times(1)).eventBulkStored(any(BulkSaveEventsDto.class));
   }
 
   @Test
@@ -236,7 +236,7 @@ public class AggregateClientIT {
 
     when(apiCallback.aggregateLoaded(aggregateType, orderId1, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
     when(apiCallback.aggregateLoaded(aggregateType, orderId2, 0, 1000)).thenReturn(getResource("/aggregate/placed_order2.json"));
-    when(apiCallback.eventBulkStored(any(BulkSaveEvents.class))).thenReturn(OK);
+    when(apiCallback.eventBulkStored(any(BulkSaveEventsDto.class))).thenReturn(OK);
 
     int eventsStored = orderClient.bulkUpdate(orderIds, new AggregateUpdate<OrderState>() {
 
@@ -272,9 +272,7 @@ public class AggregateClientIT {
 
     verify(apiCallback, times(1)).aggregateLoaded("order", orderId1, 0, 1000);
     verify(apiCallback, times(1)).aggregateLoaded("order", orderId2, 0, 1000);
-
-    ArgumentCaptor<EventBatch> secondCaptor = ArgumentCaptor.forClass(EventBatch.class);
-    verify(apiCallback, times(2)).eventBulkStored(any(BulkSaveEvents.class));
+    verify(apiCallback, times(2)).eventBulkStored(any(BulkSaveEventsDto.class));
   }
 
   @Test
