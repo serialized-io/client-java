@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
+import static io.serialized.client.feed.FeedRequests.getSequenceNumber;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
@@ -111,6 +112,11 @@ public class FeedClient implements Closeable {
   public UUID subscribe(GetFeedRequest request, SequenceNumberTracker sequenceNumberTracker, FeedEntryHandler feedEntryHandler) {
     Validate.isTrue(request.waitTime.getSeconds() > 0, "'waitTime' in request cannot be zero when subscribing to a feed");
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+
+    if (request.startFromHead) {
+      long sequenceNumber = execute(getSequenceNumber().withFeed(request.feedName).build());
+      sequenceNumberTracker.updateLastConsumedSequenceNumber(sequenceNumber);
+    }
 
     executor.scheduleWithFixedDelay(() -> {
 

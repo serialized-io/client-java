@@ -24,6 +24,7 @@ public class GetFeedRequest {
   public final Integer partitionCount;
   public final Integer partitionNumber;
   public final Set<String> types;
+  public final boolean startFromHead;
 
   private GetFeedRequest(Builder builder) {
     this.feedName = builder.feedName;
@@ -34,6 +35,7 @@ public class GetFeedRequest {
     this.partitionCount = builder.partitionCount;
     this.partitionNumber = builder.partitionNumber;
     this.types = Collections.unmodifiableSet(builder.types);
+    this.startFromHead = builder.startFromHead;
   }
 
   public Optional<UUID> tenantId() {
@@ -52,6 +54,7 @@ public class GetFeedRequest {
     private UUID tenantId;
     private Integer partitionCount;
     private Integer partitionNumber;
+    private boolean startFromHead = false;
 
     /**
      * @param types Aggregate types to filter (include) when requesting the _all feed.
@@ -122,6 +125,14 @@ public class GetFeedRequest {
 
       this.partitionCount = partitionCount;
       this.partitionNumber = partitionNumber;
+      return this;
+    }
+
+    /**
+     * Configures the request to start from the most recent sequence number.
+     */
+    public Builder withStartFromHead() {
+      this.startFromHead = true;
       return this;
     }
 

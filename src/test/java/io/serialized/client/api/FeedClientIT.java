@@ -240,6 +240,44 @@ public class FeedClientIT {
     feedClient.close();
   }
 
+  @Test
+  public void shouldSubscribeStartingFromHead() throws Exception {
+
+    FeedClient feedClient = getFeedClient();
+
+    long head = 13;
+    String feedName = "test";
+    CountDownLatch latch = new CountDownLatch(3);
+
+    when(apiCallback.currentSequenceNumberRequested(feedName)).thenReturn(head);
+
+    ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
+
+    AtomicBoolean firstPoll = new AtomicBoolean(true);
+    AtomicBoolean unexpectedSince = new AtomicBoolean(false);
+
+    when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenAnswer((Answer<String>) invocation -> {
+      if (firstPoll.compareAndSet(true, false)) {
+        if (queryParams.getValue().getSince() != head) {
+          unexpectedSince.set(true);
+        }
+      }
+      Thread.sleep(1000);
+      latch.countDown();
+      return getResource("/feed/feedentries-empty.json");
+    });
+
+    GetFeedRequest request = getFromFeed(feedName).withStartFromHead().withWaitTime(Duration.ofSeconds(10)).build();
+    feedClient.subscribe(request, feedEntry -> {
+    });
+
+    latch.await();
+
+    assertThat(unexpectedSince).isFalse();
+
+    feedClient.close();
+  }
+
   private FeedClient getFeedClient() {
     return FeedClient.feedClient(
             SerializedClientConfig.serializedConfig()
