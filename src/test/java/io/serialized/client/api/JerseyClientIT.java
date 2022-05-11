@@ -284,11 +284,12 @@ public class JerseyClientIT {
     Client client = ClientBuilder.newClient();
 
     Long sequenceNumber = 20L;
-    when(feedApiCallback.currentSequenceNumberRequested()).thenReturn(sequenceNumber);
+    String feedName = "payment";
+    when(feedApiCallback.currentSequenceNumberRequested(feedName)).thenReturn(sequenceNumber);
 
     Response response = client.target(apiRoot)
         .path("feeds")
-        .path("payment")
+        .path(feedName)
         .request()
         .header("Serialized-Access-Key", "<YOUR_ACCESS_KEY>")
         .header("Serialized-Secret-Access-Key", "<YOUR_SECRET_ACCESS_KEY>")

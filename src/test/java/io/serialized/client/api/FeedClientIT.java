@@ -10,8 +10,6 @@ import io.serialized.client.feed.FeedApiStub;
 import io.serialized.client.feed.FeedClient;
 import io.serialized.client.feed.FeedResponse;
 import io.serialized.client.feed.GetFeedRequest;
-import io.serialized.client.feed.InMemorySequenceNumberTracker;
-import io.serialized.client.feed.SequenceNumberTracker;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,9 +67,11 @@ public class FeedClientIT {
 
     FeedClient feedClient = getFeedClient();
 
-    when(apiCallback.currentSequenceNumberRequested()).thenReturn(7L);
+    String feedName = "games";
 
-    assertThat(feedClient.execute(getSequenceNumber().withFeed("games").build())).isEqualTo(7L);
+    when(apiCallback.currentSequenceNumberRequested(feedName)).thenReturn(7L);
+
+    assertThat(feedClient.execute(getSequenceNumber().withFeed(feedName).build())).isEqualTo(7L);
   }
 
   @Test
@@ -233,9 +233,8 @@ public class FeedClientIT {
 
     CountDownLatch latch = new CountDownLatch(10);
 
-    SequenceNumberTracker tracker = new InMemorySequenceNumberTracker();
     GetFeedRequest request = getFromFeed(feedName).withWaitTime(Duration.ofSeconds(10)).build();
-    feedClient.subscribe(request, tracker, feedEntry -> latch.countDown());
+    feedClient.subscribe(request, feedEntry -> latch.countDown());
 
     latch.await();
     feedClient.close();
@@ -243,11 +242,11 @@ public class FeedClientIT {
 
   private FeedClient getFeedClient() {
     return FeedClient.feedClient(
-        SerializedClientConfig.serializedConfig()
-            .rootApiUrl(dropwizard.baseUri() + "/api-stub/")
-            .accessKey("aaaaa")
-            .secretAccessKey("bbbbb")
-            .build())
+            SerializedClientConfig.serializedConfig()
+                .rootApiUrl(dropwizard.baseUri() + "/api-stub/")
+                .accessKey("aaaaa")
+                .secretAccessKey("bbbbb")
+                .build())
         .build();
   }
 

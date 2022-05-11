@@ -62,7 +62,7 @@ public class FeedApiStub {
   @HEAD
   @Path("{feedName}")
   public Response getCurrentSequenceNumber(@PathParam("feedName") String feedName) {
-    long sequenceNumber = callback.currentSequenceNumberRequested();
+    long sequenceNumber = callback.currentSequenceNumberRequested(feedName);
     return Response.ok(APPLICATION_JSON_TYPE).header("Serialized-SequenceNumber-Current", sequenceNumber).build();
   }
 
@@ -97,7 +97,7 @@ public class FeedApiStub {
 
     Object feedEntriesLoaded(String feedName, QueryParams queryParams);
 
-    long currentSequenceNumberRequested();
+    long currentSequenceNumberRequested(String feedName);
 
     long currentGlobalSequenceNumberRequested();
 
