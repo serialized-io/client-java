@@ -57,7 +57,7 @@ public class FeedClient implements Closeable {
   }
 
   /**
-   * Terminates a subscription by shutting down it's executor.
+   * Terminates a subscription by shutting down its executor.
    *
    * @param subscriptionId ID of subscription to terminate.
    */
@@ -91,7 +91,7 @@ public class FeedClient implements Closeable {
   }
 
   /**
-   * Starts subscribing to the feed starting from the beginning.
+   * Starts subscribing to the feed.
    * The default in-memory sequence number tracker will be used.
    *
    * @param feedEntryHandler Handler invoked for each received entry
@@ -104,7 +104,20 @@ public class FeedClient implements Closeable {
   }
 
   /**
-   * Starts subscribing to the feed starting at given sequence number.
+   * Starts subscribing to the feed.
+   * The default in-memory sequence number tracker will be used.
+   *
+   * @param feedEntryBatchHandler Handler invoked for each received batch
+   * @return The subscription ID
+   * @see SequenceNumberTracker
+   * @see InMemorySequenceNumberTracker
+   */
+  public UUID subscribe(GetFeedRequest request, FeedEntryBatchHandler feedEntryBatchHandler) {
+    return subscribe(request, new InMemorySequenceNumberTracker(), feedEntryBatchHandler);
+  }
+
+  /**
+   * Starts subscribing to the feed.
    *
    * @param feedEntryHandler Handler invoked for each received entry
    * @return The subscription ID
@@ -153,6 +166,64 @@ public class FeedClient implements Closeable {
               }
             }
           }
+        } while (request.eagerFetching && response.hasMore());
+      } catch (Exception exception) {
+        logger.log(WARNING, format("Error polling event feed [%s]: %s", request.feedName, exception.getMessage()), exception);
+
+        try {
+          Thread.sleep(1000); // sleep before retrying
+        } catch (InterruptedException io) {
+          // ignore
+        }
+      }
+
+    }, 1, 1, TimeUnit.MILLISECONDS);
+
+    UUID subscriptionId = UUID.randomUUID();
+    executors.put(subscriptionId, executor);
+    return subscriptionId;
+  }
+
+  /**
+   * Starts subscribing to the feed.
+   *
+   * @param feedEntryBatchHandler Handler invoked for each received batch
+   * @return The subscription ID
+   */
+  public UUID subscribe(GetFeedRequest request, SequenceNumberTracker sequenceNumberTracker, FeedEntryBatchHandler feedEntryBatchHandler) {
+    Validate.isTrue(request.waitTime.getSeconds() > 0, "'waitTime' in request cannot be zero when subscribing to a feed");
+    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+
+    if (request.startFromHead) {
+      long sequenceNumber = execute(getSequenceNumber().withFeed(request.feedName).build());
+      sequenceNumberTracker.updateLastConsumedSequenceNumber(sequenceNumber);
+    }
+
+    executor.scheduleWithFixedDelay(() -> {
+
+      FeedResponse response;
+
+      try {
+        do {
+          long sequenceNumber = sequenceNumberTracker.lastConsumedSequenceNumber();
+
+          response = execute(request, sequenceNumber);
+
+          if (sequenceNumber > sequenceNumberTracker.lastConsumedSequenceNumber()) {
+            return; // Tracker was reset during poll - return to poll again.
+          }
+
+          List<FeedEntry> entries = response.entries();
+
+          if (entries.isEmpty()) {
+            if (response.currentSequenceNumber() > sequenceNumber) {
+              sequenceNumberTracker.updateLastConsumedSequenceNumber(response.currentSequenceNumber());
+            }
+          } else {
+            feedEntryBatchHandler.handle(entries);
+            sequenceNumberTracker.updateLastConsumedSequenceNumber(entries.get(entries.size() - 1).sequenceNumber());
+          }
+
         } while (request.eagerFetching && response.hasMore());
       } catch (Exception exception) {
         logger.log(WARNING, format("Error polling event feed [%s]: %s", request.feedName, exception.getMessage()), exception);

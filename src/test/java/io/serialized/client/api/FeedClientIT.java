@@ -8,8 +8,12 @@ import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.feed.Feed;
 import io.serialized.client.feed.FeedApiStub;
 import io.serialized.client.feed.FeedClient;
+import io.serialized.client.feed.FeedEntryBatchHandler;
+import io.serialized.client.feed.FeedEntryHandler;
 import io.serialized.client.feed.FeedResponse;
 import io.serialized.client.feed.GetFeedRequest;
+import io.serialized.client.feed.InMemorySequenceNumberTracker;
+import io.serialized.client.feed.SequenceNumberTracker;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -213,7 +217,7 @@ public class FeedClientIT {
   }
 
   @Test
-  public void shouldSubscribe() throws Exception {
+  public void shouldSubscribeAndHandleEntries() throws Exception {
 
     FeedClient feedClient = getFeedClient();
 
@@ -233,10 +237,46 @@ public class FeedClientIT {
 
     CountDownLatch latch = new CountDownLatch(10);
 
+    SequenceNumberTracker sequenceNumberTracker = new InMemorySequenceNumberTracker();
     GetFeedRequest request = getFromFeed(feedName).withWaitTime(Duration.ofSeconds(10)).build();
-    feedClient.subscribe(request, feedEntry -> latch.countDown());
+    feedClient.subscribe(request, sequenceNumberTracker, (FeedEntryHandler) feedEntry -> latch.countDown());
 
     latch.await();
+
+    assertThat(sequenceNumberTracker.lastConsumedSequenceNumber()).isEqualTo(13);
+
+    feedClient.close();
+  }
+
+  @Test
+  public void shouldSubscribeAndHandleEntryBatches() throws Exception {
+
+    FeedClient feedClient = getFeedClient();
+
+    String feedName = "test";
+
+    ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
+
+    AtomicBoolean firstPoll = new AtomicBoolean(true);
+    when(apiCallback.feedEntriesLoaded(eq(feedName), queryParams.capture())).thenAnswer((Answer<String>) invocation -> {
+      if (firstPoll.compareAndSet(true, false)) {
+        return getResource("/feed/feedentries-limit.json");
+      } else {
+        Thread.sleep(1000);
+        return getResource("/feed/feedentries-empty.json");
+      }
+    });
+
+    CountDownLatch latch = new CountDownLatch(1);
+
+    SequenceNumberTracker sequenceNumberTracker = new InMemorySequenceNumberTracker();
+    GetFeedRequest request = getFromFeed(feedName).withWaitTime(Duration.ofSeconds(10)).build();
+    feedClient.subscribe(request, sequenceNumberTracker, (FeedEntryBatchHandler) feedEntryBatch -> latch.countDown());
+
+    latch.await();
+
+    assertThat(sequenceNumberTracker.lastConsumedSequenceNumber()).isEqualTo(13);
+
     feedClient.close();
   }
 
@@ -268,7 +308,7 @@ public class FeedClientIT {
     });
 
     GetFeedRequest request = getFromFeed(feedName).withStartFromHead().withWaitTime(Duration.ofSeconds(10)).build();
-    feedClient.subscribe(request, feedEntry -> {
+    feedClient.subscribe(request, (FeedEntryHandler) feedEntry -> {
     });
 
     latch.await();
