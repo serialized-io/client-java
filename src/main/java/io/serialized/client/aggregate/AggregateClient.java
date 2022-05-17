@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.client.ApiException;
 import io.serialized.client.ConcurrencyException;
+import io.serialized.client.InvalidRequestException;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.SerializedOkHttpClient;
 import io.serialized.client.aggregate.cache.StateCache;
@@ -27,6 +28,7 @@ import java.util.logging.Logger;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
+import static io.serialized.client.aggregate.AggregateRequest.MAX_EVENTS_IN_BATCH;
 import static io.serialized.client.aggregate.BulkSaveEvents.newBulkSaveEvents;
 import static io.serialized.client.aggregate.StateBuilder.stateBuilder;
 import static java.lang.String.format;
@@ -189,6 +191,9 @@ public class AggregateClient<T> {
 
       try {
         List<Event<?>> events = update.apply(currentState);
+        if (events.size() >= MAX_EVENTS_IN_BATCH) {
+          throw new InvalidRequestException(format("Cannot store more than %d events per batch", MAX_EVENTS_IN_BATCH));
+        }
         int eventStored = onSave.apply(new EventBatch(events, currentVersion));
         if (eventStored > 0) {
           stateCache.put(aggregateId, new VersionedState<>(stateBuilder.buildState(currentState, events), currentVersion + 1));
@@ -205,6 +210,9 @@ public class AggregateClient<T> {
       T state = stateBuilder.buildState(aggregateResponse.events);
       Integer expectedVersion = update.useOptimisticConcurrencyOnUpdate() ? aggregateResponse.aggregateVersion : null;
       List<Event<?>> events = update.apply(state);
+      if (events.size() >= MAX_EVENTS_IN_BATCH) {
+        throw new InvalidRequestException(format("Cannot store more than %d events per batch", MAX_EVENTS_IN_BATCH));
+      }
       return onSave.apply(new EventBatch(events, expectedVersion));
     }
 

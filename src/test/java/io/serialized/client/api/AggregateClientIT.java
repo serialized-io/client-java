@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit5.DropwizardClientExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.ConcurrencyException;
+import io.serialized.client.InvalidRequestException;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.aggregate.AggregateApiStub;
 import io.serialized.client.aggregate.AggregateClient;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -190,6 +192,32 @@ public class AggregateClientIT {
 
     // Order is already canceled
     assertThat(orderClient.update(orderId, orderState -> new Order(orderState).cancel())).isEqualTo(0);
+
+    verify(apiCallback, never()).eventsStored(any(UUID.class), any(EventBatch.class));
+  }
+
+  @Test
+  public void testMaxEventsInUpdateBatch() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/placed_order1.json"));
+
+    Exception exception = assertThrows(InvalidRequestException.class, () ->
+        orderClient.update(orderId, orderState -> {
+          List<Event<?>> events = new ArrayList<>();
+          for (int i = 0; i < 65; i++) {
+            events.addAll(new Order(orderState).cancel());
+          }
+          return events;
+        })
+    );
+
+    assertThat(exception.getMessage()).isEqualTo("Cannot store more than 64 events per batch");
 
     verify(apiCallback, never()).eventsStored(any(UUID.class), any(EventBatch.class));
   }

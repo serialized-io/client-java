@@ -1,7 +1,9 @@
 package io.serialized.client.aggregate;
 
+import io.serialized.client.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +64,20 @@ public class AggregateRequestTest {
     AggregateRequest request = AggregateRequest.saveRequest().withAggregateId(aggregateId).withEvent(newEvent("test-event").build()).build();
     assertThat(request.aggregateId).isEqualTo(UUID.fromString(aggregateId));
     assertThat(request.events).hasSize(1);
+  }
+
+  @Test
+  public void saveRequestMustHaveLessThan65Events() {
+    List<Event<?>> events = new ArrayList<>();
+    for (int i = 0; i < 65; i++) {
+      events.add(newEvent("test-event").build());
+    }
+
+    InvalidRequestException exception = assertThrows(InvalidRequestException.class, () ->
+        AggregateRequest.saveRequest().withAggregateId(UUID.randomUUID()).withEvents(events).build()
+    );
+
+    assertThat(exception.getMessage()).isEqualTo("Cannot store more than 64 events per batch");
   }
 
 }

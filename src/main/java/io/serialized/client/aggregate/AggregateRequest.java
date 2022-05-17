@@ -1,5 +1,7 @@
 package io.serialized.client.aggregate;
 
+import io.serialized.client.InvalidRequestException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -7,6 +9,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class AggregateRequest {
+
+  public static final int MAX_EVENTS_IN_BATCH = 64;
 
   public final UUID aggregateId;
   public final List<Event<?>> events;
@@ -92,6 +96,10 @@ public class AggregateRequest {
 
       if (aggregateId == null) {
         throw new IllegalStateException("aggregateId is null");
+      }
+
+      if (events.size() >= MAX_EVENTS_IN_BATCH) {
+        throw new InvalidRequestException("Cannot store more than 64 events per batch");
       }
 
       return new AggregateRequest(this);
