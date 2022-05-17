@@ -62,6 +62,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -173,6 +174,24 @@ public class AggregateClientIT {
     assertThat(orderClient.update(orderId, orderState -> new Order(orderState).cancel())).isEqualTo(1);
 
     verify(apiCallback, times(1)).eventsStored(eq(orderId), argThat(containsEventType("OrderCanceled")));
+  }
+
+  @Test
+  public void testUpdateIsIdempotent() throws IOException {
+    UUID orderId = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .registerHandler(OrderCanceled.class, OrderState::handleOrderCanceled)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId, 0, 1000)).thenReturn(getResource("/aggregate/canceled_order1.json"));
+
+    // Order is already canceled
+    assertThat(orderClient.update(orderId, orderState -> new Order(orderState).cancel())).isEqualTo(0);
+
+    verify(apiCallback, never()).eventsStored(any(UUID.class), any(EventBatch.class));
   }
 
   @Test

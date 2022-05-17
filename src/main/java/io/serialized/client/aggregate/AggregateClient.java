@@ -294,7 +294,8 @@ public class AggregateClient<T> {
   }
 
   private int storeBatch(UUID aggregateId, Optional<UUID> tenantId, EventBatch eventBatch) {
-    if (eventBatch.events().isEmpty()) return 0;
+    int eventCount = eventBatch.events().size();
+    if (eventCount == 0) return 0;
 
     try {
       HttpUrl url = getAggregateUrl(aggregateId).addPathSegment("events").build();
@@ -306,7 +307,7 @@ public class AggregateClient<T> {
     } catch (ApiException e) {
       handleConcurrencyException(e);
     }
-    return eventBatch.events().size();
+    return eventCount;
   }
 
   private int storeBulk(Optional<UUID> tenantId, List<EventBatch> batches) {
