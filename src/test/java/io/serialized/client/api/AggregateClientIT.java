@@ -247,6 +247,28 @@ public class AggregateClientIT {
   }
 
   @Test
+  public void testBulkUpdateNoEvents() throws IOException {
+    UUID orderId1 = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
+    Set<UUID> orderIds = new HashSet<>();
+    orderIds.add(orderId1);
+
+    String aggregateType = "order";
+
+    AggregateClient<OrderState> orderClient = aggregateClient(aggregateType, OrderState.class, getConfig())
+        .registerHandler(OrderPlaced.class, OrderState::handleOrderPlaced)
+        .registerHandler(OrderCanceled.class, OrderState::handleOrderCanceled)
+        .build();
+
+    when(apiCallback.aggregateLoaded(aggregateType, orderId1, 0, 1000)).thenReturn(getResource("/aggregate/canceled_order1.json"));
+
+    when(apiCallback.eventBulkStored(any(BulkSaveEventsDto.class))).thenReturn(OK);
+
+    assertThat(orderClient.bulkUpdate(orderIds, orderState -> new Order(orderState).cancel())).isEqualTo(0);
+
+    verify(apiCallback, times(0)).eventBulkStored(any(BulkSaveEventsDto.class));
+  }
+
+  @Test
   public void testBulkUpdateUsingStateCache() throws IOException {
     UUID orderId1 = UUID.fromString("723ecfce-14e9-4889-98d5-a3d0ad54912f");
     UUID orderId2 = UUID.fromString("35b68baa-a891-4c44-af7c-f12743e777c3");
