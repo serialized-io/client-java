@@ -1,5 +1,7 @@
 package io.serialized.client.api;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import io.dropwizard.jersey.errors.ErrorMessage;
 import io.dropwizard.testing.junit5.DropwizardClientExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
@@ -15,6 +17,8 @@ import io.serialized.client.feed.GetFeedRequest;
 import io.serialized.client.feed.InMemorySequenceNumberTracker;
 import io.serialized.client.feed.SequenceNumberTracker;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -50,6 +54,19 @@ public class FeedClientIT {
   private final FeedApiStub.FeedApiCallback apiCallback = mock(FeedApiStub.FeedApiCallback.class);
 
   public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new FeedApiStub(apiCallback));
+
+  private FeedClient feedClient;
+
+  @BeforeEach
+  void setUp() {
+    dropwizard.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+    feedClient = getFeedClient();
+  }
+
+  @AfterEach
+  void tearDown() {
+    feedClient.close();
+  }
 
   @Test
   public void shouldListFeeds() throws IOException {
