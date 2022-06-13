@@ -230,7 +230,7 @@ public class FeedClientIT {
       if (firstPoll.compareAndSet(true, false)) {
         return getResource("/feed/feedentries-limit.json");
       } else {
-        Thread.sleep(1000);
+        Thread.sleep(500);
         return getResource("/feed/feedentries-empty.json");
       }
     });
