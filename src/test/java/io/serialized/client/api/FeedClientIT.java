@@ -245,6 +245,8 @@ public class FeedClientIT {
 
     latch.await();
 
+    Thread.sleep(100);
+
     assertThat(sequenceNumberTracker.lastConsumedSequenceNumber()).isEqualTo(13);
   }
 
@@ -308,6 +310,8 @@ public class FeedClientIT {
     });
 
     latch.await();
+
+    Thread.sleep(100);
 
     assertThat(unexpectedSince).isFalse();
   }
