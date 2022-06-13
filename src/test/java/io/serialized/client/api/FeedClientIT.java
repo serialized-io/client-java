@@ -18,6 +18,7 @@ import io.serialized.client.feed.InMemorySequenceNumberTracker;
 import io.serialized.client.feed.SequenceNumberTracker;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,15 +52,17 @@ import static org.mockito.Mockito.when;
 @ExtendWith(DropwizardExtensionsSupport.class)
 public class FeedClientIT {
 
-  private final FeedApiStub.FeedApiCallback apiCallback = mock(FeedApiStub.FeedApiCallback.class);
-
-  public final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new FeedApiStub(apiCallback));
-
+  private static final FeedApiStub.FeedApiCallback apiCallback = mock(FeedApiStub.FeedApiCallback.class);
+  private static final DropwizardClientExtension dropwizard = new DropwizardClientExtension(new FeedApiStub(apiCallback));
   private FeedClient feedClient;
+
+  @BeforeAll
+  static void beforeAll() {
+    dropwizard.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+  }
 
   @BeforeEach
   void setUp() {
-    dropwizard.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
     feedClient = getFeedClient();
   }
 
@@ -243,8 +246,6 @@ public class FeedClientIT {
     latch.await();
 
     assertThat(sequenceNumberTracker.lastConsumedSequenceNumber()).isEqualTo(13);
-
-    feedClient.close();
   }
 
   @Test
@@ -275,8 +276,6 @@ public class FeedClientIT {
     Thread.sleep(100);
 
     assertThat(sequenceNumberTracker.lastConsumedSequenceNumber()).isEqualTo(13);
-
-    feedClient.close();
   }
 
   @Test
@@ -311,8 +310,6 @@ public class FeedClientIT {
     latch.await();
 
     assertThat(unexpectedSince).isFalse();
-
-    feedClient.close();
   }
 
   private FeedClient getFeedClient() {
