@@ -332,6 +332,7 @@ public class ProjectionClientIT {
             .build(OrderBalanceProjection.class));
 
     assertThat(projection.projectionId()).isEqualTo(projectionId);
+    assertThat(projection.createdAt()).isEqualTo(1505754083970L);
     assertThat(projection.updatedAt()).isEqualTo(1505754083976L);
     assertThat(projection.data().orderAmount).isEqualTo(12345L);
   }
@@ -383,6 +384,7 @@ public class ProjectionClientIT {
             .build(OrderBalanceProjection.class));
 
     assertThat(projection.projectionId()).isEqualTo(projectionId);
+    assertThat(projection.createdAt()).isEqualTo(1505754083970L);
     assertThat(projection.updatedAt()).isEqualTo(1505754083976L);
     assertThat(projection.data().orderAmount).isEqualTo(12345L);
   }
@@ -402,6 +404,10 @@ public class ProjectionClientIT {
             .build(Map.class));
 
     assertThat(projections.projections()).hasSize(1);
+    ProjectionResponse<Map> projectionResponse = projections.projections().iterator().next();
+    assertThat(projectionResponse.projectionId()).isEqualTo("22c3780f-6dcb-440f-8532-6693be83f21c");
+    assertThat(projectionResponse.createdAt()).isEqualTo(1523518143967L);
+    assertThat(projectionResponse.updatedAt()).isEqualTo(1523518144467L);
     assertThat(projections.hasMore()).isEqualTo(false);
   }
 

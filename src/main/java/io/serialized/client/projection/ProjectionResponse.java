@@ -9,20 +9,26 @@ import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 public class ProjectionResponse<T> {
 
   private String projectionId;
+  private long createdAt;
   private long updatedAt;
   private T data;
 
   public ProjectionResponse() {
   }
 
-  public ProjectionResponse(String projectionId, long updatedAt, T data) {
+  public ProjectionResponse(String projectionId, long createdAt, long updatedAt, T data) {
     this.projectionId = projectionId;
+    this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.data = data;
   }
 
   public String projectionId() {
     return projectionId;
+  }
+
+  public long createdAt() {
+    return createdAt;
   }
 
   public long updatedAt() {
