@@ -71,8 +71,6 @@ public class FeedClientIT {
   @Test
   public void shouldListFeeds() throws IOException {
 
-    FeedClient feedClient = getFeedClient();
-
     when(apiCallback.feedOverviewLoaded()).thenReturn(getResource("/feed/feeds.json"));
 
     List<Feed> feeds = feedClient.execute(listFeeds().build());
@@ -86,8 +84,6 @@ public class FeedClientIT {
   @Test
   public void getCurrentSequenceNumber() {
 
-    FeedClient feedClient = getFeedClient();
-
     String feedName = "games";
 
     when(apiCallback.currentSequenceNumberRequested(feedName)).thenReturn(7L);
@@ -98,8 +94,6 @@ public class FeedClientIT {
   @Test
   public void getCurrentGlobalSequenceNumber() {
 
-    FeedClient feedClient = getFeedClient();
-
     when(apiCallback.currentGlobalSequenceNumberRequested()).thenReturn(777L);
 
     assertThat(feedClient.execute(getSequenceNumber().build())).isEqualTo(777L);
@@ -107,8 +101,6 @@ public class FeedClientIT {
 
   @Test
   public void allFeedEntries() throws IOException {
-
-    FeedClient feedClient = getFeedClient();
 
     when(apiCallback.allFeedLoaded(emptySet())).thenReturn(getResource("/feed/allFeed.json"));
 
@@ -120,8 +112,6 @@ public class FeedClientIT {
 
   @Test
   public void allFeedEntries_ServiceUnavailable() {
-
-    FeedClient feedClient = getFeedClient();
 
     Response.Status status = Response.Status.SERVICE_UNAVAILABLE;
     Response response = Response.status(status).entity(new ErrorMessage(status.getStatusCode(), "Error")).build();
@@ -139,8 +129,6 @@ public class FeedClientIT {
   @Test
   public void allFeedEntriesFilteredOnType() throws IOException {
 
-    FeedClient feedClient = getFeedClient();
-
     when(apiCallback.allFeedLoaded(Sets.of("payment"))).thenReturn(getResource("/feed/allFeed.json"));
 
     FeedResponse feedResponse = feedClient.execute(getFromAll().withTypes("payment").build(), 0);
@@ -152,7 +140,6 @@ public class FeedClientIT {
   @Test
   public void feedEntries() throws IOException {
 
-    FeedClient feedClient = getFeedClient();
     String feedName = "games";
 
     ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
@@ -168,7 +155,6 @@ public class FeedClientIT {
   @Test
   public void feedEntriesWithLimit() throws IOException {
 
-    FeedClient feedClient = getFeedClient();
     String feedName = "games";
 
     int limit = 10;
@@ -186,7 +172,6 @@ public class FeedClientIT {
   @Test
   public void feedEntriesWithLimitAndSince() throws IOException {
 
-    FeedClient feedClient = getFeedClient();
     String feedName = "games";
 
     int limit = 10;
@@ -205,7 +190,6 @@ public class FeedClientIT {
   @Test
   public void feedEntriesWithCallback() throws IOException {
 
-    FeedClient feedClient = getFeedClient();
     String feedName = "games";
 
     ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
@@ -236,8 +220,6 @@ public class FeedClientIT {
   @Test
   public void shouldSubscribeAndHandleEntries() throws Exception {
 
-    FeedClient feedClient = getFeedClient();
-
     String feedName = "test";
 
     ArgumentCaptor<FeedApiStub.QueryParams> queryParams = ArgumentCaptor.forClass(FeedApiStub.QueryParams.class);
@@ -267,8 +249,6 @@ public class FeedClientIT {
 
   @Test
   public void shouldSubscribeAndHandleEntryBatches() throws Exception {
-
-    FeedClient feedClient = getFeedClient();
 
     String feedName = "test";
 
@@ -301,8 +281,6 @@ public class FeedClientIT {
 
   @Test
   public void shouldSubscribeStartingFromHead() throws Exception {
-
-    FeedClient feedClient = getFeedClient();
 
     long head = 13;
     String feedName = "test";
