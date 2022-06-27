@@ -62,6 +62,10 @@ public class Functions {
     return new Function.Builder("append");
   }
 
+  public static Function.Builder addtoset() {
+    return new Function.Builder("addtoset");
+  }
+
   public static Function.Builder prepend() {
     return new Function.Builder("prepend");
   }
