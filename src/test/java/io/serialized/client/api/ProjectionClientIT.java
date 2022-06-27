@@ -283,9 +283,12 @@ public class ProjectionClientIT {
 
     String projectionName = "game-count";
     String feedName = "games";
+    String description = "Version1";
+
     ProjectionDefinition expected =
         ProjectionDefinition.aggregatedProjection(projectionName)
             .feed(feedName)
+            .description(description)
             .addHandler(handler("GameFinished", inc().with(targetSelector("count")).build())).build();
 
     when(apiCallback.definitionFetched()).thenReturn(expected);
@@ -293,6 +296,7 @@ public class ProjectionClientIT {
     ProjectionDefinition definition = projectionClient.getDefinition(projectionName);
     assertThat(definition.projectionName()).isEqualTo(projectionName);
     assertThat(definition.feedName()).isEqualTo(feedName);
+    assertThat(definition.description()).isEqualTo(description);
     assertThat(definition.handlers()).hasSize(1);
   }
 

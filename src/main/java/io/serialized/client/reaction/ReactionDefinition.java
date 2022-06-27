@@ -18,6 +18,7 @@ public class ReactionDefinition {
 
   private String reactionName;
   private String feedName;
+  private String description;
   private String reactOnEventType;
   private String triggerTimeField;
   private String offset;
@@ -30,6 +31,10 @@ public class ReactionDefinition {
 
   public String feedName() {
     return feedName;
+  }
+
+  public String description() {
+    return description;
   }
 
   public String reactOnEventType() {
@@ -76,6 +81,7 @@ public class ReactionDefinition {
     private final Set<String> cancelOnEventTypes = new LinkedHashSet<>();
 
     private String feedName;
+    private String description;
     private String reactOnEventType;
     private String triggerTimeField;
     private String offset;
@@ -90,6 +96,14 @@ public class ReactionDefinition {
      */
     public DefinitionBuilder feed(String feedName) {
       this.feedName = feedName;
+      return this;
+    }
+
+    /**
+     * @param description Optional description
+     */
+    public DefinitionBuilder description(String description) {
+      this.description = description;
       return this;
     }
 
@@ -151,6 +165,7 @@ public class ReactionDefinition {
       ReactionDefinition definition = new ReactionDefinition();
       definition.reactionName = reactionName;
       definition.feedName = feedName;
+      definition.description = description;
       definition.reactOnEventType = reactOnEventType;
       definition.triggerTimeField = triggerTimeField;
       definition.offset = offset;
