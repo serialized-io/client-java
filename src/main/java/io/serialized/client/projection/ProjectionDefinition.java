@@ -16,6 +16,7 @@ public class ProjectionDefinition {
 
   private String projectionName;
   private String feedName;
+  private String description;
   private boolean aggregated;
   private String idField;
   private String signingSecret;
@@ -32,6 +33,10 @@ public class ProjectionDefinition {
 
   public String feedName() {
     return feedName;
+  }
+
+  public String description() {
+    return description;
   }
 
   public boolean aggregated() {
@@ -78,6 +83,7 @@ public class ProjectionDefinition {
     private final List<ProjectionHandler> handlers = new ArrayList<>();
     private final String projectionName;
     private String feedName;
+    private String description;
     private String signingSecret;
     private List<String> indexedFields;
 
@@ -87,6 +93,14 @@ public class ProjectionDefinition {
 
     public AggregatedProjectionBuilder feed(String feedName) {
       this.feedName = feedName;
+      return this;
+    }
+
+    /**
+     * @param description Optional description
+     */
+    public AggregatedProjectionBuilder description(String description) {
+      this.description = description;
       return this;
     }
 
@@ -119,6 +133,7 @@ public class ProjectionDefinition {
       ProjectionDefinition definition = new ProjectionDefinition();
       definition.projectionName = projectionName;
       definition.feedName = feedName;
+      definition.description = description;
       definition.aggregated = true;
       definition.handlers = handlers;
       definition.signingSecret = signingSecret;
@@ -133,6 +148,7 @@ public class ProjectionDefinition {
     private final List<ProjectionHandler> handlers = new ArrayList<>();
     private final String projectionName;
     private String feedName;
+    private String description;
     private String idField;
     private String signingSecret;
     private List<String> indexedFields;
@@ -143,6 +159,14 @@ public class ProjectionDefinition {
 
     public SingleProjectionBuilder feed(String feedName) {
       this.feedName = feedName;
+      return this;
+    }
+
+    /**
+     * @param description Optional description
+     */
+    public SingleProjectionBuilder description(String description) {
+      this.description = description;
       return this;
     }
 
@@ -180,6 +204,7 @@ public class ProjectionDefinition {
       ProjectionDefinition definition = new ProjectionDefinition();
       definition.projectionName = projectionName;
       definition.feedName = feedName;
+      definition.description = description;
       definition.aggregated = false;
       definition.idField = idField;
       definition.handlers = handlers;

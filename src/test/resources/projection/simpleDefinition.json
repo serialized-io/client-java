@@ -1,6 +1,7 @@
 {
   "projectionName": "orders",
   "feedName": "order",
+  "description": "Version1",
   "handlers": [
     {
       "eventType": "OrderPlacedEvent",

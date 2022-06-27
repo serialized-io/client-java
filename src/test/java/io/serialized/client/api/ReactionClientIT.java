@@ -92,10 +92,12 @@ public class ReactionClientIT {
     String reactionName = "order-notifier";
     String eventType = "OrderPlacedEvent";
     String feedName = "orders";
+    String description = "Reaction sending notifications for new orders";
 
     ReactionDefinition orderNotifier =
         ReactionDefinition.newReactionDefinition(reactionName)
             .feed(feedName)
+            .description(description)
             .reactOnEventType(eventType)
             .action(httpAction(targetUri).build())
             .build();
@@ -108,6 +110,7 @@ public class ReactionClientIT {
     ReactionDefinition value = captor.getValue();
     assertThat(value.reactionName()).isEqualTo(reactionName);
     assertThat(value.feedName()).isEqualTo(feedName);
+    assertThat(value.description()).isEqualTo(description);
     assertThat(value.reactOnEventType()).isEqualTo(eventType);
     assertThat(value.action().targetUri()).isEqualTo(targetUri);
   }
@@ -160,10 +163,12 @@ public class ReactionClientIT {
     String reactionName = "order-notifier";
     String feedName = "orders";
     String eventType = "OrderPlacedEvent";
+    String description = "Version1";
 
     ReactionDefinition expected = ReactionDefinition.newReactionDefinition(reactionName)
         .reactOnEventType(eventType)
         .feed(feedName)
+        .description(description)
         .action(httpAction(targetUri).build())
         .build();
     when(apiCallback.definitionFetched()).thenReturn(expected);
@@ -172,6 +177,7 @@ public class ReactionClientIT {
 
     assertThat(definition.reactionName()).isEqualTo(reactionName);
     assertThat(definition.feedName()).isEqualTo(feedName);
+    assertThat(definition.description()).isEqualTo(description);
     assertThat(definition.reactOnEventType()).isEqualTo(eventType);
     assertThat(definition.action().targetUri()).isEqualTo(targetUri);
   }
