@@ -131,12 +131,12 @@ public class ListProjectionQuery implements ProjectionQuery {
           .addPathSegment(SINGLE.name().toLowerCase())
           .addPathSegment(projectionName);
 
-      Optional.ofNullable(skip).ifPresent(limit -> projections.addQueryParameter("skip", String.valueOf(skip)));
+      Optional.ofNullable(skip).ifPresent(skip -> projections.addQueryParameter("skip", String.valueOf(skip)));
       Optional.ofNullable(limit).ifPresent(limit -> projections.addQueryParameter("limit", String.valueOf(limit)));
-      Optional.ofNullable(sort).ifPresent(limit -> projections.addQueryParameter("sort", sort));
+      Optional.ofNullable(sort).ifPresent(sort -> projections.addQueryParameter("sort", sort));
       Optional.ofNullable(reference).ifPresent(reference -> projections.addQueryParameter("reference", reference));
-      Optional.ofNullable(from).ifPresent(reference -> projections.addQueryParameter("from", from));
-      Optional.ofNullable(to).ifPresent(reference -> projections.addQueryParameter("to", to));
+      Optional.ofNullable(from).ifPresent(from -> projections.addQueryParameter("from", from));
+      Optional.ofNullable(to).ifPresent(to -> projections.addQueryParameter("to", to));
       Optional.ofNullable(ids).ifPresent(ids -> ids.forEach(id -> projections.addQueryParameter("id", id)));
 
       return projections.build();

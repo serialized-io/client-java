@@ -75,7 +75,7 @@ public class FeedClient implements Closeable {
     Optional.ofNullable(request.limit).ifPresent(limit -> urlBuilder.addQueryParameter("limit", String.valueOf(limit)));
     Optional.ofNullable(request.partitionCount).ifPresent(pCount -> urlBuilder.addQueryParameter("partitionCount", String.valueOf(pCount)));
     Optional.ofNullable(request.partitionNumber).ifPresent(pNumber -> urlBuilder.addQueryParameter("partitionNumber", String.valueOf(pNumber)));
-    Optional.ofNullable(request.waitTime).ifPresent(pNumber -> urlBuilder.addQueryParameter("waitTime", String.valueOf(pNumber.toMillis())));
+    Optional.ofNullable(request.waitTime).ifPresent(waitTime -> urlBuilder.addQueryParameter("waitTime", String.valueOf(waitTime.toMillis())));
 
     for (String type : request.types) {
       urlBuilder.addQueryParameter("filterType", type);
