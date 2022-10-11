@@ -43,6 +43,8 @@ public class ListProjectionQuery implements ProjectionQuery {
     private Integer limit;
     private String sort;
     private String reference;
+    private String from;
+    private String to;
     private UUID tenantId;
     private Iterable<String> ids;
 
@@ -70,16 +72,49 @@ public class ListProjectionQuery implements ProjectionQuery {
       return this;
     }
 
+    /**
+     * Sort string.
+     * Any combination of the following fields: projectionId, reference, createdAt, updatedAt.
+     * Add '+' and '-' prefixes to indicate ascending/descending sort order.
+     * Ascending order is default.
+     *
+     * @param string Sort string
+     */
     public Builder withSort(String string) {
       this.sort = string;
       return this;
     }
 
+    /**
+     * @param reference String to filter result by
+     */
     public Builder withReference(String reference) {
       this.reference = reference;
       return this;
     }
 
+    /**
+     * @param from String to filter reference from (inclusive).
+     */
+    public Builder withFrom(String from) {
+      this.from = from;
+      return this;
+    }
+
+    /**
+     * @param to String to filter reference to (inclusive).
+     */
+    public Builder withTo(String to) {
+      this.to = to;
+      return this;
+    }
+
+    /**
+     * If provided, filters on the projection id(s) to only the specified projections.
+     * Provide multiple values to retrieve multiple projections in the response.
+     *
+     * @param ids Set of IDs of projections to fetch.
+     */
     public Builder withIds(Iterable<String> ids) {
       this.ids = ids;
       return this;
@@ -100,6 +135,8 @@ public class ListProjectionQuery implements ProjectionQuery {
       Optional.ofNullable(limit).ifPresent(limit -> projections.addQueryParameter("limit", String.valueOf(limit)));
       Optional.ofNullable(sort).ifPresent(limit -> projections.addQueryParameter("sort", sort));
       Optional.ofNullable(reference).ifPresent(reference -> projections.addQueryParameter("reference", reference));
+      Optional.ofNullable(from).ifPresent(reference -> projections.addQueryParameter("from", from));
+      Optional.ofNullable(to).ifPresent(reference -> projections.addQueryParameter("to", to));
       Optional.ofNullable(ids).ifPresent(ids -> ids.forEach(id -> projections.addQueryParameter("id", id)));
 
       return projections.build();

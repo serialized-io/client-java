@@ -394,18 +394,42 @@ public class ProjectionClientIT {
   }
 
   @Test
-  public void testListSingleProjections() throws IOException {
+  public void testListSingleProjectionsByReference() throws IOException {
 
     ProjectionClient projectionClient = getProjectionClient();
 
     String projectionName = "orders";
     String reference = "externalId";
-    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), reference, "-createdAt", 5, 10))
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), reference, null, null, "-createdAt", 5, 10))
         .thenReturn(getResource("/projection/listSingleProjections.json"));
 
     ProjectionsResponse<Map> projections = projectionClient.query(
         list("orders").withSkip(5).withLimit(10).withSortDescending("createdAt").withReference(reference)
             .build(Map.class));
+
+    assertThat(projections.projections()).hasSize(1);
+    ProjectionResponse<Map> projectionResponse = projections.projections().iterator().next();
+    assertThat(projectionResponse.projectionId()).isEqualTo("22c3780f-6dcb-440f-8532-6693be83f21c");
+    assertThat(projectionResponse.createdAt()).isEqualTo(1523518143967L);
+    assertThat(projectionResponse.updatedAt()).isEqualTo(1523518144467L);
+    assertThat(projections.hasMore()).isEqualTo(false);
+  }
+
+  @Test
+  public void testListSingleProjectionsByFromToReference() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    String projectionName = "orders";
+    String reference = "externalId";
+    String from = "123";
+    String to = "456";
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), reference, from, to, "-createdAt", 5, 10))
+        .thenReturn(getResource("/projection/listSingleProjections.json"));
+
+    ProjectionsResponse<Map> projections = projectionClient.query(
+        list("orders").withSkip(5).withLimit(10).withSortDescending("createdAt").withReference(reference)
+            .withFrom(from).withTo(to).build(Map.class));
 
     assertThat(projections.projections()).hasSize(1);
     ProjectionResponse<Map> projectionResponse = projections.projections().iterator().next();
@@ -423,7 +447,7 @@ public class ProjectionClientIT {
     String projectionName = "orders";
     Set<String> ids = ImmutableSet.of("22c3780f-6dcb-440f-8532-6693be83f21c");
 
-    when(apiCallback.singleProjectionsFetched(projectionName, ids, null, "createdAt", 0, 100))
+    when(apiCallback.singleProjectionsFetched(projectionName, ids, null, null, null, "createdAt", 0, 100))
         .thenReturn(getResource("/projection/listSingleProjections.json"));
 
     ProjectionsResponse<Map> projections = projectionClient.query(list("orders").withIds(ids).build(Map.class));

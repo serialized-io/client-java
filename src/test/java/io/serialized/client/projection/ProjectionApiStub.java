@@ -87,12 +87,14 @@ public class ProjectionApiStub {
   @Path("single/{projectionName}")
   public Response listSingleProjections(@PathParam("projectionName") String projectionName,
                                         @QueryParam("reference") String reference,
+                                        @QueryParam("from") String from,
+                                        @QueryParam("to") String to,
                                         @QueryParam("id") Set<String> ids,
                                         @QueryParam("sort") @DefaultValue("createdAt") String sort,
                                         @QueryParam("skip") @DefaultValue("0") int skip,
                                         @QueryParam("limit") @DefaultValue("100") @Min(1) @Max(1000) int limit) {
 
-    Object responseBody = callback.singleProjectionsFetched(projectionName, ids, reference, sort, skip, limit);
+    Object responseBody = callback.singleProjectionsFetched(projectionName, ids, reference, from, to, sort, skip, limit);
     return Response.ok(APPLICATION_JSON_TYPE).entity(responseBody).build();
   }
 
@@ -159,7 +161,7 @@ public class ProjectionApiStub {
 
     Object singleProjectionCount(String projectionName, String reference, UUID tenantId);
 
-    Object singleProjectionsFetched(String projectionName, Set<String> ids, String reference, String sort, Integer skip, Integer limit);
+    Object singleProjectionsFetched(String projectionName, Set<String> ids, String reference, String from, String to, String sort, Integer skip, Integer limit);
 
     Object singleProjectionFetched(String projectionName, String id);
 

@@ -59,6 +59,11 @@ public class SingleProjectionQuery implements ProjectionQuery {
       return this;
     }
 
+    /**
+     * Max number of milliseconds to await the initial creation.
+     *
+     * @param duration Value between 1 and 60000.
+     */
     public Builder withAwaitCreation(Duration duration) {
       this.duration = duration;
       return this;
