@@ -3,6 +3,7 @@ package io.serialized.client.projection.query;
 import okhttp3.HttpUrl;
 import org.apache.commons.lang3.Validate;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -102,10 +103,42 @@ public class ListProjectionQuery implements ProjectionQuery {
     }
 
     /**
+     * @param from String to filter reference from (inclusive).
+     */
+    public Builder withFrom(long from) {
+      this.from = String.valueOf(from);
+      return this;
+    }
+
+    /**
+     * @param from String to filter reference from (inclusive).
+     */
+    public Builder withFrom(Date from) {
+      this.from = String.valueOf(from.getTime());
+      return this;
+    }
+
+    /**
      * @param to String to filter reference to (inclusive).
      */
     public Builder withTo(String to) {
       this.to = to;
+      return this;
+    }
+
+    /**
+     * @param to String to filter reference to (inclusive).
+     */
+    public Builder withTo(long to) {
+      this.to = String.valueOf(to);
+      return this;
+    }
+
+    /**
+     * @param to String to filter reference to (inclusive).
+     */
+    public Builder withTo(Date to) {
+      this.to = String.valueOf(to.getTime());
       return this;
     }
 
