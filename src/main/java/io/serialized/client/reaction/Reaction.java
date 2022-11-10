@@ -10,6 +10,10 @@ import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class Reaction {
 
+  public enum Status {
+    SCHEDULED, READY, ONGOING, COMPLETED, CANCELED, FAILED
+  }
+
   private UUID reactionId;
   private String reactionName;
   private String aggregateType;
@@ -18,6 +22,7 @@ public class Reaction {
   private Long createdAt;
   private Long triggerAt;
   private Long finishedAt;
+  private Status status;
 
   public UUID reactionId() {
     return reactionId;
@@ -49,6 +54,10 @@ public class Reaction {
 
   public Long finishedAt() {
     return finishedAt;
+  }
+
+  public Status status() {
+    return status;
   }
 
   @Override

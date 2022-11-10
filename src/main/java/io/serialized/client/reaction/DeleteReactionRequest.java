@@ -5,7 +5,6 @@ import java.util.UUID;
 
 public class DeleteReactionRequest {
 
-  public final String type = ReactionRequests.Type.SCHEDULED.getName();
   public final UUID tenantId;
   public final UUID reactionId;
 

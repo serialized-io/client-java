@@ -7,14 +7,14 @@ import com.google.common.collect.ImmutableMap;
 import io.dropwizard.testing.junit5.DropwizardClientExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.serialized.client.SerializedClientConfig;
+import io.serialized.client.reaction.ListReactionsRequest;
+import io.serialized.client.reaction.ListReactionsResponse;
 import io.serialized.client.reaction.Reaction;
 import io.serialized.client.reaction.ReactionApiStub;
 import io.serialized.client.reaction.ReactionClient;
 import io.serialized.client.reaction.ReactionDefinition;
 import io.serialized.client.reaction.ReactionDefinitions;
-import io.serialized.client.reaction.ReactionRequest;
 import io.serialized.client.reaction.ReactionRequests;
-import io.serialized.client.reaction.ReactionsResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,8 +32,7 @@ import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.reaction.Actions.httpAction;
 import static io.serialized.client.reaction.ReactionDefinitions.newDefinitionList;
 import static io.serialized.client.reaction.ReactionRequests.deleteReaction;
-import static io.serialized.client.reaction.ReactionRequests.reTriggerReaction;
-import static io.serialized.client.reaction.ReactionRequests.triggerReaction;
+import static io.serialized.client.reaction.ReactionRequests.executeReaction;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.ZoneOffset.UTC;
 import static java.util.Collections.singletonList;
@@ -228,11 +227,11 @@ public class ReactionClientIT {
             )
         )).build();
 
-    ReactionRequest request = ReactionRequests.scheduled().build();
+    ListReactionsRequest request = ReactionRequests.listReactions().build();
 
-    when(apiCallback.scheduledReactionsFetched()).thenReturn(expected);
+    when(apiCallback.reactionsListed("ALL", 0, 10)).thenReturn(expected);
 
-    ReactionsResponse response = reactionClient.listReactions(request);
+    ListReactionsResponse response = reactionClient.listReactions(request);
     List<Reaction> reactions = response.reactions();
     assertThat(reactions).hasSize(1);
 
@@ -244,7 +243,7 @@ public class ReactionClientIT {
   }
 
   @Test
-  public void testListTriggeredReactions() {
+  public void testListReactions() {
 
     ReactionClient reactionClient = getReactionClient();
 
@@ -262,11 +261,11 @@ public class ReactionClientIT {
             )
         )).build();
 
-    ReactionRequest request = ReactionRequests.triggered().build();
+    ListReactionsRequest request = ReactionRequests.listReactions().build();
 
-    when(apiCallback.triggeredReactionsFetched()).thenReturn(expected);
+    when(apiCallback.reactionsListed("ALL", 0, 10)).thenReturn(expected);
 
-    ReactionsResponse response = reactionClient.listReactions(request);
+    ListReactionsResponse response = reactionClient.listReactions(request);
     List<Reaction> reactions = response.reactions();
     assertThat(reactions).hasSize(1);
 
@@ -278,31 +277,19 @@ public class ReactionClientIT {
   }
 
   @Test
-  public void testTriggerScheduledReaction() {
+  public void testExecuteReaction() {
 
     ReactionClient reactionClient = getReactionClient();
 
     String aggregateId = "750fc2c9-0c2e-4504-9a95-87281d7bbd1f";
 
-    reactionClient.triggerReaction(triggerReaction(UUID.fromString(aggregateId)).build());
+    reactionClient.executeReaction(executeReaction(UUID.fromString(aggregateId)).build());
 
-    verify(apiCallback).scheduledReactionTriggered(aggregateId);
+    verify(apiCallback).reactionExecuted(aggregateId);
   }
 
   @Test
-  public void testReTriggerTriggeredReaction() {
-
-    ReactionClient reactionClient = getReactionClient();
-
-    String aggregateId = "750fc2c9-0c2e-4504-9a95-87281d7bbd1f";
-
-    reactionClient.triggerReaction(reTriggerReaction(UUID.fromString(aggregateId)).build());
-
-    verify(apiCallback).triggeredReactionReTriggered(aggregateId);
-  }
-
-  @Test
-  public void testDeleteScheduledReaction() {
+  public void testDeleteReaction() {
 
     ReactionClient reactionClient = getReactionClient();
 
@@ -310,7 +297,7 @@ public class ReactionClientIT {
 
     reactionClient.deleteReaction(deleteReaction(UUID.fromString(aggregateId)).build());
 
-    verify(apiCallback).scheduledReactionDeleted(aggregateId);
+    verify(apiCallback).reactionDeleted(aggregateId);
   }
 
   private ReactionClient getReactionClient() {

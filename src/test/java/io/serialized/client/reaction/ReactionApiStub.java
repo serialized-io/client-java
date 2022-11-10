@@ -1,13 +1,17 @@
 package io.serialized.client.reaction;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -60,37 +64,26 @@ public class ReactionApiStub {
   }
 
   @GET
-  @Path("scheduled")
-  public Response listScheduled() {
-    Object definitions = callback.scheduledReactionsFetched();
+  @Path("/")
+  public Response listReactions(@QueryParam("status") @DefaultValue("ALL") String status,
+                                @QueryParam("skip") @DefaultValue("0") int skip,
+                                @QueryParam("limit") @DefaultValue("10") @Min(1) @Max(100) int limit) {
+
+    Object definitions = callback.reactionsListed(status, skip, limit);
     return Response.ok(APPLICATION_JSON_TYPE).entity(definitions).build();
   }
 
   @POST
-  @Path("scheduled/{reactionId}")
-  public Response trigger(@PathParam("reactionId") String reactionId) {
-    callback.scheduledReactionTriggered(reactionId);
+  @Path("{reactionId}/execute")
+  public Response execute(@PathParam("reactionId") String reactionId) {
+    callback.reactionExecuted(reactionId);
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
   @DELETE
-  @Path("scheduled/{reactionId}")
+  @Path("{reactionId}")
   public Response deleteScheduled(@PathParam("reactionId") String reactionId) {
-    callback.scheduledReactionDeleted(reactionId);
-    return Response.ok(APPLICATION_JSON_TYPE).build();
-  }
-
-  @GET
-  @Path("triggered")
-  public Response listTriggered() {
-    Object definitions = callback.triggeredReactionsFetched();
-    return Response.ok(APPLICATION_JSON_TYPE).entity(definitions).build();
-  }
-
-  @POST
-  @Path("triggered/{reactionId}")
-  public Response reTrigger(@PathParam("reactionId") String reactionId) {
-    callback.triggeredReactionReTriggered(reactionId);
+    callback.reactionDeleted(reactionId);
     return Response.ok(APPLICATION_JSON_TYPE).build();
   }
 
@@ -106,15 +99,11 @@ public class ReactionApiStub {
 
     void definitionDeleted(String reactionName);
 
-    Object scheduledReactionsFetched();
+    Object reactionsListed(String status, int skip, int limit);
 
-    Object triggeredReactionsFetched();
+    void reactionExecuted(String reactionId);
 
-    void scheduledReactionTriggered(String reactionId);
-
-    void triggeredReactionReTriggered(String reactionId);
-
-    void scheduledReactionDeleted(String reactionId);
+    void reactionDeleted(String reactionId);
 
   }
 

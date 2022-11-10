@@ -3,14 +3,14 @@ package io.serialized.client.reaction;
 import java.util.Optional;
 import java.util.UUID;
 
-public class ReactionRequest {
+public class ExecuteReactionRequest {
 
-  public final String type;
   public final UUID tenantId;
+  public final UUID reactionId;
 
-  private ReactionRequest(Builder builder) {
-    this.type = builder.type.getName();
+  private ExecuteReactionRequest(Builder builder) {
     this.tenantId = builder.tenantId;
+    this.reactionId = builder.reactionId;
   }
 
   public Optional<UUID> tenantId() {
@@ -19,20 +19,21 @@ public class ReactionRequest {
 
   public static class Builder {
 
-    private final ReactionRequests.Type type;
     private UUID tenantId;
-
-    public Builder(ReactionRequests.Type type) {
-      this.type = type;
-    }
+    private UUID reactionId;
 
     public Builder withTenantId(UUID tenantId) {
       this.tenantId = tenantId;
       return this;
     }
 
-    public ReactionRequest build() {
-      return new ReactionRequest(this);
+    public Builder withReactionId(UUID reactionId) {
+      this.reactionId = reactionId;
+      return this;
+    }
+
+    public ExecuteReactionRequest build() {
+      return new ExecuteReactionRequest(this);
     }
 
   }

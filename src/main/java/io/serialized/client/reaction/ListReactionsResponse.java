@@ -5,14 +5,14 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
-public class ReactionsResponse {
+public class ListReactionsResponse {
 
   private List<Reaction> reactions;
 
-  public ReactionsResponse() {
+  public ListReactionsResponse() {
   }
 
-  public ReactionsResponse(List<Reaction> reactions) {
+  public ListReactionsResponse(List<Reaction> reactions) {
     this.reactions = reactions;
   }
 

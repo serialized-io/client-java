@@ -9,6 +9,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -97,22 +98,26 @@ public class ReactionClient {
   }
 
   /**
-   * List triggered or scheduled reactions.
+   * List reactions.
    */
-  public ReactionsResponse listReactions(ReactionRequest request) {
-    HttpUrl url = pathForReactions(request.type).build();
+  public ListReactionsResponse listReactions(ListReactionsRequest request) {
+    HttpUrl.Builder urlBuilder = pathForReactions();
+    Optional.ofNullable(request.status).ifPresent(status -> urlBuilder.addQueryParameter("status", status));
+    Optional.ofNullable(request.skip).ifPresent(skip -> urlBuilder.addQueryParameter("skip", String.valueOf(skip)));
+    Optional.ofNullable(request.limit).ifPresent(limit -> urlBuilder.addQueryParameter("limit", String.valueOf(limit)));
+
     if (request.tenantId().isPresent()) {
-      return client.get(url, ReactionsResponse.class, request.tenantId);
+      return client.get(urlBuilder.build(), ListReactionsResponse.class, request.tenantId);
     } else {
-      return client.get(url, ReactionsResponse.class);
+      return client.get(urlBuilder.build(), ListReactionsResponse.class);
     }
   }
 
   /**
-   * Trigger a scheduled reaction or re-trigger an already triggered reaction.
+   * Execute a reaction.
    */
-  public void triggerReaction(TriggerReactionRequest request) {
-    HttpUrl url = pathForReaction(request.type, request.reactionId).build();
+  public void executeReaction(ExecuteReactionRequest request) {
+    HttpUrl url = pathForReactionExecution(request.reactionId).build();
     if (request.tenantId().isPresent()) {
       client.post(url, "", request.tenantId);
     } else {
@@ -124,7 +129,7 @@ public class ReactionClient {
    * Delete a scheduled reaction.
    */
   public void deleteReaction(DeleteReactionRequest request) {
-    HttpUrl url = pathForReaction(request.type, request.reactionId).build();
+    HttpUrl url = pathForReaction(request.reactionId).build();
     if (request.tenantId().isPresent()) {
       client.delete(url, request.tenantId);
     } else {
@@ -138,17 +143,22 @@ public class ReactionClient {
         .addPathSegment("definitions");
   }
 
-  private HttpUrl.Builder pathForReactions(String type) {
+  private HttpUrl.Builder pathForReactions() {
     return apiRoot.newBuilder()
-        .addPathSegment("reactions")
-        .addPathSegment(type);
+        .addPathSegment("reactions");
   }
 
-  private HttpUrl.Builder pathForReaction(String type, UUID reactionId) {
+  private HttpUrl.Builder pathForReaction(UUID reactionId) {
     return apiRoot.newBuilder()
         .addPathSegment("reactions")
-        .addPathSegment(type)
         .addPathSegment(reactionId.toString());
+  }
+
+  private HttpUrl.Builder pathForReactionExecution(UUID reactionId) {
+    return apiRoot.newBuilder()
+        .addPathSegment("reactions")
+        .addPathSegment(reactionId.toString())
+        .addPathSegment("execute");
   }
 
   public static class Builder {
