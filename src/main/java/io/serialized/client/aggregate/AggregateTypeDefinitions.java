@@ -1,4 +1,4 @@
-package io.serialized.client.reaction;
+package io.serialized.client.aggregate;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -12,17 +12,19 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
-public class ReactionDefinitions {
+public class AggregateTypeDefinitions {
 
-  private List<ReactionDefinition> definitions;
+  private List<AggregateTypeDefinition> definitions;
+  private int totalCount;
+  private boolean hasMore;
 
-  public static ReactionDefinitions newDefinitionList(Collection<ReactionDefinition> definitions) {
-    ReactionDefinitions reactionDefinitions = new ReactionDefinitions();
+  public static AggregateTypeDefinitions newDefinitionList(Collection<AggregateTypeDefinition> definitions) {
+    AggregateTypeDefinitions reactionDefinitions = new AggregateTypeDefinitions();
     reactionDefinitions.definitions = new ArrayList<>(definitions);
     return reactionDefinitions;
   }
 
-  public List<ReactionDefinition> definitions() {
+  public List<AggregateTypeDefinition> definitions() {
     return definitions == null ? emptyList() : unmodifiableList(definitions);
   }
 
