@@ -6,6 +6,10 @@ public class ProjectionQueries {
     return new ListProjectionQuery.Builder(projectionName);
   }
 
+  public static ListProjectionQuery.Builder search(String projectionName, SearchString searchString) {
+    return new ListProjectionQuery.Builder(projectionName).withSearchString(searchString);
+  }
+
   public static SingleProjectionQuery.Builder single(String projectionName) {
     return new SingleProjectionQuery.Builder(projectionName);
   }

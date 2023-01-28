@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static io.serialized.client.projection.query.ProjectionQueries.list;
+import static io.serialized.client.projection.query.ProjectionQueries.search;
+import static io.serialized.client.projection.query.SearchString.exact;
+import static io.serialized.client.projection.query.SearchString.startsWith;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ListProjectionQueryTest {
@@ -51,6 +54,20 @@ public class ListProjectionQueryTest {
     assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
     assertThat(httpUrl.queryParameter("limit")).isEqualTo("10");
     assertThat(httpUrl.queryParameter("sort")).isEqualTo("-startTime");
+  }
+
+  @Test
+  public void searchForStringStartingWith() {
+    HttpUrl httpUrl = search("game", startsWith("test")).build(Map.class).constructUrl(ROOT_URL);
+    assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
+    assertThat(httpUrl.queryParameter("search")).isEqualTo("test*");
+  }
+
+  @Test
+  public void searchForExactString() {
+    HttpUrl httpUrl = search("game", exact("test")).build(Map.class).constructUrl(ROOT_URL);
+    assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
+    assertThat(httpUrl.queryParameter("search")).isEqualTo("test");
   }
 
 }
