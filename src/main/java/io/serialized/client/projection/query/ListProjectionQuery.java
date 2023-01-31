@@ -48,6 +48,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     private String to;
     private UUID tenantId;
     private Iterable<String> ids;
+    private SearchString searchString;
 
     public Builder(String projectionName) {
       this.projectionName = projectionName;
@@ -158,6 +159,11 @@ public class ListProjectionQuery implements ProjectionQuery {
       return this;
     }
 
+    public Builder withSearchString(SearchString searchString) {
+      this.searchString = searchString;
+      return this;
+    }
+
     private HttpUrl urlBuilder(HttpUrl rootUrl) {
       HttpUrl.Builder projections = rootUrl.newBuilder()
           .addPathSegment("projections")
@@ -171,6 +177,7 @@ public class ListProjectionQuery implements ProjectionQuery {
       Optional.ofNullable(from).ifPresent(from -> projections.addQueryParameter("from", from));
       Optional.ofNullable(to).ifPresent(to -> projections.addQueryParameter("to", to));
       Optional.ofNullable(ids).ifPresent(ids -> ids.forEach(id -> projections.addQueryParameter("id", id)));
+      Optional.ofNullable(searchString).ifPresent(searchString -> projections.addQueryParameter("search", searchString.string));
 
       return projections.build();
     }

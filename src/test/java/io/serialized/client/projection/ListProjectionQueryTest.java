@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static io.serialized.client.projection.query.ProjectionQueries.list;
+import static io.serialized.client.projection.query.ProjectionQueries.search;
+import static io.serialized.client.projection.query.SearchString.string;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ListProjectionQueryTest {
 
@@ -51,6 +54,21 @@ public class ListProjectionQueryTest {
     assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
     assertThat(httpUrl.queryParameter("limit")).isEqualTo("10");
     assertThat(httpUrl.queryParameter("sort")).isEqualTo("-startTime");
+  }
+
+  @Test
+  public void searchForString() {
+    HttpUrl httpUrl = search("game", string("test")).build(Map.class).constructUrl(ROOT_URL);
+    assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
+    assertThat(httpUrl.queryParameter("search")).isEqualTo("test");
+  }
+
+  @Test
+  public void searchForEmptyStringNotAllowed() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        search("game", string("")).build(Map.class).constructUrl(ROOT_URL)
+    );
+    assertThat(exception.getMessage()).isEqualTo("Search string cannot be empty");
   }
 
 }
