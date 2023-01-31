@@ -57,7 +57,7 @@ public class ListProjectionQueryTest {
   }
 
   @Test
-  public void searchForStringStartingWith() {
+  public void searchForString() {
     HttpUrl httpUrl = search("game", string("test")).build(Map.class).constructUrl(ROOT_URL);
     assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
     assertThat(httpUrl.queryParameter("search")).isEqualTo("test");
