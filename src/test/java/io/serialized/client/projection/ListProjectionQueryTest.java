@@ -8,9 +8,9 @@ import java.util.Map;
 
 import static io.serialized.client.projection.query.ProjectionQueries.list;
 import static io.serialized.client.projection.query.ProjectionQueries.search;
-import static io.serialized.client.projection.query.SearchString.exact;
-import static io.serialized.client.projection.query.SearchString.startsWith;
+import static io.serialized.client.projection.query.SearchString.string;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ListProjectionQueryTest {
 
@@ -58,16 +58,17 @@ public class ListProjectionQueryTest {
 
   @Test
   public void searchForStringStartingWith() {
-    HttpUrl httpUrl = search("game", startsWith("test")).build(Map.class).constructUrl(ROOT_URL);
+    HttpUrl httpUrl = search("game", string("test")).build(Map.class).constructUrl(ROOT_URL);
     assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
-    assertThat(httpUrl.queryParameter("search")).isEqualTo("test*");
+    assertThat(httpUrl.queryParameter("search")).isEqualTo("test");
   }
 
   @Test
-  public void searchForExactString() {
-    HttpUrl httpUrl = search("game", exact("test")).build(Map.class).constructUrl(ROOT_URL);
-    assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
-    assertThat(httpUrl.queryParameter("search")).isEqualTo("test");
+  public void searchForEmptyStringNotAllowed() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        search("game", string("")).build(Map.class).constructUrl(ROOT_URL)
+    );
+    assertThat(exception.getMessage()).isEqualTo("Search string cannot be empty");
   }
 
 }
