@@ -2,12 +2,16 @@ package io.serialized.client.projection.query;
 
 public class ProjectionQueries {
 
-  public static ListProjectionQuery.Builder list(String projectionName) {
-    return new ListProjectionQuery.Builder(projectionName);
+  public static ListProjectionsQuery.Builder list(String projectionName) {
+    return new ListProjectionsQuery.Builder(projectionName);
   }
 
-  public static ListProjectionQuery.Builder search(String projectionName, SearchString searchString) {
-    return new ListProjectionQuery.Builder(projectionName).withSearchString(searchString);
+  public static ListProjectionsQuery.Builder listAll(String projectionName) {
+    return new ListProjectionsQuery.Builder(projectionName).withAutoPagination(true).withLimit(1000);
+  }
+
+  public static ListProjectionsQuery.Builder search(String projectionName, SearchString searchString) {
+    return new ListProjectionsQuery.Builder(projectionName).withSearchString(searchString);
   }
 
   public static SingleProjectionQuery.Builder single(String projectionName) {

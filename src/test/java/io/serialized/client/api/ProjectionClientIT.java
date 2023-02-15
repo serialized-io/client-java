@@ -16,6 +16,8 @@ import io.serialized.client.projection.ProjectionRequest;
 import io.serialized.client.projection.ProjectionRequests;
 import io.serialized.client.projection.ProjectionResponse;
 import io.serialized.client.projection.ProjectionsResponse;
+import io.serialized.client.projection.query.ProjectionQuery;
+import io.serialized.client.projection.query.ProjectionsQuery;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,9 +25,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 import static io.serialized.client.SerializedClientConfig.serializedConfig;
 import static io.serialized.client.projection.EventSelector.eventSelector;
@@ -37,11 +41,13 @@ import static io.serialized.client.projection.ProjectionHandler.handler;
 import static io.serialized.client.projection.TargetSelector.targetSelector;
 import static io.serialized.client.projection.query.ProjectionQueries.aggregated;
 import static io.serialized.client.projection.query.ProjectionQueries.list;
+import static io.serialized.client.projection.query.ProjectionQueries.listAll;
 import static io.serialized.client.projection.query.ProjectionQueries.single;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -330,10 +336,8 @@ public class ProjectionClientIT {
     String projectionId = "84e3565e-cd61-44e7-9769-c4663588c4dd";
     when(apiCallback.singleProjectionFetched(projectionName, projectionId)).thenReturn(getResource("/projection/getSingleProjection.json"));
 
-    ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(
-        single("orders")
-            .withId(projectionId)
-            .build(OrderBalanceProjection.class));
+    ProjectionQuery query = single("orders").withId(projectionId).build(OrderBalanceProjection.class);
+    ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(query);
 
     assertThat(projection.projectionId()).isEqualTo(projectionId);
     assertThat(projection.createdAt()).isEqualTo(1505754083970L);
@@ -381,11 +385,12 @@ public class ProjectionClientIT {
     UUID tenantId = UUID.randomUUID();
     when(apiCallback.singleProjectionFetched(projectionName, projectionId, tenantId)).thenReturn(getResource("/projection/getSingleProjection.json"));
 
-    ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(
-        single("orders")
-            .withId(projectionId)
-            .withTenantId(tenantId)
-            .build(OrderBalanceProjection.class));
+    ProjectionQuery query = single("orders")
+        .withId(projectionId)
+        .withTenantId(tenantId)
+        .build(OrderBalanceProjection.class);
+
+    ProjectionResponse<OrderBalanceProjection> projection = projectionClient.query(query);
 
     assertThat(projection.projectionId()).isEqualTo(projectionId);
     assertThat(projection.createdAt()).isEqualTo(1505754083970L);
@@ -400,12 +405,18 @@ public class ProjectionClientIT {
 
     String projectionName = "orders";
     String reference = "externalId";
+
     when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), reference, null, null, "-createdAt", 5, 10))
         .thenReturn(getResource("/projection/listSingleProjections.json"));
 
-    ProjectionsResponse<Map> projections = projectionClient.query(
-        list("orders").withSkip(5).withLimit(10).withSortDescending("createdAt").withReference(reference)
-            .build(Map.class));
+    ProjectionsQuery query = list("orders")
+        .withSkip(5)
+        .withLimit(10)
+        .withSortDescending("createdAt")
+        .withReference(reference)
+        .build(Map.class);
+
+    ProjectionsResponse<Map> projections = projectionClient.query(query);
 
     assertThat(projections.projections()).hasSize(1);
     ProjectionResponse<Map> projectionResponse = projections.projections().iterator().next();
@@ -413,6 +424,107 @@ public class ProjectionClientIT {
     assertThat(projectionResponse.createdAt()).isEqualTo(1523518143967L);
     assertThat(projectionResponse.updatedAt()).isEqualTo(1523518144467L);
     assertThat(projections.hasMore()).isEqualTo(false);
+  }
+
+  @Test
+  public void testListSingleProjectionsAutoPaginated() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+    String projectionName = "orders";
+
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), null, null, null, "createdAt", 0, 2))
+        .thenReturn(getResource("/projection/listSingleProjectionsPage1.json"));
+
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), null, null, null, "createdAt", 2, 2))
+        .thenReturn(getResource("/projection/listSingleProjectionsPage2.json"));
+
+    ProjectionsQuery query = listAll("orders")
+        .withLimit(2)
+        .build(Map.class);
+
+    ProjectionsResponse<Map> projections = projectionClient.query(query);
+
+    assertThat(projections.projections()).hasSize(2);
+    assertThat(projections.hasMore()).isEqualTo(false);
+
+    Set<String> ids = new LinkedHashSet<>();
+    for (ProjectionResponse<Map> projection : projections) {
+      ids.add(projection.projectionId());
+    }
+    assertThat(ids).hasSize(4);
+  }
+
+  @Test
+  public void testListSingleProjectionsAutoPaginated_forEach() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+    String projectionName = "orders";
+
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), null, null, null, "createdAt", 0, 2))
+        .thenReturn(getResource("/projection/listSingleProjectionsPage1.json"));
+
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), null, null, null, "createdAt", 2, 2))
+        .thenReturn(getResource("/projection/listSingleProjectionsPage2.json"));
+
+    ProjectionsQuery query = listAll("orders")
+        .withLimit(2)
+        .build(Map.class);
+
+    ProjectionsResponse<Map> projections = projectionClient.query(query);
+
+    Set<String> ids = new LinkedHashSet<>();
+    projections.forEach(p -> ids.add(p.projectionId()));
+    assertThat(ids).hasSize(4);
+  }
+
+  @Test
+  public void testListSingleProjectionsAutoPaginated_stream() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+    String projectionName = "orders";
+
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), null, null, null, "createdAt", 0, 2))
+        .thenReturn(getResource("/projection/listSingleProjectionsPage1.json"));
+
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), null, null, null, "createdAt", 2, 2))
+        .thenReturn(getResource("/projection/listSingleProjectionsPage2.json"));
+
+    ProjectionsQuery query = listAll("orders")
+        .withLimit(2)
+        .build(Map.class);
+
+    ProjectionsResponse<Map> projections = projectionClient.query(query);
+
+    assertThat(StreamSupport.stream(projections.spliterator(), false).count()).isEqualTo(4);
+  }
+
+  @Test
+  public void testListSingleProjectionsAutoPaginated_IteratorExhausted() throws IOException {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    String projectionName = "orders";
+
+    when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), null, null, null, "createdAt", 0, 1000))
+        .thenReturn(getResource("/projection/listSingleProjectionsPage2.json"));
+
+    ProjectionsQuery query = listAll("orders").build(Map.class);
+
+    ProjectionsResponse<Map> projections = projectionClient.query(query);
+
+    Set<String> ids = new LinkedHashSet<>();
+    for (ProjectionResponse<Map> projection : projections) {
+      ids.add(projection.projectionId());
+    }
+    assertThat(ids).hasSize(2);
+
+    Throwable exception = assertThrows(IllegalStateException.class,
+        () -> {
+          for (ProjectionResponse<Map> projection : projections) {
+            ids.add(projection.projectionId());
+          }
+        });
+    assertThat(exception.getMessage()).isEqualTo("Iterator is already exhausted");
   }
 
   @Test
@@ -427,9 +539,16 @@ public class ProjectionClientIT {
     when(apiCallback.singleProjectionsFetched(projectionName, emptySet(), reference, from, to, "-createdAt", 5, 10))
         .thenReturn(getResource("/projection/listSingleProjections.json"));
 
-    ProjectionsResponse<Map> projections = projectionClient.query(
-        list("orders").withSkip(5).withLimit(10).withSortDescending("createdAt").withReference(reference)
-            .withFrom(from).withTo(to).build(Map.class));
+    ProjectionsQuery query = list("orders")
+        .withSkip(5)
+        .withLimit(10)
+        .withSortDescending("createdAt")
+        .withReference(reference)
+        .withFrom(from)
+        .withTo(to)
+        .build(Map.class);
+
+    ProjectionsResponse<Map> projections = projectionClient.query(query);
 
     assertThat(projections.projections()).hasSize(1);
     ProjectionResponse<Map> projectionResponse = projections.projections().iterator().next();
@@ -450,7 +569,8 @@ public class ProjectionClientIT {
     when(apiCallback.singleProjectionsFetched(projectionName, ids, null, null, null, "createdAt", 0, 100))
         .thenReturn(getResource("/projection/listSingleProjections.json"));
 
-    ProjectionsResponse<Map> projections = projectionClient.query(list("orders").withIds(ids).build(Map.class));
+    ProjectionsQuery query = list("orders").withIds(ids).build(Map.class);
+    ProjectionsResponse<Map> projections = projectionClient.query(query);
 
     assertThat(projections.projections()).hasSize(1);
     assertThat(projections.hasMore()).isEqualTo(false);
@@ -463,9 +583,8 @@ public class ProjectionClientIT {
 
     when(apiCallback.aggregatedProjectionFetched("order-totals")).thenReturn(getResource("/projection/getAggregatedProjection.json"));
 
-    ProjectionResponse<OrderTotalsProjection> projection = projectionClient.query(
-        aggregated("order-totals")
-            .build(OrderTotalsProjection.class));
+    ProjectionQuery query = aggregated("order-totals").build(OrderTotalsProjection.class);
+    ProjectionResponse<OrderTotalsProjection> projection = projectionClient.query(query);
 
     assertThat(projection.projectionId()).isEqualTo("order-totals");
     assertThat(projection.updatedAt()).isEqualTo(1505850788368L);
