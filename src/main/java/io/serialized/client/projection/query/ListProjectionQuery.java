@@ -96,7 +96,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     }
 
     /**
-     * @param from String to filter reference from (inclusive).
+     * @param from filter reference from (inclusive).
      */
     public Builder withFrom(String from) {
       this.from = from;
@@ -104,7 +104,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     }
 
     /**
-     * @param from String to filter reference from (inclusive).
+     * @param from filter reference from (inclusive).
      */
     public Builder withFrom(long from) {
       this.from = String.valueOf(from);
@@ -112,7 +112,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     }
 
     /**
-     * @param from String to filter reference from (inclusive).
+     * @param from filter reference from (inclusive).
      */
     public Builder withFrom(Date from) {
       this.from = String.valueOf(from.getTime());
@@ -120,7 +120,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     }
 
     /**
-     * @param to String to filter reference to (inclusive).
+     * @param to filter reference to (inclusive).
      */
     public Builder withTo(String to) {
       this.to = to;
@@ -128,7 +128,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     }
 
     /**
-     * @param to String to filter reference to (inclusive).
+     * @param to filter reference to (inclusive).
      */
     public Builder withTo(long to) {
       this.to = String.valueOf(to);
@@ -136,7 +136,7 @@ public class ListProjectionQuery implements ProjectionQuery {
     }
 
     /**
-     * @param to String to filter reference to (inclusive).
+     * @param to filter reference to (inclusive).
      */
     public Builder withTo(Date to) {
       this.to = String.valueOf(to.getTime());
