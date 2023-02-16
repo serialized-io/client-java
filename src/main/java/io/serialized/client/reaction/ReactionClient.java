@@ -103,6 +103,10 @@ public class ReactionClient {
   public ListReactionsResponse listReactions(ListReactionsRequest request) {
     HttpUrl.Builder urlBuilder = pathForReactions();
     Optional.ofNullable(request.status).ifPresent(status -> urlBuilder.addQueryParameter("status", status));
+    Optional.ofNullable(request.from).ifPresent(from -> urlBuilder.addQueryParameter("from", from));
+    Optional.ofNullable(request.to).ifPresent(to -> urlBuilder.addQueryParameter("to", to));
+    Optional.ofNullable(request.aggregateId).ifPresent(aggregateId -> urlBuilder.addQueryParameter("aggregateId", aggregateId.toString()));
+    Optional.ofNullable(request.eventId).ifPresent(eventId -> urlBuilder.addQueryParameter("eventId", eventId.toString()));
     Optional.ofNullable(request.skip).ifPresent(skip -> urlBuilder.addQueryParameter("skip", String.valueOf(skip)));
     Optional.ofNullable(request.limit).ifPresent(limit -> urlBuilder.addQueryParameter("limit", String.valueOf(limit)));
 
