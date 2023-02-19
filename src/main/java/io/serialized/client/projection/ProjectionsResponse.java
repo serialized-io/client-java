@@ -26,7 +26,7 @@ public class ProjectionsResponse<T> implements Iterable<ProjectionResponse<T>> {
     this.hasMore = hasMore;
   }
 
-  public List<ProjectionResponse<T>> projections() {
+  public List<ProjectionResponse<T>> result() {
     return projections == null ? emptyList() : unmodifiableList(projections);
   }
 
@@ -36,17 +36,17 @@ public class ProjectionsResponse<T> implements Iterable<ProjectionResponse<T>> {
 
   @Override
   public Iterator<ProjectionResponse<T>> iterator() {
-    return projections().iterator();
+    return result().iterator();
   }
 
   @Override
   public void forEach(Consumer<? super ProjectionResponse<T>> action) {
-    projections().forEach(action);
+    result().forEach(action);
   }
 
   @Override
   public Spliterator<ProjectionResponse<T>> spliterator() {
-    return projections().spliterator();
+    return result().spliterator();
   }
 
 }

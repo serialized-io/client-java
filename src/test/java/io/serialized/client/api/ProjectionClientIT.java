@@ -418,8 +418,8 @@ public class ProjectionClientIT {
 
     ProjectionsResponse<Map> projections = projectionClient.query(query);
 
-    assertThat(projections.projections()).hasSize(1);
-    ProjectionResponse<Map> projectionResponse = projections.projections().iterator().next();
+    assertThat(projections.result()).hasSize(1);
+    ProjectionResponse<Map> projectionResponse = projections.result().iterator().next();
     assertThat(projectionResponse.projectionId()).isEqualTo("22c3780f-6dcb-440f-8532-6693be83f21c");
     assertThat(projectionResponse.createdAt()).isEqualTo(1523518143967L);
     assertThat(projectionResponse.updatedAt()).isEqualTo(1523518144467L);
@@ -444,7 +444,7 @@ public class ProjectionClientIT {
 
     ProjectionsResponse<Map> projections = projectionClient.query(query);
 
-    assertThat(projections.projections()).hasSize(2);
+    assertThat(projections.result()).hasSize(2);
     assertThat(projections.hasMore()).isEqualTo(false);
 
     Set<String> ids = new LinkedHashSet<>();
@@ -550,8 +550,8 @@ public class ProjectionClientIT {
 
     ProjectionsResponse<Map> projections = projectionClient.query(query);
 
-    assertThat(projections.projections()).hasSize(1);
-    ProjectionResponse<Map> projectionResponse = projections.projections().iterator().next();
+    assertThat(projections.result()).hasSize(1);
+    ProjectionResponse<Map> projectionResponse = projections.result().iterator().next();
     assertThat(projectionResponse.projectionId()).isEqualTo("22c3780f-6dcb-440f-8532-6693be83f21c");
     assertThat(projectionResponse.createdAt()).isEqualTo(1523518143967L);
     assertThat(projectionResponse.updatedAt()).isEqualTo(1523518144467L);
@@ -572,7 +572,7 @@ public class ProjectionClientIT {
     ProjectionsQuery query = list("orders").withIds(ids).build(Map.class);
     ProjectionsResponse<Map> projections = projectionClient.query(query);
 
-    assertThat(projections.projections()).hasSize(1);
+    assertThat(projections.result()).hasSize(1);
     assertThat(projections.hasMore()).isEqualTo(false);
   }
 

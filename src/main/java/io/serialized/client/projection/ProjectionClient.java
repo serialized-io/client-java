@@ -135,7 +135,7 @@ public class ProjectionClient {
       HttpUrl url = query.constructUrl(apiRoot);
       currentPage.set(getProjections(url, query, javaType));
 
-      return new ProjectionsResponse<>(new ArrayList<ProjectionResponse<T>>(currentPage.get().projections()) {
+      return new ProjectionsResponse<>(new ArrayList<ProjectionResponse<T>>(currentPage.get().result()) {
         private boolean exhausted = false;
 
         @Override
