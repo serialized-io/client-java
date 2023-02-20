@@ -20,7 +20,8 @@ public class ListProjectionQueryTest {
   public void listSimple() {
     HttpUrl httpUrl = list("game").build(Map.class).constructUrl(ROOT_URL);
     assertThat(httpUrl.pathSegments()).contains("projections", "single", "game");
-    assertThat(httpUrl.queryParameter("limit")).isNull();
+    assertThat(httpUrl.queryParameter("skip")).isEqualTo("0");
+    assertThat(httpUrl.queryParameter("limit")).isEqualTo("100");
     assertThat(httpUrl.queryParameter("sort")).isNull();
   }
 

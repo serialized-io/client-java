@@ -1,0 +1,22 @@
+{
+  "projections": [
+    {
+      "projectionId": "22c3780f-6dcb-440f-8532-6693be83f21c",
+      "createdAt": 1523518143967,
+      "updatedAt": 1523518144467,
+      "data": {
+        "value": "a"
+      }
+    },
+    {
+      "projectionId": "b7af1219-d8f1-4b80-85f3-9ac79e26a6d5",
+      "createdAt": 1523518143967,
+      "updatedAt": 1523518144467,
+      "data": {
+        "value": "b"
+      }
+    }
+  ],
+  "hasMore": true,
+  "totalCount": 4
+}

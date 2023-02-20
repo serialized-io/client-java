@@ -6,14 +6,19 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serialized.client.SerializedClientConfig;
 import io.serialized.client.SerializedOkHttpClient;
-import io.serialized.client.projection.query.ListProjectionQuery;
 import io.serialized.client.projection.query.ProjectionQuery;
+import io.serialized.client.projection.query.ProjectionsQuery;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
@@ -111,12 +116,82 @@ public class ProjectionClient {
   }
 
   public <T> ProjectionResponse<T> query(ProjectionQuery query) {
-    HttpUrl url = query.constructUrl(apiRoot);
-
     JavaType javaType = query.responseClass()
         .map(dataClass -> objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, dataClass))
         .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
 
+    HttpUrl url = query.constructUrl(apiRoot);
+    return getProjections(query, url, javaType);
+  }
+
+  public <T> ProjectionsResponse<T> query(ProjectionsQuery query) {
+    JavaType javaType = query.responseClass()
+        .map(dataClass -> objectMapper.getTypeFactory().constructParametricType(ProjectionsResponse.class, dataClass))
+        .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
+
+    if (query.isAutoPagination()) {
+
+      AtomicReference<ProjectionsResponse<T>> currentPage = new AtomicReference<>();
+      HttpUrl url = query.constructUrl(apiRoot);
+      currentPage.set(getProjections(url, query, javaType));
+
+      return new ProjectionsResponse<>(new ArrayList<ProjectionResponse<T>>(currentPage.get().result()) {
+        private boolean exhausted = false;
+
+        @Override
+        public void forEach(Consumer<? super ProjectionResponse<T>> action) {
+          for (ProjectionResponse<T> item : this) {
+            action.accept(item);
+          }
+        }
+
+        @Override
+        public Spliterator<ProjectionResponse<T>> spliterator() {
+          return Spliterators.spliteratorUnknownSize(this.iterator(), 0);
+        }
+
+        @Override
+        public Iterator<ProjectionResponse<T>> iterator() {
+          if (exhausted) {
+            throw new IllegalStateException("Iterator is already exhausted");
+          }
+          AtomicReference<Iterator<ProjectionResponse<T>>> delegateIterator = new AtomicReference<>(super.iterator());
+
+          return new Iterator<ProjectionResponse<T>>() {
+            @Override
+            public boolean hasNext() {
+              if (delegateIterator.get().hasNext()) {
+                return true;
+              } else {
+                if (currentPage.get().hasMore()) {
+                  HttpUrl url = query.constructUrl(apiRoot);
+                  currentPage.set(getProjections(url, query, javaType));
+                  Iterator<ProjectionResponse<T>> iterator = currentPage.get().iterator();
+                  delegateIterator.set(iterator);
+                  return iterator.hasNext();
+                } else {
+                  exhausted = true;
+                  return false;
+                }
+              }
+            }
+
+            @Override
+            public ProjectionResponse<T> next() {
+              return delegateIterator.get().next();
+            }
+          };
+        }
+      });
+
+    } else {
+      HttpUrl url = query.constructUrl(apiRoot);
+      return getProjections(url, query, javaType);
+    }
+
+  }
+
+  private <T> ProjectionResponse<T> getProjections(ProjectionQuery query, HttpUrl url, JavaType javaType) {
     if (query.tenantId().isPresent()) {
       return client.get(url, javaType, query.tenantId().get());
     } else {
@@ -124,13 +199,7 @@ public class ProjectionClient {
     }
   }
 
-  public <T> ProjectionsResponse<T> query(ListProjectionQuery query) {
-    HttpUrl url = query.constructUrl(apiRoot);
-
-    JavaType javaType = query.responseClass()
-        .map(dataClass -> objectMapper.getTypeFactory().constructParametricType(ProjectionsResponse.class, dataClass))
-        .orElse(objectMapper.getTypeFactory().constructParametricType(ProjectionResponse.class, Map.class));
-
+  private <T> ProjectionsResponse<T> getProjections(HttpUrl url, ProjectionsQuery query, JavaType javaType) {
     if (query.tenantId().isPresent()) {
       return client.get(url, javaType, query.tenantId().get());
     } else {
