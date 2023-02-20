@@ -17,9 +17,9 @@ public class SearchString {
    * '-' negates a single token: -token0
    * '"' creates phrases of terms: "term1 term2 ..."
    * '*' at the end of terms specifies prefix query: term*
-   * '(' and '' specifies precedence: token1 + (token2 | token3)
    * '~N' at the end of terms specifies fuzzy query: term~1
-   * '~N' at the end of phrases specifies near/slop query: "term1 term2"~5
+   * '~N' at the end of phrases specifies near query: "term1 term2"~5
+   * '(' and ')' specifies precedence: token1 + (token2 | token3)
    * </pre>
    */
   public static SearchString string(String string) {
