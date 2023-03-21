@@ -10,11 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
+import static org.apache.commons.lang3.Validate.notBlank;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class ProjectionHandler {
 
   private String eventType;
+
+  private String feedName;
   private final List<Function> functions = new ArrayList<>();
   private URI functionUri;
   private String idField;
@@ -41,6 +44,10 @@ public class ProjectionHandler {
 
   public String eventType() {
     return eventType;
+  }
+
+  public String feedName() {
+    return feedName;
   }
 
   public List<Function> functions() {
@@ -73,6 +80,7 @@ public class ProjectionHandler {
   public static class Builder {
 
     private final String eventType;
+    private String feedName;
     private final List<Function> functions = new ArrayList<>();
     private URI functionUri;
     private String idField;
@@ -84,6 +92,12 @@ public class ProjectionHandler {
     public Builder addFunction(Function function) {
       Validate.isTrue(functionUri == null, "Cannot combine 'functions' and 'functionUri'");
       this.functions.add(function);
+      return this;
+    }
+
+    public Builder withFeedName(String feedName) {
+      notBlank(feedName, "'feedName' cannot be blank");
+      this.feedName = feedName;
       return this;
     }
 
@@ -103,6 +117,7 @@ public class ProjectionHandler {
 
       ProjectionHandler projectionHandler = new ProjectionHandler();
       projectionHandler.eventType = this.eventType;
+      projectionHandler.feedName = this.feedName;
       projectionHandler.functions.addAll(this.functions);
       projectionHandler.functionUri = this.functionUri;
       projectionHandler.idField = this.idField;
