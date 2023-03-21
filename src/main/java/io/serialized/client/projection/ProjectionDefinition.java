@@ -10,6 +10,8 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 public class ProjectionDefinition {
@@ -186,6 +188,13 @@ public class ProjectionDefinition {
       return addHandler(builder.build());
     }
 
+    public SingleProjectionBuilder addHandler(String eventType, String feedName, Function... functions) {
+      ProjectionHandler.Builder builder = ProjectionHandler.handler(eventType);
+      builder.withFeedName(feedName);
+      asList(functions).forEach(builder::addFunction);
+      return addHandler(builder.build());
+    }
+
     public SingleProjectionBuilder withIdField(String idField) {
       this.idField = idField;
       return this;
@@ -199,7 +208,8 @@ public class ProjectionDefinition {
     public ProjectionDefinition build() {
       Validate.isTrue(!handlers.isEmpty(), "'handlers' must not be empty");
       Validate.notEmpty(projectionName, "'projectionName' must be set");
-      Validate.notEmpty(feedName, "'feedName' must be set");
+      boolean feedNameOnAllHandlers = handlers.stream().noneMatch(h -> isBlank(h.feedName()));
+      Validate.isTrue(feedNameOnAllHandlers || isNotBlank(feedName), "'feedName' must be set on all handlers or on the projection definition");
 
       ProjectionDefinition definition = new ProjectionDefinition();
       definition.projectionName = projectionName;

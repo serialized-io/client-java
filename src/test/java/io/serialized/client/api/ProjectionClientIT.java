@@ -152,6 +152,46 @@ public class ProjectionClientIT {
   }
 
   @Test
+  public void testCreateProjectionDefinitionWithFeedNameOnHandlerLevel() {
+
+    ProjectionClient projectionClient = getProjectionClient();
+
+    ProjectionDefinition highScoreProjection =
+        ProjectionDefinition.singleProjection("high-score")
+            .withIdField("winner")
+            .addHandler("GameFinished", "game",
+                set().with(targetSelector("playerName")).with(eventSelector("winner")).build(),
+                inc().with(targetSelector("wins")).build(),
+                setref().with(targetSelector("wins")).build())
+            .build();
+
+    projectionClient.createDefinition(highScoreProjection);
+
+    ArgumentCaptor<ProjectionDefinition> captor = ArgumentCaptor.forClass(ProjectionDefinition.class);
+    verify(apiCallback, times(1)).definitionCreated(captor.capture());
+
+    ProjectionDefinition value = captor.getValue();
+    assertThat(value.projectionName()).isEqualTo("high-score");
+    assertThat(value.feedName()).isNull();
+    assertThat(value.idField()).isEqualTo("winner");
+    assertThat(value.handlers()).hasSize(1);
+    ProjectionHandler handler = value.handlers().get(0);
+    assertThat(handler.feedName()).isEqualTo("game");
+    assertThat(handler.functions()).hasSize(3);
+
+    assertThat(handler.functions().get(0).function()).isEqualTo("set");
+    assertThat(handler.functions().get(0).function()).isEqualTo("set");
+    assertThat(handler.functions().get(0).targetSelector()).isEqualTo("$.projection.playerName");
+    assertThat(handler.functions().get(0).eventSelector()).isEqualTo("$.event.winner");
+
+    assertThat(handler.functions().get(1).function()).isEqualTo("inc");
+    assertThat(handler.functions().get(1).targetSelector()).isEqualTo("$.projection.wins");
+
+    assertThat(handler.functions().get(2).function()).isEqualTo("setref");
+    assertThat(handler.functions().get(2).targetSelector()).isEqualTo("$.projection.wins");
+  }
+
+  @Test
   public void testUpdateProjectionDefinition() {
 
     ProjectionClient projectionClient = getProjectionClient();
